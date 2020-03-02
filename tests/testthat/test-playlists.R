@@ -11,7 +11,7 @@ test_that("ov_video_timing works as expected", {
 })
 
 test_that("ov_video_playlist works as expected", {
-    x <- datavolley::read_dv(datavolley::ov_example_file())
+    x <- datavolley::read_dv(datavolley::dv_example_file())
     expect_error(ov_video_playlist(x$plays[10, ], x$meta), "no video for")
     x$meta$video <- data.frame(camera = NA_character_, file = "myvideo.mp4")
     px <- ov_video_playlist(x$plays[10, ], x$meta)
