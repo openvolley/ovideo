@@ -1,0 +1,33 @@
+Package: ovideo
+Title: Volleyball video utilities
+Version: 0.0.1
+Authors@R: c(person(given = "Ben", family = "Raymond", role = c("aut", "cre"), email = "ben@untan.gl"),
+             person(given = "Adrien", family = "Ickowicz", role = "aut"))
+Description: Playlists and other video support functions from volleyball match files.
+URL: https://github.com/openvolley/ovideo
+BugReports: https://github.com/openvolley/ovideo/issues
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+Depends: datavolley (> 0.12.999)
+Imports:
+    assertthat,
+    av,
+    dplyr,
+    DT,
+    future.apply,
+    fs,
+    htmltools,
+    lubridate,
+    jsonlite,
+    servr,
+    shiny,
+    shinyjs,
+    shinyTime,
+    sys,
+    uuid
+Suggests:
+    testthat
+Remotes: raymondben/datavolley
+RoxygenNote: 7.0.2
