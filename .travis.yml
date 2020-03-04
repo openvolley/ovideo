@@ -2,3 +2,9 @@
 
 language: R
 cache: packages
+
+addons:
+  apt:
+    update: true
+    packages:
+      - libavfilter-dev
