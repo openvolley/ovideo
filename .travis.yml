@@ -2,9 +2,13 @@
 
 language: R
 cache: packages
+sudo: required
+
+before_install:
+  - sudo add-apt-repository -y ppa:cran/ffmpeg-3
+  - sudo apt-get update
 
 addons:
   apt:
-    update: true
     packages:
       - libavfilter-dev
