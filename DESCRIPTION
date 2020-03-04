@@ -13,20 +13,13 @@ Roxygen: list(markdown = TRUE)
 Depends: datavolley (> 0.12.999)
 Imports:
     assertthat,
-    av,
     dplyr,
-    DT,
     future.apply,
     fs,
     htmltools,
     lubridate,
     jsonlite,
-    servr,
-    shiny,
-    shinyjs,
-    shinyTime,
-    sys,
-    uuid
+    sys
 Suggests:
     testthat
 Remotes: raymondben/datavolley
