@@ -22,5 +22,5 @@ Imports:
     sys
 Suggests:
     testthat
-Remotes: raymondben/datavolley
+Remotes: openvolley/datavolley
 RoxygenNote: 7.0.2
