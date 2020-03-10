@@ -192,6 +192,24 @@ function dvjs_video_prev() {
     dvjs_video_play();
 }
 
+function dvjs_set_playback_rate(rate) {
+    if (dvjs_video_controller.type == "youtube") {
+        dvjs_yt_player.setPlaybackRate(rate)
+    } else {
+        var el = document.getElementById(dvjs_video_controller.id);
+        el.playbackRate=rate;
+    }
+}
+
+function dvjs_jog(howmuch) {
+    if (dvjs_video_controller.type == "youtube") {
+      dvjs_yt_player.seekTo(dvjs_yt_player.getCurrentTime() + howmuch);
+    } else {
+        var el = document.getElementById(dvjs_video_controller.id);
+        el.currentTime = (el.currentTime + howmuch);
+    }
+}
+
 function dvjs_video_manage() {
     if (dvjs_video_controller.queue.length > 0 && dvjs_video_controller.current >= 0 && (dvjs_video_controller.current <= (dvjs_video_controller.queue.length - 1))) {
 	var item = dvjs_video_controller.queue[dvjs_video_controller.current];//0];
