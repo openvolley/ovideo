@@ -144,7 +144,16 @@ ov_video_playlist_pid <- function(x, meta, type = NULL, extra_cols = NULL, norma
     x <- left_join(x, meta, by = "match_id")
     
     ## convert timing to a data.frame
-    timing <- plyr::ddply(x, .(point_id), summarize, start_time = min(video_time, na.rm = TRUE), duration = max(video_time, na.rm=TRUE) - min(video_time, na.rm = TRUE))
+    # timing <- plyr::ddply(x, .(point_id), plyr::summarize, start_time = min(.$video_time, na.rm = TRUE), 
+    #                       duration = max(.$video_time, na.rm=TRUE) - min(.$video_time, na.rm = TRUE))
+    
+    timing_tmp <- dplyr::full_join(
+        stats::aggregate(x = x$video_time, by = list(x$point_id), FUN = min,na.rm=TRUE),
+        stats::aggregate(x = x$video_time, by = list(x$point_id), FUN = range,na.rm=TRUE), by = "Group.1")
+    timing_tmp$duration <- apply(timing_tmp$x.y,1,diff) + 1
+    timing <- timing_tmp[,c("Group.1", "x.x", "duration")]
+    
+    names(timing) <- c("point_id", "start_time", "duration")
     
     x <- left_join(x, timing, by = "point_id")
     #x$start_time <- x$video_time + x$start_offset
