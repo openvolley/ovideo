@@ -78,6 +78,88 @@ ov_video_playlist <- function(x, meta, type = NULL, timing = ov_video_timing(), 
     x[, c("video_src", "start_time", "duration", "type", extra_cols)]
 }
 
+#' Create video playlist per point_id
+#'
+#' @param x data.frame: a datavolleyplays object. Normally this will be a selected subset of the `plays` component of a datavolley object (i.e. a selected set of actions that you want the video playlist to contain)
+#' @param meta list: either the `meta` component of a datavolley object, or a list of such objects, or a data.frame with the columns "match_id" and "video_src". Entries in `video_src` should be paths or URLs to the video file associated with the corresponding `match_id`
+#' @param type string: currently "youtube" or "local". If `type` is not specified as a parameter, and `meta` is a data.frame, then `type` can be provided as a column in `meta`. Alternatively, if `meta` is a `meta` component of a datavolley object, or a list of such objects, then `type` will be assumed to be "local"
+#' @param extra_cols character: names of additional columns from `x` to include in the returned data frame
+#' @param normalize_paths logical: if \code{TRUE}, apply \code{normalizePath} to local file paths. This will e.g. expand the tilde in paths like "~/path/to/video.mp4"
+#'
+#' @return A data.frame with columns `src`, `start_time`, `duration`, plus any extras specified in `extra_cols`
+#'
+#' @export
+ov_video_playlist_pid <- function(x, meta, type = NULL, extra_cols = NULL, normalize_paths = TRUE) {
+    assert_that(is.data.frame(x))
+    assert_that(has_name(x, c("video_time", "skill", "match_id")))
+    assert_that(is.flag(normalize_paths), !is.na(normalize_paths))
+    if (is.data.frame(meta)) {
+        assert_that(has_name(meta, c("match_id", "video_src")))
+        if (is.null(type)) {
+            if ("type" %in% names(meta)) type <- unique(na.omit(meta$type))
+        }
+    } else if (is.list(meta)) {
+        if ("match_id" %in% names(meta)) {
+            ## this is a single metadata object
+            ## make it a list of (one) object
+            meta <- list(meta)
+        }
+        ## assume meta is a list of metadata objects
+        video_file_from_meta <- function(z) {
+            out <- z$meta$video
+            if (is.null(out)) out <- z$video
+            if (is.null(out)) {
+                NA_character_
+            } else if (nrow(out) < 1) {
+                NA_character_
+            } else if (nrow(out) > 1) {
+                warning("multiple video files found")
+                NA_character_
+            } else {
+                out$file
+            }
+        }
+        match_id_from_meta <- function(z) {
+            out <- z$meta$match_id
+            if (is.null(out)) out <- z$match_id
+            if (is.null(out) || !nzchar(out)) {
+                NA_character_
+            } else {
+                out
+            }
+        }
+        meta <- bind_rows(lapply(meta, function(z) tibble(match_id = match_id_from_meta(z), video_src = video_file_from_meta(z))))
+        if (is.null(type)) type <- "local"
+    } else {
+        stop("meta is an unexpected format")
+    }
+    assert_that(is.string(type))
+    type <- match.arg(tolower(type), c("local", "youtube"))
+    if (!all(x$match_id %in% meta$match_id)) stop("x contains match_ids that do not appear in meta")
+    if (any(is.na(meta$video_src))) {
+        missing_vid_matches <- meta$match_id[is.na(meta$video_src)]
+        stop("no video for matches with match_id: ", paste(missing_vid_matches, collapse = ", "))
+    }
+    if (!is.null(extra_cols)) assert_that(is.character(extra_cols))
+    x <- left_join(x, meta, by = "match_id")
+    
+    ## convert timing to a data.frame
+    timing <- plyr::ddply(x, .(point_id), summarize, start_time = min(video_time, na.rm = TRUE), duration = max(video_time, na.rm=TRUE) - min(video_time, na.rm = TRUE))
+    
+    x <- left_join(x, timing, by = "point_id")
+    #x$start_time <- x$video_time + x$start_offset
+    x <- x[!is.na(x$skill), ]
+    ## TODO check for NA video_time
+    x$video_src <- as.character(x$video_src)
+    x$type <- type
+    if (normalize_paths) {
+        local_srcs <- which(x$type == "local")
+        x$video_src[local_srcs] <- normalizePath(x$video_src[local_srcs], mustWork = FALSE)
+    }
+    dplyr::distinct(x[, c("video_src", "start_time", "duration", "type", extra_cols)])
+}
+
+
 #' Timing to use when creating video playlist
 #'
 #' By default, all skills have a timing of `c(-5, 3)`, meaning that the video clip will start 5 seconds before the recorded time of the event and end 3 seconds after its recorded time.
