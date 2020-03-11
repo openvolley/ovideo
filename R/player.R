@@ -79,3 +79,51 @@ ov_video_player <- function(id, type, controls = FALSE, ...) {
         tags$div(id = paste0(id, "_container"), plyr)
     }
 }
+
+
+#' Functions for controlling the video player
+#'
+#' This functions runs the appropriate javascript via \code{\link[shinyjs]{runjs}}, so it is probably only useful inside of a Shiny app.
+#'
+#' @param what string: the command, currently one of:
+#' \itemize{
+#'   \item "play" (note that this requires that the playlist has already been loaded)
+#'   \item "stop"
+#'   \item "pause"
+#'   \item "prev"
+#'   \item "next"
+#'   \item "jog" - move the video forward or backwards by a given number of seconds (pass this value as the `...` argument)
+#'   \item "set_playback_rate" - set the playback rate: 1 = normal speed, 2 = double speed, etc
+#' }
+#' @param ... : parameters used by those commands
+#'
+#' @examples
+#' \dontrun{
+#'   ov_video_control("jog", -1) ## rewind 1s
+#'   ov_video_control("jog", 10) ## jump forwards 10s
+#'   ov_video_control("set_playback_rate", 0.5) ## play at half speed
+#' }
+#' @export
+ov_video_control <- function(what, ...) {
+    assert_that(is.string(what))
+    myargs <- list(...)
+    what <- match.arg(tolower(what), c("play", "stop", "prev", "next", "pause", "set_playback_rate", "jog"))
+    if (what == "play") {
+        shinyjs::runjs("dvjs_video_play();")
+    } else if (what == "stop") {
+        shinyjs::runjs("dvjs_video_stop();")
+    } else if (what == "prev") {
+        shinyjs::runjs("dvjs_video_prev();")
+    } else if (what == "next") {
+        shinyjs::runjs("dvjs_video_next();")
+    } else if (what == "pause") {
+        shinyjs::runjs("dvjs_video_pause();")
+    } else if (what == "set_playback_rate") {
+        if (length(myargs) < 1) stop("provide the playback rate as the second parameter to ov_video_control")
+        shinyjs::runjs(paste0("dvjs_set_playback_rate(", myargs[[1]], ");"))
+    } else if (what == "jog") {
+        if (length(myargs) < 1) stop("provide the number of seconds as the second parameter to ov_video_control")
+        shinyjs::runjs(paste0("dvjs_jog(", myargs[[1]], ");"))
+    }
+}
+
