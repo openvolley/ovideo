@@ -150,10 +150,11 @@ ov_video_playlist_pid <- function(x, meta, type = NULL, extra_cols = NULL, norma
     timing_tmp <- dplyr::full_join(
         stats::aggregate(x = x$video_time, by = list(x$point_id), FUN = min,na.rm=TRUE),
         stats::aggregate(x = x$video_time, by = list(x$point_id), FUN = range,na.rm=TRUE), by = "Group.1")
-    timing_tmp$duration <- apply(timing_tmp$x.y,1,diff) + 1
+    timing_tmp$duration <- apply(timing_tmp$x.y,1,diff) + 2
     timing <- timing_tmp[,c("Group.1", "x.x", "duration")]
     
     names(timing) <- c("point_id", "start_time", "duration")
+    timing$start_time <- timing$start_time - 2
     
     x <- left_join(x, timing, by = "point_id")
     #x$start_time <- x$video_time + x$start_offset
