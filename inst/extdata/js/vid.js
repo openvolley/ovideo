@@ -152,7 +152,8 @@ function dvjs_video_stop() {
 	}
 	dvjs_video_onstop();
     }
-    dvjs_video_controller = {id:null, queue: [], current: -1, type: "", paused: false};
+    /*dvjs_video_controller = {id:null, queue: [], current: -1, type: "", paused: false};*/
+    /* don't clear the playlist when stopping? */
 }
 
 function dvjs_video_pause() {
