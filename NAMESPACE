@@ -2,6 +2,7 @@
 
 export(dv_example_file)
 export(ov_create_video)
+export(ov_find_video_file)
 export(ov_playlist_as_onclick)
 export(ov_video_control)
 export(ov_video_js)
