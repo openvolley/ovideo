@@ -21,7 +21,7 @@ ov_video_control(what, ...)
 \item{...}{: parameters used by those commands}
 }
 \description{
-This functions runs the appropriate javascript via \code{\link[shinyjs]{runjs}}, so it is probably only useful inside of a Shiny app.
+The video element and the controls provided by this function are javascript-based, and so are probably most useful in Shiny apps.
 }
 \examples{
 \dontrun{

@@ -11,7 +11,8 @@ ov_video_js <- function(youtube = FALSE) {
     assert_that(is.flag(youtube), !is.na(youtube))
     js <- readLines(system.file("extdata/js/vid.js", package = "ovideo"))
     js <- paste(js, collapse = "\n")
-    out <- list(tags$script(HTML(js)), if (youtube) tags$script(src = "https://www.youtube.com/iframe_api"))
+    out <- list(tags$script(HTML(js)), if (youtube) tags$script(src = "https://www.youtube.com/iframe_api"),
+                tags$script("Shiny.addCustomMessageHandler('evaljs', function(jsexpr) { eval(jsexpr) });")) ## handler for running js code directly
     tagList(Filter(Negate(is.null), out))
 }
 
@@ -33,15 +34,6 @@ ov_video_js <- function(youtube = FALSE) {
 #'                          start_time = c(5417, 7252, 6222, 7656, 7369),
 #'                          duration = 8,
 #'                          type = "youtube")
-#'   shinyApp(
-#'       ui = fluidPage(
-#'           ov_video_js(youtube = TRUE),
-#'           ov_video_player(id = "yt_player", type = "youtube", controls = TRUE,
-#'                           style = "height: 480px; background-color: black;"),
-#'           tags$button("Go", onclick = ov_playlist_as_onclick(playlist, "yt_player"))
-#'       ),
-#'       server = function(input, output) {},
-#'   )
 #'
 #'   shinyApp(
 #'       ui = fluidPage(
@@ -50,7 +42,7 @@ ov_video_js <- function(youtube = FALSE) {
 #'                           style = "height: 480px; background-color: black;",
 #'                           controls = tags$button("Go",
 #'                                        onclick = ov_playlist_as_onclick(playlist, "yt_player")))
-#'       )),
+#'       ),
 #'       server = function(input, output) {},
 #'   )
 #' }
@@ -83,7 +75,7 @@ ov_video_player <- function(id, type, controls = FALSE, ...) {
 
 #' Functions for controlling the video player
 #'
-#' This functions runs the appropriate javascript via \code{\link[shinyjs]{runjs}}, so it is probably only useful inside of a Shiny app.
+#' The video element and the controls provided by this function are javascript-based, and so are probably most useful in Shiny apps.
 #'
 #' @param what string: the command, currently one of:
 #' \itemize{
@@ -109,21 +101,24 @@ ov_video_control <- function(what, ...) {
     myargs <- list(...)
     what <- match.arg(tolower(what), c("play", "stop", "prev", "next", "pause", "set_playback_rate", "jog"))
     if (what == "play") {
-        shinyjs::runjs("dvjs_video_play();")
+        evaljs("dvjs_video_play();")
     } else if (what == "stop") {
-        shinyjs::runjs("dvjs_video_stop();")
+        evaljs("dvjs_video_stop();")
     } else if (what == "prev") {
-        shinyjs::runjs("dvjs_video_prev();")
+        evaljs("dvjs_video_prev();")
     } else if (what == "next") {
-        shinyjs::runjs("dvjs_video_next();")
+        evaljs("dvjs_video_next();")
     } else if (what == "pause") {
-        shinyjs::runjs("dvjs_video_pause();")
+        evaljs("dvjs_video_pause();")
     } else if (what == "set_playback_rate") {
         if (length(myargs) < 1) stop("provide the playback rate as the second parameter to ov_video_control")
-        shinyjs::runjs(paste0("dvjs_set_playback_rate(", myargs[[1]], ");"))
+        evaljs(paste0("dvjs_set_playback_rate(", myargs[[1]], ");"))
     } else if (what == "jog") {
         if (length(myargs) < 1) stop("provide the number of seconds as the second parameter to ov_video_control")
-        shinyjs::runjs(paste0("dvjs_jog(", myargs[[1]], ");"))
+        evaljs(paste0("dvjs_jog(", myargs[[1]], ");"))
     }
 }
 
+evaljs <- function(expr) {
+    shiny::getDefaultReactiveDomain()$sendCustomMessage("evaljs", expr)
+}

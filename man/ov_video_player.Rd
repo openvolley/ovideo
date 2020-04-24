@@ -30,15 +30,6 @@ Video player tag element
                          start_time = c(5417, 7252, 6222, 7656, 7369),
                          duration = 8,
                          type = "youtube")
-  shinyApp(
-      ui = fluidPage(
-          ov_video_js(youtube = TRUE),
-          ov_video_player(id = "yt_player", type = "youtube", controls = TRUE,
-                          style = "height: 480px; background-color: black;"),
-          tags$button("Go", onclick = ov_playlist_as_onclick(playlist, "yt_player"))
-      ),
-      server = function(input, output) {},
-  )
 
   shinyApp(
       ui = fluidPage(
@@ -47,7 +38,7 @@ Video player tag element
                           style = "height: 480px; background-color: black;",
                           controls = tags$button("Go",
                                        onclick = ov_playlist_as_onclick(playlist, "yt_player")))
-      )),
+      ),
       server = function(input, output) {},
   )
 }
