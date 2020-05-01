@@ -13,7 +13,7 @@ ov_video_js <- function(youtube = FALSE) {
     js <- paste(js, collapse = "\n")
     out <- list(tags$script(HTML(js)), if (youtube) tags$script(src = "https://www.youtube.com/iframe_api"),
                 tags$script("Shiny.addCustomMessageHandler('evaljs', function(jsexpr) { eval(jsexpr) });")) ## handler for running js code directly
-    tagList(Filter(Negate(is.null), out))
+    tags$head(Filter(Negate(is.null), out))
 }
 
 #' Video player tag element
