@@ -2,7 +2,7 @@
 #'
 #' @param x data.frame: a datavolleyplays object. Normally this will be a selected subset of the `plays` component of a datavolley object (i.e. a selected set of actions that you want the video playlist to contain)
 #' @param meta list: either the `meta` component of a datavolley object, or a list of such objects, or a data.frame with the columns "match_id" and "video_src". Entries in `video_src` should be paths or URLs to the video file associated with the corresponding `match_id`
-#' @param type string: currently "youtube" or "local". If `type` is not specified as a parameter, and `meta` is a data.frame, then `type` can be provided as a column in `meta`. Alternatively, if `meta` is a `meta` component of a datavolley object, or a list of such objects, then `type` will be assumed to be "local"
+#' @param type string: currently "youtube" or "local". If `type` is not specified as a parameter, and `meta` is a data.frame, then `type` can be provided as a column in `meta`. Alternatively, if `meta` is a `meta` component of a datavolley object, or a list of such objects, then `type` will be assumed to be "local". Note that a single playlist can't mix types, all entries must be of the same type
 #' @param timing list: a named list giving the relative timing for each skill type. Each element in the list should be named (with the name of the skill, as it appears in `x`) and should consist of a two-element numeric vector giving the starting and ending time offset relative to the recorded `video_time` of the event. See \code{\link{ov_video_timing}} for further details
 #' @param extra_cols character: names of additional columns from `x` to include in the returned data frame
 #' @param normalize_paths logical: if \code{TRUE}, apply \code{normalizePath} to local file paths. This will e.g. expand the tilde in paths like "~/path/to/video.mp4"
@@ -49,8 +49,14 @@ ov_video_playlist <- function(x, meta, type = NULL, timing = ov_video_timing(), 
                 out
             }
         }
-        meta <- bind_rows(lapply(meta, function(z) tibble(match_id = match_id_from_meta(z), video_src = video_file_from_meta(z))))
-        if (is.null(type)) type <- "local"
+        meta <- bind_rows(lapply(meta, function(z) tibble(match_id = match_id_from_meta(z), video_src = as.character(video_file_from_meta(z)))))
+        if (is.null(type)) {
+            if (all(is_youtube_id(meta$video_src) | grepl("https?://.*youtube", meta$video_src, ignore.case = TRUE))) {
+                type <- "youtube"
+            } else {
+                type <- "local"
+            }
+        }
     } else {
         stop("meta is an unexpected format")
     }
@@ -70,6 +76,23 @@ ov_video_playlist <- function(x, meta, type = NULL, timing = ov_video_timing(), 
     x <- x[!is.na(x$skill), ]
     ## TODO check for NA video_time
     x$video_src <- as.character(x$video_src)
+    if (type == "youtube") {
+        ## ensure that we have youtube IDs, not e.g. full URLs
+        x$video_src <- vapply(x$video_src, function(z) {
+            if (!is_youtube_id(z) && grepl("^https?://", z, ignore.case = TRUE)) {
+                tryCatch({
+                    temp <- httr::parse_url(z)
+                    if (!is.null(temp$query$v) && length(temp$query$v) == 1) {
+                        temp$query$v
+                    } else {
+                        z
+                    }
+                }, error = function(e) z)
+            } else {
+                z
+            }
+        }, FUN.VALUE = "", USE.NAMES = FALSE)
+    }
     x$type <- type
     if (normalize_paths) {
         local_srcs <- which(x$type == "local")

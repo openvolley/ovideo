@@ -18,7 +18,7 @@ ov_video_playlist(
 
 \item{meta}{list: either the \code{meta} component of a datavolley object, or a list of such objects, or a data.frame with the columns "match_id" and "video_src". Entries in \code{video_src} should be paths or URLs to the video file associated with the corresponding \code{match_id}}
 
-\item{type}{string: currently "youtube" or "local". If \code{type} is not specified as a parameter, and \code{meta} is a data.frame, then \code{type} can be provided as a column in \code{meta}. Alternatively, if \code{meta} is a \code{meta} component of a datavolley object, or a list of such objects, then \code{type} will be assumed to be "local"}
+\item{type}{string: currently "youtube" or "local". If \code{type} is not specified as a parameter, and \code{meta} is a data.frame, then \code{type} can be provided as a column in \code{meta}. Alternatively, if \code{meta} is a \code{meta} component of a datavolley object, or a list of such objects, then \code{type} will be assumed to be "local". Note that a single playlist can't mix types, all entries must be of the same type}
 
 \item{timing}{list: a named list giving the relative timing for each skill type. Each element in the list should be named (with the name of the skill, as it appears in \code{x}) and should consist of a two-element numeric vector giving the starting and ending time offset relative to the recorded \code{video_time} of the event. See \code{\link{ov_video_timing}} for further details}
 

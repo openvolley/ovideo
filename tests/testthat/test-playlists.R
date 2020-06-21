@@ -28,3 +28,18 @@ test_that("ov_video_playlist works as expected", {
     expect_equal(nrow(px), sum(!is.na(x$plays$skill[1:10])))
     expect_named(px, c("video_src", "start_time", "duration", "type", "player_name"))
 })
+
+test_that("ov_video_playlist copes with full youtube URLs", {
+    x <- datavolley::read_dv(datavolley::dv_example_file())
+    x$meta$video <- data.frame(camera = NA_character_, file = "https://www.youtube.com/watch?v=ZzbgMiklzzZ")
+    ## should guess type correctly, should cope with factors in x$meta$video
+    px <- ov_video_playlist(x$plays[10, ], x$meta)
+    expect_equal(px$type, "youtube")
+    expect_equal(px$video_src, "ZzbgMiklzzZ")
+    x$meta$video <- data.frame(camera = NA_character_, file = "http://www.youtube.com/watch?v=ZzbgMiklzzZ", stringsAsFactors = FALSE)
+    px <- ov_video_playlist(x$plays[10, ], x$meta, type = "youtube")
+    expect_equal(px$video_src, "ZzbgMiklzzZ")
+    x$meta$video <- data.frame(camera = NA_character_, file = "https://random.domain/something?x=blah&v=ZzbgMiklzzZ&foo=bar", stringsAsFactors = FALSE)
+    px <- ov_video_playlist(x$plays[10, ], x$meta, type = "youtube")
+    expect_equal(px$video_src, "ZzbgMiklzzZ")
+})
