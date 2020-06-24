@@ -51,6 +51,7 @@ ov_video_frame <- function(video_file, t, format = "jpg", debug = FALSE) {
     assert_that(is.string(video_file), fs::file_exists(video_file))
     assert_that(is.numeric(t), t >= 0)
     format <- match.arg(tolower(format), c("jpg", "png"))
+    if (!ov_ffmpeg_exists()) stop("could not find the ffmpeg executable")
     imfs <- tempfile(fileext = paste0(".", format))
     execfun <- if (isTRUE(debug)) sys::exec_wait else sys::exec_internal
     res <- execfun("ffmpeg", c("-y", "-ss", t, "-i", fs::path_real(video_file), "-vframes", 1, imfs))
@@ -73,6 +74,7 @@ ov_video_frame <- function(video_file, t, format = "jpg", debug = FALSE) {
 #'
 #' @export
 ov_video_extract_clip <- function(video_file, outfile, start_time, duration, end_time, extra = NULL, debug = FALSE) {
+    if (!ov_ffmpeg_exists()) stop("could not find the ffmpeg executable")
     if (missing(duration) && !missing(end_time)) duration <- end_time - start_time
     if (missing(outfile)) outfile <- tempfile(fileext = ".mp4")
     cargs <- c("-ss", as.character(start_time), "-i", fs::path_real(video_file), "-t", as.character(duration), "-c", "copy", extra, fs::path_real(outfile))
@@ -103,6 +105,7 @@ ov_video_extract_clip <- function(video_file, outfile, start_time, duration, end
 #' @export
 ov_video_frames <- function(video_file, start_time, duration, end_time, outdir, fps, format = "jpg", jpg_quality = 1, extra = NULL, debug = FALSE) {
     create_clip <- TRUE ## internal method choice
+    if (!ov_ffmpeg_exists()) stop("could not find the ffmpeg executable")
     if (missing(outdir) || is.null(outdir)) {
         outdir <- tempfile()
         dir.create(outdir)
@@ -153,6 +156,7 @@ ov_video_frames <- function(video_file, start_time, duration, end_time, outdir, 
 #'
 #' @export
 ov_images_to_video <- function(input_dir, image_file_mask = "image_%06d.jpg", image_files, outfile, fps = 30, extra = NULL, debug = FALSE) {
+    if (!ov_ffmpeg_exists()) stop("could not find the ffmpeg executable")
     if (missing(outfile)) outfile <- tempfile(fileext = ".mp4")
     if (grepl("mp4$", outfile)) extra <- c(extra, "-pix_fmt", "yuv420p") ## https://trac.ffmpeg.org/wiki/Slideshow: "when outputting H.264, adding -vf format=yuv420p or -pix_fmt yuv420p will ensure compatibility"
     if (missing(input_dir)) {
@@ -208,9 +212,8 @@ ov_images_to_video <- function(input_dir, image_file_mask = "image_%06d.jpg", im
 #'
 #' @export
 ov_playlist_to_video <- function(playlist, filename, subtitle_column = NULL) {
-    if (missing(filename) || is.null(filename)) filename <- tempfile(fileext = ".mp4")
-    ## find ffmpeg
     if (!ov_ffmpeg_exists()) stop("could not find the ffmpeg executable")
+    if (missing(filename) || is.null(filename)) filename <- tempfile(fileext = ".mp4")
     tempfiles <- future.apply::future_lapply(seq_len(nrow(playlist)), function(ri) {
         outfile <- tempfile(fileext = paste0(".", fs::path_ext(playlist$video_src[ri])))
         if (file.exists(outfile)) unlink(outfile)
