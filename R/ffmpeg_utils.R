@@ -75,7 +75,7 @@ ov_video_frame <- function(video_file, t, format = "jpg", debug = FALSE) {
 ov_video_extract_clip <- function(video_file, outfile, start_time, duration, end_time, extra = NULL, debug = FALSE) {
     if (missing(duration) && !missing(end_time)) duration <- end_time - start_time
     if (missing(outfile)) outfile <- tempfile(fileext = ".mp4")
-    cargs <- c("-ss", as.character(start_time), "-i", fs::path_real(video_file), "-t", as.character(duration), "-c", "copy", extra, outfile)
+    cargs <- c("-ss", as.character(start_time), "-i", fs::path_real(video_file), "-t", as.character(duration), "-c", "copy", extra, fs::path_real(outfile))
     execfun <- if (isTRUE(debug)) sys::exec_wait else sys::exec_internal
     res <- execfun("ffmpeg", cargs)
     outfile
