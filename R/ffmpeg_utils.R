@@ -210,8 +210,7 @@ ov_images_to_video <- function(input_dir, image_file_mask = "image_%06d.jpg", im
 ov_playlist_to_video <- function(playlist, filename, subtitle_column = NULL) {
     if (missing(filename) || is.null(filename)) filename <- tempfile(fileext = ".mp4")
     ## find ffmpeg
-    chk <- sys::exec_internal("ffmpeg", "-version")
-    if (chk$status != 0) stop("could not find the ffmpeg executable")
+    if (!ov_ffmpeg_exists()) stop("could not find the ffmpeg executable")
     tempfiles <- future.apply::future_lapply(seq_len(nrow(playlist)), function(ri) {
         outfile <- tempfile(fileext = paste0(".", fs::path_ext(playlist$video_src[ri])))
         if (file.exists(outfile)) unlink(outfile)
@@ -240,6 +239,10 @@ ov_playlist_to_video <- function(playlist, filename, subtitle_column = NULL) {
         writeLines(srts, srtfile)
     }
     list(video = filename, subtitles = srtfile)
+}
+
+ov_ffmpeg_exists <- function() {
+    sys::exec_internal("ffmpeg", "-version")$status == 0
 }
 
 
