@@ -2,10 +2,11 @@
 
 export(dv_example_file)
 export(ov_create_video)
-export(ov_encode_video)
 export(ov_find_video_file)
 export(ov_get_court_ref)
+export(ov_images_to_video)
 export(ov_playlist_as_onclick)
+export(ov_playlist_to_video)
 export(ov_transform_points)
 export(ov_video_control)
 export(ov_video_extract_clip)

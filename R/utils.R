@@ -152,7 +152,7 @@ ov_video_frames <- function(video_file, start_time, duration, end_time, outdir, 
 #' @seealso \code{\link[av]{av_encode_video}} if you don't have ffmpeg installed
 #'
 #' @export
-ov_encode_video <- function(input_dir, image_file_mask = "image_%06d.jpg", image_files, outfile, fps = 30, extra = NULL, debug = FALSE) {
+ov_images_to_video <- function(input_dir, image_file_mask = "image_%06d.jpg", image_files, outfile, fps = 30, extra = NULL, debug = FALSE) {
     if (missing(outfile)) outfile <- tempfile(fileext = ".mp4")
     if (grepl("mp4$", outfile)) extra <- c(extra, "-pix_fmt", "yuv420p") ## https://trac.ffmpeg.org/wiki/Slideshow: "when outputting H.264, adding -vf format=yuv420p or -pix_fmt yuv420p will ensure compatibility"
     if (missing(input_dir)) {
@@ -169,10 +169,11 @@ ov_encode_video <- function(input_dir, image_file_mask = "image_%06d.jpg", image
     outfile
 }
 
-#' Make a self-contained video file from a playlist
+#' Playlist to video file
 #'
+#' Make a self-contained video file from a playlist.
+#' 
 #' Requires that ffmpeg be available on the system path. Note that the processing of each clip is done inside of a `future_lapply` call, and so you can have this part of the processing done in parallel by setting an appropriate futures plan before calling this function.
-#'
 #' This function is experimental. In particular it is unlikely to work well with all video formats, and especially if the playlist comprises clips from different videos with different resolution/encoding/etc.
 #'
 #' @param playlist data.frame: a playlist as returned by `ov_video_playlist`. Note that only local video sources are supported
@@ -206,7 +207,7 @@ ov_encode_video <- function(input_dir, image_file_mask = "image_%06d.jpg", image
 #' }
 #'
 #' @export
-ov_create_video <- function(playlist, filename, subtitle_column = NULL) {
+ov_playlist_to_video <- function(playlist, filename, subtitle_column = NULL) {
     if (missing(filename) || is.null(filename)) filename <- tempfile(fileext = ".mp4")
     ## find ffmpeg
     chk <- sys::exec_internal("ffmpeg", "-version")
@@ -239,4 +240,29 @@ ov_create_video <- function(playlist, filename, subtitle_column = NULL) {
         writeLines(srts, srtfile)
     }
     list(video = filename, subtitles = srtfile)
+}
+
+
+#' @title Playlist to video file
+#' @description Make a self-contained video file from a playlist
+#' @param playlist data.frame: a playlist as returned by `ov_video_playlist`. Note that only local video sources are supported
+#' @param filename string: file to write to. If not specified (or `NULL`), a file in the temporary directory will be created. If `filename` exists, it will be overwritten. The extension of `filename` will determine the output format
+#' @param subtitle_column string: if not `NULL`, a subtitle file will be produced using the contents of this column (in the playlist) as the subtitle for each clip. The subtitle file will have the same name as `filename` but with extension ".srt"
+#' @return A list with the filenames of the created video and subtitle files.
+#' @name ov_create_video-deprecated
+#' @usage ov_create_video(playlist, filename, subtitle_column = NULL)
+#' @keywords internal
+#' @seealso \code{\link{ovideo-deprecated}}
+NULL
+
+
+
+#' @rdname ovideo-deprecated
+#' @section \code{ov_create_video}:
+#' For \code{ov_create_video}, use \code{\link{ov_playlist_to_video}}.
+#'
+#' @export
+ov_create_video <- function(playlist, filename, subtitle_column = NULL) {
+    .Deprecated("ov_playlist_to_video", package="ovideo")
+    ov_playlist_to_video(playlist, filename = filename, subtitle_column = subtitle_column)
 }
