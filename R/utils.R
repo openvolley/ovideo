@@ -169,135 +169,74 @@ ov_encode_video <- function(input_dir, image_file_mask = "image_%06d.jpg", image
     outfile
 }
 
-
-#' Define the reference points on a court image
+#' Make a self-contained video file from a playlist
 #'
-#' This function is used to define the reference points on a court image, to be used with \code{\link{ov_transform_points}}.
-#' The court coordinate system is that used in \code{\link[datavolley]{dv_court}}, \code{\link[datavolley]{ggcourt}}, and related functions.
-#' Try \code{plot(c(0, 4), c(0, 7), type = "n", asp = 1); datavolley::dv_court()} or \code{ggplot2::ggplot() + datavolley::ggcourt() + ggplot2::theme_bw()} for a visual depiction.
+#' Requires that ffmpeg be available on the system path. Note that the processing of each clip is done inside of a `future_lapply` call, and so you can have this part of the processing done in parallel by setting an appropriate futures plan before calling this function.
 #'
-#' @param image_file string: path to an image file (jpg) containing the court image (not required if \code{video_file} is supplied)
-#' @param video_file string: path to a video file from which to extract the court image (not required if \code{image_file} is supplied)
-#' @param t numeric: the time of the video frame to use as the court image (not required if \code{image_file} is supplied)
-#' @param type string: currently only "corners"
+#' This function is experimental. In particular it is unlikely to work well with all video formats, and especially if the playlist comprises clips from different videos with different resolution/encoding/etc.
 #'
-#' @return A data.frame containing the reference information
+#' @param playlist data.frame: a playlist as returned by `ov_video_playlist`. Note that only local video sources are supported
+#' @param filename string: file to write to. If not specified (or `NULL`), a file in the temporary directory will be created. If `filename` exists, it will be overwritten. The extension of `filename` will determine the output format
+#' @param subtitle_column string: if not `NULL`, a subtitle file will be produced using the contents of this column (in the playlist) as the subtitle for each clip. The subtitle file will have the same name as `filename` but with extension ".srt"
 #'
-#' @seealso \code{\link{ov_transform_points}}, \code{\link[datavolley]{dv_court}},  \code{\link[datavolley]{ggcourt}}
+#' @return A list with the filenames of the created video and subtitle files.
 #'
+#' @seealso \code{\link{ov_video_playlist}}
 #' @examples
-#' if (interactive()) {
-#'   crt <- ov_get_court_ref(image_file = system.file("extdata/2019_03_01-KATS-BEDS-court.jpg",
-#'                           package = "ovideo"))
+#' \dontrun{
+#'   my_playlist <- ov_video_playlist(..., type = "local")
+#'   video_file <- ov_create_video(my_playlist)
+#'   browseURL(video_file[[1]])
 #'
+#'   ## run in parallel, with the scouted codes as subtitles
+#'   library(dplyr)
+#'   library(future.apply)
+#'   plan(multisession)
+#'   ## note that the example file doesn't have a video associated with it, so
+#'   ##  this example won't actually work in practice
+#'   x <- read_dv(dv_example_file())
+#'   ## fudge the video entry
+#'   x$meta$video <- tibble(camera = "Camera0", file = "~/my_video.mp4")
+#'   ## make the playlist
+#'   my_playlist <- ov_video_playlist(
+#'     x$plays %>% dplyr::filter(skill == "Reception") %>% slice(1:10),
+#'     meta = x$meta, extra_cols = "code")
+#'   ## create the video and subtitles files
+#'   video_file <- ov_create_video(my_playlist, subtitle_column = "code")
 #' }
-#' @export
-ov_get_court_ref <- function(image_file, video_file, t = 60, type = "corners") {
-  assert_that(is.string(type))
-  type <- match.arg(tolower(type), c("corners")) ##, "10p"))
-  if (missing(image_file) || is.null(image_file)) {
-    image_file <- ov_video_frame(video_file, t)
-  }
-  img <- jpeg::readJPEG(image_file)
-  plot(c(0, 1), c(0, 1), type = "n", axes = FALSE, xlab = "", ylab = "", asp = dim(img)[1]/dim(img)[2])
-  rasterImage(img, 0, 0, 1, 1)
-  cat("Click the near left baseline corner\n")
-  this <- locator(1)
-  imx <- this$x
-  imy <- this$y
-  points(this$x, this$y, col = 3)
-  cat("Click the near right baseline corner\n")
-  this <- locator(1)
-  points(this$x, this$y, col = 3)
-  imx <- c(imx, this$x)
-  imy <- c(imy, this$y)
-  refx <- c(0.5, 3.5); refy <- c(0.5, 0.5)
-  if (type == "10p") {
-    ## near 3m line right side, centre line right side, centre line left side, near 3m line left side, far 3m line right side
-  }
-  cat("Click the far right baseline corner\n")
-  this <- locator(1)
-  points(this$x, this$y, col = 3)
-  imx <- c(imx, this$x)
-  imy <- c(imy, this$y)
-  cat("Click the far left baseline corner\n")
-  this <- locator(1)
-  points(this$x, this$y, col = 3)
-  imx <- c(imx, this$x)
-  imy <- c(imy, this$y)
-  refx <- c(refx, 3.5, 0.5); refy <- c(refy, 6.5, 6.5)
-  if (type == "10p") {
-    ## far 3m line left side
-  }
-  data.frame(image_x = imx, image_y = imy, court_x = refx, court_y = refy)
-}
-
-#' Transform points from image coordinates to court coordinates or vice-versa
-#'
-#' The court coordinate system is that used in \code{\link[datavolley]{dv_court}}, \code{\link[datavolley]{ggcourt}}, and related functions.
-#' Try \code{plot(c(0, 4), c(0, 7), type = "n", asp = 1); datavolley::dv_court()} or \code{ggplot2::ggplot() + datavolley::ggcourt() + ggplot2::theme_bw()} for a visual depiction.
-#'
-#' @param x numeric: input x points. \code{x} can also be a two-column data.frame or matrix
-#' @param y numeric: input y points
-#' @param ref data.frame: reference, as returned by \code{\link{ov_get_court_ref}}
-#' @param direction string: either "to_court" (to transform image coordinates to court coordinates) or "to_image" (the reverse) 
-#'
-#' @return A two-column data.frame with transformed values
-#'
-#' @seealso \code{\link{ov_get_court_ref}}, \code{\link[datavolley]{dv_court}},  \code{\link[datavolley]{ggcourt}}
-#'
-#' @examples
-#' ## the ref data for the example iomage
-#' crt <- data.frame(image_x = c(0.05397063, 0.95402573, 0.75039756, 0.28921230),
-#'                   image_y = c(0.02129301, 0.02294600, 0.52049712, 0.51884413),
-#'                   court_x = c(0.5, 3.5, 3.5, 0.5),
-#'                   court_y = c(0.5, 0.5, 6.5, 6.5))
-#'
-#' ## show the image
-#' img <- jpeg::readJPEG(system.file("extdata/2019_03_01-KATS-BEDS-court.jpg",
-#'                           package = "ovideo"))
-#' plot(c(0, 1), c(0, 1), type = "n", axes = FALSE, xlab = "", ylab = "",
-#'      asp = dim(img)[1]/dim(img)[2])
-#' rasterImage(img, 0, 0, 1, 1)
-#'
-#' ## convert the ends of the 3m lines on court to image coordinates
-#' check <- data.frame(x = c(0.5, 3.5, 0.5, 3.5),
-#'                     y = c(2.5, 2.5, 4.5, 4.5))
-#' ix <- ov_transform_points(check, ref = crt, direction = "to_image")
-#'
-#' ## and finally plot onto the image
-#' points(ix$x, ix$y, pch = 21, bg = 4)
 #'
 #' @export
-ov_transform_points <- function(x, y, ref, direction = "to_court") {
-    direction <- match.arg(tolower(direction), c("to_court", "to_image"))
-    if (direction == "to_image") {
-      ## flip the ref definitions
-      ref <- dplyr::rename(ref, image_x = "court_x", image_y = "court_y", court_x = "image_x", court_y = "image_y")
+ov_create_video <- function(playlist, filename, subtitle_column = NULL) {
+    if (missing(filename) || is.null(filename)) filename <- tempfile(fileext = ".mp4")
+    ## find ffmpeg
+    chk <- sys::exec_internal("ffmpeg", "-version")
+    if (chk$status != 0) stop("could not find the ffmpeg executable")
+    tempfiles <- future.apply::future_lapply(seq_len(nrow(playlist)), function(ri) {
+        outfile <- tempfile(fileext = paste0(".", fs::path_ext(playlist$video_src[ri])))
+        if (file.exists(outfile)) unlink(outfile)
+        infile <- fs::path_real(playlist$video_src[ri])
+        ##sys::exec_wait("ffmpeg", c("-i", infile, "-ss", playlist$start_time[ri], "-t", playlist$duration[ri], "-q", 0, "-c:a", "copy", outfile)) ## works, but slow because it uses very slow seek method to find the start of the clip
+        ##sys::exec_wait("ffmpeg", c("-ss", playlist$start_time[ri], "-i", infile, "-t", playlist$duration[ri], "-q", 0, "-c:a", "copy", outfile)) ## faster but glitchy because keyframes are typically sparse
+        ##sys::exec_wait("ffmpeg", c("-i", infile, "-ss", playlist$start_time[ri], "-t", playlist$duration[ri], "-c", "copy", outfile)) ## fast but glitchy because keyframes are typically sparse
+        ## reencode
+        res <- sys::exec_internal("ffmpeg", c("-ss", playlist$start_time[ri], "-i", infile, "-strict", "-2", "-t", playlist$duration[ri], outfile))
+        if (res$status != 0) stop("failed to get video clip, ", rawToChar(res$stderr))
+        outfile
+    })
+    tempfiles <- unlist(tempfiles)
+    ## concatentate them
+    cfile <- tempfile(fileext = ".txt")
+    on.exit(unlink(c(cfile, tempfiles)))
+    cat(paste0("file ", tempfiles), file = cfile, sep = "\n")
+    if (file.exists(filename)) unlink(filename)
+    res <- sys::exec_internal("ffmpeg", c("-safe", 0, "-f", "concat", "-i", cfile, "-c", "copy", filename))
+    if (res$status != 0) stop("failed to combine clips, ", rawToChar(res$stderr))
+    srtfile <- NULL
+    if (!is.null(subtitle_column)) {
+        srts <- ov_playlist_subtitles(playlist, subtitle_column = subtitle_column)
+        srtfile <- sub(paste0(fs::path_ext(filename), "$"), "srt", filename)
+        if (file.exists(srtfile)) unlink(srtfile)
+        writeLines(srts, srtfile)
     }
-    if (is.matrix(x)) {
-        y <- x[, 2]
-        x <- x[, 1]
-    } else if (is.data.frame(x)) {
-        y <- x[[2]]
-        x <- x[[1]]
-    } else {
-        x <- as.vector(x)
-        y <- as.vector(y)
-    }
-    if (!nrow(ref) %in% c(4, 10)) {
-      stop("expecting ref to be a data.frame with 4 or 10 rows, as produced by ov_get_court_ref")
-    }
-    z <- as.vector(rep(1, length(x)))
-    ## Using homography principles
-    homography_transform = function(x, X) {
-        matrix(c(-x[1],-x[2], -1, 0, 0, 0, x[1]*X[1], x[2]*X[1], X[1],0,0, 0, -x[1],-x[2], -1, x[1]*X[2], x[2]*X[2], X[2]), nrow = 2, byrow = TRUE)
-    }
-    idx <- if (nrow(ref) == 4) 1:4 else c(1, 2, 8, 9)
-    PH <- do.call(rbind, lapply(idx, function(i) homography_transform(unlist(ref[i, c("image_x", "image_y")]), unlist(ref[i, c("court_x","court_y")]))))
-    PH <- rbind(PH, c(rep(0, 8), 1))
-    Hres <- solve(a = PH, b = matrix(c(rep(0, 8), 1), ncol = 1))
-    H <- matrix(Hres, ncol = 3, byrow = TRUE)
-    tmp <- apply(cbind(x, y, z), 1, function(xx) H %*% matrix(xx, ncol = 1))
-    data.frame(x = tmp[1, ] / tmp[3, ], y = tmp[2, ] / tmp[3, ])
+    list(video = filename, subtitles = srtfile)
 }
