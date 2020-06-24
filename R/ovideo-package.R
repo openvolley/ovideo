@@ -10,4 +10,5 @@
 #' @importFrom graphics locator plot points rasterImage
 #' @importFrom htmltools HTML tagList tags
 #' @importFrom stats na.omit setNames
+#' @importFrom utils tail
 NULL

@@ -2,18 +2,25 @@
 % Please edit documentation in R/utils.R
 \name{ov_video_frame}
 \alias{ov_video_frame}
-\title{Extract frame from video file}
+\title{Extract a single frame from a video file}
 \usage{
-ov_video_frame(video_file, t)
+ov_video_frame(video_file, t, format = "jpg", debug = FALSE)
 }
 \arguments{
 \item{video_file}{string: path to the video file}
 
 \item{t}{numeric: the time of the frame to extract (in seconds)}
+
+\item{format}{string: "jpg" or "png"}
+
+\item{debug}{logical: if \code{TRUE}, echo the ffmpeg output to the console}
 }
 \value{
-The path to the jpg file
+The path to the frame image file
 }
 \description{
 Requires that ffmpeg is available on your system path.
+}
+\seealso{
+\code{\link{ov_video_frames}}
 }
