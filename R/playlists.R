@@ -3,11 +3,33 @@
 #' @param x data.frame: a datavolleyplays object. Normally this will be a selected subset of the `plays` component of a datavolley object (i.e. a selected set of actions that you want the video playlist to contain)
 #' @param meta list: either the `meta` component of a datavolley object, or a list of such objects, or a data.frame with the columns "match_id" and "video_src". Entries in `video_src` should be paths or URLs to the video file associated with the corresponding `match_id`
 #' @param type string: currently "youtube" or "local". If `type` is not specified as a parameter, and `meta` is a data.frame, then `type` can be provided as a column in `meta`. Alternatively, if `meta` is a `meta` component of a datavolley object, or a list of such objects, then `type` will be assumed to be "local". Note that a single playlist can't mix types, all entries must be of the same type
-#' @param timing list: a named list giving the relative timing for each skill type. Each element in the list should be named (with the name of the skill, as it appears in `x`) and should consist of a two-element numeric vector giving the starting and ending time offset relative to the recorded `video_time` of the event. See \code{\link{ov_video_timing}} for further details
+#' @param timing list: the relative timing for each skill type, either a named list as returned by \code{\link{ov_video_timing}} or a data.frame as returned by \code{\link{ov_video_timing_df}}. See \code{\link{ov_video_timing}} for further details
 #' @param extra_cols character: names of additional columns from `x` to include in the returned data frame
 #' @param normalize_paths logical: if \code{TRUE}, apply \code{normalizePath} to local file paths. This will e.g. expand the tilde in paths like "~/path/to/video.mp4"
 #'
 #' @return A data.frame with columns `src`, `start_time`, `duration`, plus any extras specified in `extra_cols`
+#'
+#' @examples
+#' ## read data file
+#' x <- datavolley::dv_read(datavolley::dv_example_file())
+#' ## note that this data file has no video specified, so put a dummy value in
+#' x$meta$video <- data.frame(camera = "", file = "c:\\my_video.mp4", stringsAsFactors = FALSE)
+#'
+#' ## extract play-by-play data
+#' px <- datavolley::plays(x)
+#' ## and put dummy video_time values in, because those are missing too
+#' px$video_time <- sample.int(2e3, size = nrow(px))
+#'
+#' ## find pipe (XP) attacks in transition
+#' px <- px[which(px$attack_code == "XP" & px$phase == "Transition"), ]
+#'
+#' ## create playlist
+#' ply <- ov_video_playlist(px, x$meta, timing = ov_video_timing())
+#'
+#' ## with custom timing
+#' ply <- ov_video_playlist(px, x$meta,
+#'   timing = ov_video_timing_df(data.frame(skill = "Attack", phase = "Transition",
+#'                               start_offset = -5, duration = 10, stringsAsFactors = FALSE)))
 #'
 #' @export
 ov_video_playlist <- function(x, meta, type = NULL, timing = ov_video_timing(), extra_cols = NULL, normalize_paths = TRUE) {
@@ -67,14 +89,28 @@ ov_video_playlist <- function(x, meta, type = NULL, timing = ov_video_timing(), 
         missing_vid_matches <- meta$match_id[is.na(meta$video_src)]
         stop("no video for matches with match_id: ", paste(missing_vid_matches, collapse = ", "))
     }
+    ## check for NA video_time
+    if (any(is.na(x$video_time))) stop("x has at least one missing video_time value")
     if (!is.null(extra_cols)) assert_that(is.character(extra_cols))
     x <- left_join(x, meta, by = "match_id")
-    ## convert timing to a data.frame
-    timing <- bind_rows(lapply(names(timing), function(z) tibble(skill = z, start_offset = timing[[z]][1], duration = abs(diff(timing[[z]])))))
-    x <- left_join(x, timing, by = "skill")
+    if (!is.data.frame(timing) && is.list(timing)) {
+        ## convert timing to a data.frame
+        timing <- bind_rows(lapply(names(timing), function(z) tibble(skill = z, start_offset = timing[[z]][1], duration = abs(diff(timing[[z]])))))
+        jby <- "skill"
+    } else if (is.data.frame(timing)) {
+        ## expect at least the columns "skill", "start_offset", "duration"
+        if (!all(c("skill", "start_offset", "duration") %in% names(timing))) {
+            stop("the timing data.frame needs columns \"skill\", \"start_offset\", and \"duration\"")
+        }
+        ## any others (e.g. "phase") will be used in the join operation
+        jby <- setdiff(names(timing), c("start_offset", "duration"))
+    } else {
+        stop("unexpected 'timing' format, should be either named list or data.frame")
+    }
+    x <- left_join(x, timing, by = jby)
+    if (any(is.na(x$start_offset) | is.na(x$duration))) warning("some NA start_time/duration values in playlist")
     x$start_time <- x$video_time + x$start_offset
     x <- x[!is.na(x$skill), ]
-    ## TODO check for NA video_time
     x$video_src <- as.character(x$video_src)
     if (type == "youtube") {
         ## ensure that we have youtube IDs, not e.g. full URLs
@@ -166,10 +202,6 @@ ov_video_playlist_pid <- function(x, meta, type = NULL, extra_cols = NULL, norma
     if (!is.null(extra_cols)) assert_that(is.character(extra_cols))
     x <- left_join(x, meta, by = "match_id")
     
-    ## convert timing to a data.frame
-    # timing <- plyr::ddply(x, .(point_id), plyr::summarize, start_time = min(.$video_time, na.rm = TRUE), 
-    #                       duration = max(.$video_time, na.rm=TRUE) - min(.$video_time, na.rm = TRUE))
-    
     timing_tmp <- dplyr::full_join(
         stats::aggregate(x = x$video_time, by = list(x$point_id), FUN = min,na.rm=TRUE),
         stats::aggregate(x = x$video_time, by = list(x$point_id), FUN = range,na.rm=TRUE), by = "Group.1")
@@ -197,9 +229,12 @@ ov_video_playlist_pid <- function(x, meta, type = NULL, extra_cols = NULL, norma
 #'
 #' By default, all skills have a timing of `c(-5, 3)`, meaning that the video clip will start 5 seconds before the recorded time of the event and end 3 seconds after its recorded time.
 #'
-#' @param ... : named parameters that will override the defaults. Each parameter should be a two-element numeric vector
+#' \code{ov_video_timing_df} accepts and returns a data.frame rather than a named list. The data.frame format also allows timings to be differentiated by play phase ("Reception" vs "Transition").
 #'
-#' @return A named list, with names corresponding to skills ("Serve", "Reception", etc).
+#' @param ... : named parameters that will override the defaults. Each parameter should be a two-element numeric vector
+#' @param x data.frame: a data.frame of timings that will override the defaults, with columns \code{skill}, \code{phase}, \code{start_offset} (start offset in seconds, default = -5), and \code{duration} (duration in seconds, default = 8)
+#'
+#' @return For \code{ov_video_timing} a named list, with names corresponding to skills ("Serve", "Reception", etc). For \code{ov_video_timing_df}, a data.frame with columns \code{skill}, \code{phase}, \code{start_offset}, and \code{duration}
 #'
 #' @seealso \code{\link{ov_video_playlist}}
 #'
@@ -210,6 +245,10 @@ ov_video_playlist_pid <- function(x, meta, type = NULL, extra_cols = NULL, norma
 #'
 #' ## with different settings for serve and reception
 #' ov_video_timing(serve = c(-2, 2), reception = c(-3, 1))
+#'
+#' ## as data.frame
+#' ov_video_timing_df(data.frame(skill = "Set", phase = "Transition",
+#'                               start_offset = -5, duration = 10))
 #'
 #' @export
 ov_video_timing <- function(...) {
@@ -228,6 +267,32 @@ ov_video_timing <- function(...) {
         for (usr in names(user)) out[[usr]] <- user[[usr]]
     }
     out
+}
+
+#' @export
+#' @rdname ov_video_timing
+ov_video_timing_df <- function(x) {
+    ## defaults
+    def <- tibble(skill = c("Serve", "Reception", "Set", "Set", "Attack", "Attack", "Block", "Block", "Dig", "Freeball", "Freeball"),
+                  phase = c("Serve", "Reception", "Reception", "Transition", "Reception", "Transition", "Reception", "Transition", "Transition", "Reception", "Transition"),
+                  start_offset = rep(-5, 11),
+                  duration = rep(8, 11))
+    ## override with any user-specified parms
+    if (!missing(x) && !is.null(x)) {
+        if (!is.data.frame(x) || !all(c("skill", "phase", "start_offset", "duration") %in% names(x))) {
+            stop("x should be a data.frame with columns \"skill\", \"phase\", \"start_offset\", and \"duration\"")
+        }
+        if (is.factor(x$skill)) x$skill <- as.character(x$skill)
+        x$skill <- str_first_upper(x$skill)
+        if (!all(x$skill %in% def$skill)) stop("x contains unexpected skill values")
+        if (is.factor(x$phase)) x$phase <- as.character(x$phase)
+        x$phase <- str_first_upper(x$phase)
+        if (!all(x$phase %in% def$phase)) stop("x contains unexpected phase values")
+        def <- dplyr::anti_join(def, x, by = c("skill", "phase"))
+        dplyr::bind_rows(x, def)
+    } else {
+        def
+    }
 }
 
 

@@ -14,12 +14,13 @@ test_that("ov_video_playlist works as expected", {
     x <- datavolley::read_dv(datavolley::dv_example_file())
     expect_error(ov_video_playlist(x$plays[10, ], x$meta), "no video for")
     x$meta$video <- data.frame(camera = NA_character_, file = "myvideo.mp4")
+    expect_error(px <- ov_video_playlist(x$plays[10, ], x$meta), "x has at least one missing video_time value")
+    x$plays$video_time <- seq_len(nrow(x$plays)) ## dummy values
     px <- ov_video_playlist(x$plays[10, ], x$meta)
     expect_equal(nrow(px), 1L)
     expect_named(px, c("video_src", "start_time", "duration", "type"))
-    expect_true(is.na(px$start_time[1])) ## because this file has no non-NA video_time entries
-    x$plays$video_time <- seq_len(nrow(x$plays))
-    px <- ov_video_playlist(x$plays[10, ], x$meta)
+    px2 <- ov_video_playlist(x$plays[10, ], x$meta, timing = ov_video_timing_df(data.frame(skill = "Serve", phase = "Serve", start_offset = -5, duration = 8)))
+    expect_equivalent(px, px2)
     expect_equivalent(px, data.frame(video_src = "myvideo.mp4", start_time = 10-5, duration = 8, type = "local", stringsAsFactors = FALSE))
     px <- ov_video_playlist(x$plays[10, ], x$meta, timing = list(Set = c(0, 0)))
     expect_equal(px$start_time, 10)
@@ -32,6 +33,7 @@ test_that("ov_video_playlist works as expected", {
 test_that("ov_video_playlist copes with full youtube URLs", {
     x <- datavolley::read_dv(datavolley::dv_example_file())
     x$meta$video <- data.frame(camera = NA_character_, file = "https://www.youtube.com/watch?v=ZzbgMiklzzZ")
+    x$plays$video_time <- 1L ## dummy values
     ## should guess type correctly, should cope with factors in x$meta$video
     px <- ov_video_playlist(x$plays[10, ], x$meta)
     expect_equal(px$type, "youtube")

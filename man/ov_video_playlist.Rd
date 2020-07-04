@@ -20,7 +20,7 @@ ov_video_playlist(
 
 \item{type}{string: currently "youtube" or "local". If \code{type} is not specified as a parameter, and \code{meta} is a data.frame, then \code{type} can be provided as a column in \code{meta}. Alternatively, if \code{meta} is a \code{meta} component of a datavolley object, or a list of such objects, then \code{type} will be assumed to be "local". Note that a single playlist can't mix types, all entries must be of the same type}
 
-\item{timing}{list: a named list giving the relative timing for each skill type. Each element in the list should be named (with the name of the skill, as it appears in \code{x}) and should consist of a two-element numeric vector giving the starting and ending time offset relative to the recorded \code{video_time} of the event. See \code{\link{ov_video_timing}} for further details}
+\item{timing}{list: the relative timing for each skill type, either a named list as returned by \code{\link{ov_video_timing}} or a data.frame as returned by \code{\link{ov_video_timing_df}}. See \code{\link{ov_video_timing}} for further details}
 
 \item{extra_cols}{character: names of additional columns from \code{x} to include in the returned data frame}
 
@@ -31,4 +31,27 @@ A data.frame with columns \code{src}, \code{start_time}, \code{duration}, plus a
 }
 \description{
 Create video playlist
+}
+\examples{
+## read data file
+x <- datavolley::dv_read(datavolley::dv_example_file())
+## note that this data file has no video specified, so put a dummy value in
+x$meta$video <- data.frame(camera = "", file = "c:\\\\my_video.mp4", stringsAsFactors = FALSE)
+
+## extract play-by-play data
+px <- datavolley::plays(x)
+## and put dummy video_time values in, because those are missing too
+px$video_time <- sample.int(2e3, size = nrow(px))
+
+## find pipe (XP) attacks in transition
+px <- px[which(px$attack_code == "XP" & px$phase == "Transition"), ]
+
+## create playlist
+ply <- ov_video_playlist(px, x$meta, timing = ov_video_timing())
+
+## with custom timing
+ply <- ov_video_playlist(px, x$meta,
+  timing = ov_video_timing_df(data.frame(skill = "Attack", phase = "Transition",
+                              start_offset = -5, duration = 10, stringsAsFactors = FALSE)))
+
 }

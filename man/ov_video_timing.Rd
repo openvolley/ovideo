@@ -2,18 +2,26 @@
 % Please edit documentation in R/playlists.R
 \name{ov_video_timing}
 \alias{ov_video_timing}
+\alias{ov_video_timing_df}
 \title{Timing to use when creating video playlist}
 \usage{
 ov_video_timing(...)
+
+ov_video_timing_df(x)
 }
 \arguments{
 \item{...}{: named parameters that will override the defaults. Each parameter should be a two-element numeric vector}
+
+\item{x}{data.frame: a data.frame of timings that will override the defaults, with columns \code{skill}, \code{phase}, \code{start_offset} (start offset in seconds, default = -5), and \code{duration} (duration in seconds, default = 8)}
 }
 \value{
-A named list, with names corresponding to skills ("Serve", "Reception", etc).
+For \code{ov_video_timing} a named list, with names corresponding to skills ("Serve", "Reception", etc). For \code{ov_video_timing_df}, a data.frame with columns \code{skill}, \code{phase}, \code{start_offset}, and \code{duration}
 }
 \description{
 By default, all skills have a timing of \code{c(-5, 3)}, meaning that the video clip will start 5 seconds before the recorded time of the event and end 3 seconds after its recorded time.
+}
+\details{
+\code{ov_video_timing_df} accepts and returns a data.frame rather than a named list. The data.frame format also allows timings to be differentiated by play phase ("Reception" vs "Transition").
 }
 \examples{
 
@@ -22,6 +30,10 @@ ov_video_timing()
 
 ## with different settings for serve and reception
 ov_video_timing(serve = c(-2, 2), reception = c(-3, 1))
+
+## as data.frame
+ov_video_timing_df(data.frame(skill = "Set", phase = "Transition",
+                              start_offset = -5, duration = 10))
 
 }
 \seealso{

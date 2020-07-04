@@ -7,3 +7,7 @@ is_youtube_id <- function(z) {
         !is.na(z) & nchar(z) == 11 & grepl("^[[:alnum:]_\\-]+$", z)
     }
 }
+
+str_first_upper <- function(x) {
+    paste0(toupper(substr(x, 1, 1)), tolower(substr(x, 2, nchar(x))))
+}
