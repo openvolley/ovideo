@@ -302,6 +302,7 @@ ov_video_timing_df <- function(x) {
 #' @param video_id string: the id of the HTML video element to attach the playlist to
 #' @param normalize_paths logical: if \code{TRUE}, apply \code{normalizePath} to local file paths. This will e.g. expand the tilde in paths like "~/path/to/video.mp4"
 #' @param dvjs_fun string: the javascript function to use
+#' @param seamless logical: if clips overlap, should we transition seamless from one to the next?
 #'
 #' @return A string suitable for inclusion as an 'onclick' tag attribute
 #'
@@ -325,17 +326,18 @@ ov_video_timing_df <- function(x) {
 #' }
 #'
 #' @export
-ov_playlist_as_onclick <- function(playlist, video_id, normalize_paths = TRUE, dvjs_fun = "dvjs_set_playlist_and_play") {
+ov_playlist_as_onclick <- function(playlist, video_id, normalize_paths = TRUE, dvjs_fun = "dvjs_set_playlist_and_play", seamless = TRUE) {
     q2s <- function(z) gsub("\"", "'", z)
     type <- unique(na.omit(playlist$type))
     if (is.factor(type)) type <- as.character(type)
     assert_that(is.string(type))
     assert_that(is.flag(normalize_paths), !is.na(normalize_paths))
+    assert_that(is.flag(seamless), !is.na(seamless))
     if (normalize_paths) {
         local_srcs <- which(playlist$type == "local")
         if (length(local_srcs) > 0) {
             playlist$video_src[local_srcs] <- normalizePath(playlist$video_src[local_srcs], mustWork = FALSE)
         }
     }
-    paste0(dvjs_fun, "(", q2s(jsonlite::toJSON(playlist)), ", '", video_id, "', '", type, "');")
+    paste0(dvjs_fun, "(", q2s(jsonlite::toJSON(playlist)), ", '", video_id, "', '", type, "', ", ifelse(seamless, "true", "false"), ");")
 }

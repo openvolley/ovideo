@@ -1,4 +1,4 @@
-var dvjs_video_controller = {id: null, queue: [], current: -1, type: "local", paused: false};
+var dvjs_video_controller = {id: null, queue: [], current: -1, type: "local", paused: false, seamless: true};
 // current is the pointer to the currently-being-played item in the queue
 // type is "local" or "youtube"
 // id is the id of the player HTML element
@@ -22,10 +22,10 @@ function dvjs_stop_video_interval() {
     }
 }
 
-function dvjs_set_playlist(items, video_id, type) {
+function dvjs_set_playlist(items, video_id, type, seamless = true) {
     // set the player's playlist, but don't start playing
     var old_id = dvjs_video_controller.id; // HTML element with player attached, if any
-    dvjs_video_controller = {id: video_id, queue: items, current: 0, type: type, paused: false};
+    dvjs_video_controller = {id: video_id, queue: items, current: 0, type: type, paused: false, seamless: seamless};
     if (type == "youtube") {
 	if (old_id != null && old_id != video_id) {
 	    dvjs_yt_player.destroy();
@@ -44,11 +44,11 @@ function dvjs_set_playlist(items, video_id, type) {
     }
 }
 
-function dvjs_set_playlist_and_play(items, video_id, type) {
+function dvjs_set_playlist_and_play(items, video_id, type, seamless = true) {
     // set the player's playlist, and start playing it
     dvjs_stop_video_interval();
     var old_id = dvjs_video_controller.id; // HTML element with player attached, if any
-    dvjs_video_controller = {id: video_id, queue: items, current: 0, type: type, paused: false};
+    dvjs_video_controller = {id: video_id, queue: items, current: 0, type: type, paused: false, seamless: seamless};
     if (type == "youtube") {
 	if (old_id != null && old_id != video_id) {
 	    dvjs_yt_player.destroy();
@@ -230,7 +230,20 @@ function dvjs_video_manage() {
 	    dvjs_video_stop();
         } else if (current_time > (item.start_time+item.duration)) {
 	    //console.log("finished");
-	    dvjs_video_next();
+	    // seamless transition to next clip? (no stop and seek)
+	    var this_seamless = dvjs_video_controller.seamless;
+	    if (this_seamless && dvjs_video_controller.current >= 0 && dvjs_video_controller.current < (dvjs_video_controller.queue.length - 1)) {
+		var item = dvjs_video_controller.queue[dvjs_video_controller.current];
+		var next_item = dvjs_video_controller.queue[dvjs_video_controller.current+1];
+		this_seamless = item.video_src == next_item.video_src && next_item.start_time <= (item.start_time + item.duration)
+	    }
+	    if (this_seamless) {
+		dvjs_video_controller.current++;
+		dvjs_video_onstart();
+		dvjs_start_video_interval();
+	    } else {
+		dvjs_video_next();
+	    }
         } else {
 	    // current item still playing, do nothing
         }

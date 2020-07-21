@@ -8,7 +8,8 @@ ov_playlist_as_onclick(
   playlist,
   video_id,
   normalize_paths = TRUE,
-  dvjs_fun = "dvjs_set_playlist_and_play"
+  dvjs_fun = "dvjs_set_playlist_and_play",
+  seamless = TRUE
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ ov_playlist_as_onclick(
 \item{normalize_paths}{logical: if \code{TRUE}, apply \code{normalizePath} to local file paths. This will e.g. expand the tilde in paths like "~/path/to/video.mp4"}
 
 \item{dvjs_fun}{string: the javascript function to use}
+
+\item{seamless}{logical: if clips overlap, should we transition seamless from one to the next?}
 }
 \value{
 A string suitable for inclusion as an 'onclick' tag attribute
