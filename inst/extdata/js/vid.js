@@ -73,6 +73,15 @@ function dvjs_set_playlist_and_play(items, video_id, type, seamless = true) {
     }
 }
 
+function dvjs_clear_playlist() {
+    dvjs_video_stop();
+    if (dvjs_yt_player != null) {
+	dvjs_yt_player.destroy();
+	dvjs_yt_player = null;
+    }
+    dvjs_video_controller = {id: null, queue: [], current: -1, type: "local", paused: false, seamless: true};
+}
+
 
 //function dvjs_new_player(items, video_id, type) {
 //    if (type == "youtube") {
