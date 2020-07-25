@@ -75,6 +75,9 @@ function dvjs_set_playlist_and_play(items, video_id, type, seamless = true) {
 
 function dvjs_clear_playlist() {
     dvjs_video_stop();
+    if (dvjs_video_controller.type == "local") {
+	document.getElementById(dvjs_video_controller.id).removeAttribute("src");
+    }
     if (dvjs_yt_player != null) {
 	dvjs_yt_player.destroy();
 	dvjs_yt_player = null;
