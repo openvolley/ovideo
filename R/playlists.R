@@ -241,7 +241,7 @@ ov_video_playlist_pid <- function(x, meta, type = NULL, extra_cols = NULL, norma
 
 #' Timing to use when creating video playlist
 #'
-#' By default, all skills have a timing of `c(-5, 3)`, meaning that the video clip will start 5 seconds before the recorded time of the event and end 3 seconds after its recorded time.
+#' By default, all skills except reception have a timing of `c(-5, 3)`, meaning that the video clip will start 5 seconds before the recorded time of the event and end 3 seconds after its recorded time. Reception has a timing of `c(-2, 6)` (because reception usually has the same timestamp as the serve)
 #'
 #' \code{ov_video_timing_df} accepts and returns a data.frame rather than a named list. The data.frame format also allows timings to be differentiated by play phase ("Reception" vs "Transition").
 #'
@@ -268,6 +268,7 @@ ov_video_playlist_pid <- function(x, meta, type = NULL, extra_cols = NULL, norma
 ov_video_timing <- function(...) {
     skills <- c("Serve", "Reception", "Set", "Attack", "Block", "Dig", "Freeball")
     out <- rep(list(c(-5, 3)), length(skills))
+    out[[2]] <- c(-2, 6) ## reception
     names(out) <- skills
     ## override with any user-specified parms
     user <- list(...)
@@ -291,6 +292,7 @@ ov_video_timing_df <- function(x) {
                   phase = c("Serve", "Reception", "Reception", "Transition", "Reception", "Transition", "Reception", "Transition", "Transition", "Reception", "Transition"),
                   start_offset = rep(-5, 11),
                   duration = rep(8, 11))
+    def$start_offset[2] <- -2 ## reception
     ## override with any user-specified parms
     if (!missing(x) && !is.null(x)) {
         if (!is.data.frame(x) || !all(c("skill", "phase", "start_offset", "duration") %in% names(x))) {

@@ -2,6 +2,7 @@ context("Video functions")
 test_that("ov_video_timing works as expected", {
     skills <- c("Serve", "Reception", "Set", "Attack", "Block", "Dig", "Freeball")
     def_timing <- rep(list(c(-5, 3)), length(skills))
+    def_timing[[2]] <- c(-2, 6)
     names(def_timing) <- skills
     expect_identical(ov_video_timing(), def_timing)
     def_timing$Serve <- c(-2, 1)

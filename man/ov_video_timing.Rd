@@ -18,7 +18,7 @@ ov_video_timing_df(x)
 For \code{ov_video_timing} a named list, with names corresponding to skills ("Serve", "Reception", etc). For \code{ov_video_timing_df}, a data.frame with columns \code{skill}, \code{phase}, \code{start_offset}, and \code{duration}
 }
 \description{
-By default, all skills have a timing of \code{c(-5, 3)}, meaning that the video clip will start 5 seconds before the recorded time of the event and end 3 seconds after its recorded time.
+By default, all skills except reception have a timing of \code{c(-5, 3)}, meaning that the video clip will start 5 seconds before the recorded time of the event and end 3 seconds after its recorded time. Reception has a timing of \code{c(-2, 6)} (because reception usually has the same timestamp as the serve)
 }
 \details{
 \code{ov_video_timing_df} accepts and returns a data.frame rather than a named list. The data.frame format also allows timings to be differentiated by play phase ("Reception" vs "Transition").
