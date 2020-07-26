@@ -9,7 +9,7 @@ var dvjs_yt_player = null;
 
 function dvjs_start_video_interval() {
     if (!dvjs_video_timer_active) {
-	dvjs_video_timer = setInterval(dvjs_video_manage, 500);
+	dvjs_video_timer = setInterval(dvjs_video_manage, 200);
 	dvjs_video_timer_active = true;
 	//console.dir(dvjs_video_timer_active);
     }
@@ -259,7 +259,8 @@ function dvjs_video_manage() {
 		var next_item = dvjs_video_controller.queue[dvjs_video_controller.current+1];
 		this_seamless = item.video_src == next_item.video_src && next_item.start_time <= (item.start_time + item.duration)
 	    }
-	    console.log("item: " + item + ", seamless: ", this_seamless)
+	    console.dir(item)
+	    console.log("this seamless: ", this_seamless)
 	    dvjs_video_next(this_seamless)
         } else {
 	    // current item still playing, do nothing

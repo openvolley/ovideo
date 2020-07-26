@@ -144,9 +144,9 @@ ov_video_playlist <- function(x, meta, type = NULL, timing = ov_video_timing(), 
                 seamless_end_time = case_when(lead(.data$overlap) ~ lead(.data$seamless_start_time), TRUE ~ .data$end_time),
                 seamless_duration = .data$seamless_end_time - .data$seamless_start_time)
     x <- dplyr::ungroup(x)
-    if (any(x$seamless_duration < 0)) {
+    if (any(x$seamless_duration < 0, na.rm = TRUE)) {
         warning("seamless durations < 0, needs checking")
-        x$seamless_duration[x$seamless_duration < 0] <- 0
+        x$seamless_duration[which(x$seamless_duration < 0)] <- 0
     }
     x[, c("video_src", "start_time", "duration", "type", "seamless_start_time", "seamless_duration", extra_cols)]
 }
