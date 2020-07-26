@@ -259,8 +259,6 @@ function dvjs_video_manage() {
 		var next_item = dvjs_video_controller.queue[dvjs_video_controller.current+1];
 		this_seamless = item.video_src == next_item.video_src && next_item.start_time <= (item.start_time + item.duration)
 	    }
-	    console.dir(item)
-	    console.log("this seamless: ", this_seamless)
 	    dvjs_video_next(this_seamless)
         } else {
 	    // current item still playing, do nothing
