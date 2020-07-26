@@ -18,16 +18,16 @@ test_that("ov_video_playlist works as expected", {
     x$plays$video_time <- seq_len(nrow(x$plays)) ## dummy values
     px <- ov_video_playlist(x$plays[10, ], x$meta)
     expect_equal(nrow(px), 1L)
-    expect_named(px, c("video_src", "start_time", "duration", "type"))
+    expect_named(px, c("video_src", "start_time", "duration", "type", "seamless_start_time", "seamless_duration"))
     px2 <- ov_video_playlist(x$plays[10, ], x$meta, timing = ov_video_timing_df(data.frame(skill = "Serve", phase = "Serve", start_offset = -5, duration = 8)))
     expect_equivalent(px, px2)
-    expect_equivalent(px, data.frame(video_src = "myvideo.mp4", start_time = 10-5, duration = 8, type = "local", stringsAsFactors = FALSE))
+    expect_equivalent(px, data.frame(video_src = "myvideo.mp4", start_time = 10-5, duration = 8, type = "local", seamless_start_time = 10-5, seamless_duration = 8, stringsAsFactors = FALSE))
     px <- ov_video_playlist(x$plays[10, ], x$meta, timing = list(Set = c(0, 0)))
     expect_equal(px$start_time, 10)
     expect_equal(px$duration, 0)
     px <- ov_video_playlist(x$plays[1:10, ], x$meta, extra = "player_name")
     expect_equal(nrow(px), sum(!is.na(x$plays$skill[1:10])))
-    expect_named(px, c("video_src", "start_time", "duration", "type", "player_name"))
+    expect_named(px, c("video_src", "start_time", "duration", "type", "seamless_start_time", "seamless_duration", "player_name"))
 })
 
 test_that("ov_video_playlist copes with full youtube URLs", {

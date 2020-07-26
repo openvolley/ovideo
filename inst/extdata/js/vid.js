@@ -195,9 +195,15 @@ function dvjs_video_pause() {
 // this function does nothing by default but can be redefined by the user
 function dvjs_video_onstop() { }
 
-function dvjs_video_next() {
+function dvjs_video_next(seamless = false) {
+    // seamless should be true if we want to transition seamlessly to the next clip (i.e. no stop and seek)
     dvjs_video_controller.current++;
-    dvjs_video_play(); // next item, or stop if it was the last
+    if (seamless) {
+	dvjs_video_onstart();
+	dvjs_start_video_interval();
+    } else {
+	dvjs_video_play(); // next item, or stop if it was the last
+    }
 }
 
 function dvjs_video_prev() {
@@ -228,6 +234,10 @@ function dvjs_video_manage() {
 	var item = dvjs_video_controller.queue[dvjs_video_controller.current];//0];
 	var current_time;
 	var current_src;
+	var this_end_time = item.start_time+item.duration;
+	if (dvjs_video_controller.seamless && typeof item.seamless_start_time !== "undefined" && typeof item.seamless_duration !== "undefined") {
+	    this_end_time = item.seamless_start_time+item.seamless_duration;
+	}
 	if (dvjs_video_controller.type == "youtube") {
 	    current_time = dvjs_yt_player.getCurrentTime();
 	    current_src = dvjs_yt_player.getPlaylist()[0];
@@ -240,22 +250,17 @@ function dvjs_video_manage() {
 	    // we are out of whack somehow
 	    console.log("src mismatch");
 	    dvjs_video_stop();
-        } else if (current_time > (item.start_time+item.duration)) {
+        } else if (current_time > this_end_time) {
 	    //console.log("finished");
-	    // seamless transition to next clip? (no stop and seek)
+	    // should we transition seamlessly to the next clip? (no stop and seek)
 	    var this_seamless = dvjs_video_controller.seamless;
 	    if (this_seamless && dvjs_video_controller.current >= 0 && dvjs_video_controller.current < (dvjs_video_controller.queue.length - 1)) {
 		var item = dvjs_video_controller.queue[dvjs_video_controller.current];
 		var next_item = dvjs_video_controller.queue[dvjs_video_controller.current+1];
 		this_seamless = item.video_src == next_item.video_src && next_item.start_time <= (item.start_time + item.duration)
 	    }
-	    if (this_seamless) {
-		dvjs_video_controller.current++;
-		dvjs_video_onstart();
-		dvjs_start_video_interval();
-	    } else {
-		dvjs_video_next();
-	    }
+	    console.log("item: " + item + ", seamless: ", this_seamless)
+	    dvjs_video_next(this_seamless)
         } else {
 	    // current item still playing, do nothing
         }

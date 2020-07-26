@@ -21,7 +21,7 @@ ov_playlist_as_onclick(
 
 \item{dvjs_fun}{string: the javascript function to use}
 
-\item{seamless}{logical: if clips overlap, should we transition seamless from one to the next?}
+\item{seamless}{logical: if clips overlap, should we transition seamlessly from one to the next?}
 }
 \value{
 A string suitable for inclusion as an 'onclick' tag attribute

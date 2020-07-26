@@ -134,7 +134,21 @@ ov_video_playlist <- function(x, meta, type = NULL, timing = ov_video_timing(), 
         local_srcs <- which(x$type == "local")
         x$video_src[local_srcs] <- normalizePath(x$video_src[local_srcs], mustWork = FALSE)
     }
-    x[, c("video_src", "start_time", "duration", "type", extra_cols)]
+    ## add timings for seamless transitions
+    x <- mutate(x, end_time = .data$start_time + .data$duration)
+    x <- mutate(group_by_at(x, "video_src"), overlap = .data$start_time <= lag(.data$end_time),
+                overlap = case_when(is.na(.data$overlap) ~ FALSE, TRUE ~ .data$overlap), ## TRUE means that this event overlaps with previous
+                ## may be better to calculate overlap in terms of point_id and/or team_touch_id?
+                seamless_start_time = pmin(.data$video_time, case_when(is.na(lag(.data$end_time)) ~ .data$start_time, TRUE ~ (lag(.data$end_time) + .data$start_time)/2)),
+                seamless_start_time = case_when(.data$overlap ~ .data$seamless_start_time, TRUE ~ .data$start_time),
+                seamless_end_time = case_when(lead(.data$overlap) ~ lead(.data$seamless_start_time), TRUE ~ .data$end_time),
+                seamless_duration = .data$seamless_end_time - .data$seamless_start_time)
+    x <- dplyr::ungroup(x)
+    if (any(x$seamless_duration < 0)) {
+        warning("seamless durations < 0, needs checking")
+        x$seamless_duration[x$seamless_duration < 0] <- 0
+    }
+    x[, c("video_src", "start_time", "duration", "type", "seamless_start_time", "seamless_duration", extra_cols)]
 }
 
 #' Create video playlist per point_id
@@ -302,7 +316,7 @@ ov_video_timing_df <- function(x) {
 #' @param video_id string: the id of the HTML video element to attach the playlist to
 #' @param normalize_paths logical: if \code{TRUE}, apply \code{normalizePath} to local file paths. This will e.g. expand the tilde in paths like "~/path/to/video.mp4"
 #' @param dvjs_fun string: the javascript function to use
-#' @param seamless logical: if clips overlap, should we transition seamless from one to the next?
+#' @param seamless logical: if clips overlap, should we transition seamlessly from one to the next?
 #'
 #' @return A string suitable for inclusion as an 'onclick' tag attribute
 #'
