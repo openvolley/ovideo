@@ -121,8 +121,9 @@ function dvjs_video_play() {
     if (dvjs_video_controller.current >= 0 && dvjs_video_controller.current <= (dvjs_video_controller.queue.length - 1)) {
 	var item = dvjs_video_controller.queue[dvjs_video_controller.current];
 	if (dvjs_video_controller.type == "youtube") {
-	    if (dvjs_yt_player.getPlaylist() != null && dvjs_yt_player.getPlaylist()[0] == item.video_src) {
+	    if (dvjs_video_controller.current > 0 && dvjs_yt_player.getPlaylist() != null && dvjs_yt_player.getPlaylist()[0] == item.video_src) {
 		// same video, so just seek to right spot
+		// don't use this on the first queue item (current == 0), maybe problems with slow connections and order of events being fired
 		dvjs_yt_player.seekTo(item.start_time);
 	    } else {
 		dvjs_yt_player.loadPlaylist(item.video_src, 0, item.start_time);
