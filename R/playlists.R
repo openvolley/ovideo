@@ -110,7 +110,11 @@ ov_video_playlist <- function(x, meta, type = NULL, timing = ov_video_timing(), 
     x <- left_join(x, timing, by = jby)
     if (any(is.na(x$start_offset) | is.na(x$duration))) warning("some NA start_time/duration values in playlist")
     x$start_time <- x$video_time + x$start_offset
-    x <- x[!is.na(x$skill), ]
+    ## cope with negative start_time values
+    idx <- x$start_time < 0
+    x$duration[idx] <- x$duration[idx] + x$start_time[idx] ## shorten duration
+    x$start_time[idx] <- 0
+    x <- x[!is.na(x$skill) & x$duration > 0, ]
     x$video_src <- as.character(x$video_src)
     if (type == "youtube") {
         ## ensure that we have youtube IDs, not e.g. full URLs
