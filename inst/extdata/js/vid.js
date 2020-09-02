@@ -6,6 +6,7 @@ var dvjs_video_timer = null;
 // we check the player at intervals to see if it's finished playing the current item
 var dvjs_video_timer_active = false;
 var dvjs_yt_player = null;
+var dvjs_yt_first_mute = false; // override this to true to start the YT player muted on first play
 
 function dvjs_start_video_interval() {
     if (!dvjs_video_timer_active) {
@@ -121,6 +122,10 @@ function dvjs_video_play() {
     if (dvjs_video_controller.current >= 0 && dvjs_video_controller.current <= (dvjs_video_controller.queue.length - 1)) {
 	var item = dvjs_video_controller.queue[dvjs_video_controller.current];
 	if (dvjs_video_controller.type == "youtube") {
+	    if (dvjs_yt_first_mute) {
+		dvjs_yt_player.mute();
+		dvjs_yt_first_mute = false;
+	    }
 	    if (dvjs_video_controller.current > 0 && dvjs_yt_player.getPlaylist() != null && dvjs_yt_player.getPlaylist()[0] == item.video_src) {
 		// same video, so just seek to right spot
 		// don't use this on the first queue item (current == 0), maybe problems with slow connections and order of events being fired
