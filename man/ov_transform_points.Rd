@@ -21,6 +21,7 @@ A two-column data.frame with transformed values
 \description{
 The court coordinate system is that used in \code{\link[datavolley]{dv_court}}, \code{\link[datavolley]{ggcourt}}, and related functions.
 Try \code{plot(c(0, 4), c(0, 7), type = "n", asp = 1); datavolley::dv_court()} or \code{ggplot2::ggplot() + datavolley::ggcourt() + ggplot2::theme_bw()} for a visual depiction.
+Image coordinates are returned as normalized coordinates in the range \code{[0, 1]}. You may need to scale these by the width and height of the image, depending on how you are plotting things.
 }
 \examples{
 ## the ref data for the example iomage
