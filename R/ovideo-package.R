@@ -5,9 +5,11 @@
 #' @name ovideo
 #' @docType package
 #' @importFrom assertthat assert_that has_name is.flag is.string
-#' @importFrom datavolley read_dv dv_example_file dv_write
+#' @importFrom datavolley read_dv dv_example_file dv_flip_xy dv_write
 #' @importFrom dplyr .data bind_rows case_when group_by_at lag lead left_join mutate tibble
+#' @importFrom ggplot2 aes_string element_blank element_rect geom_segment geom_label geom_polygon ggplot scale_size_continuous scale_x_continuous scale_y_continuous theme unit
 #' @importFrom graphics locator plot points rasterImage
+#' @importFrom grDevices dev.off png
 #' @importFrom htmltools HTML tagList tags
 #' @importFrom stats na.omit setNames
 #' @importFrom utils tail
