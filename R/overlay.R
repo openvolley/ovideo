@@ -7,7 +7,7 @@
 #' @param labels logical: if \code{TRUE}, label the zones
 #' @param space string: if "court", the data will be in court coordinates. If "image", the data will be transformed to image coordinates via \code{\link{ov_transform_points}}
 #' @param court_ref data.frame: as returned by \code{\link{ov_get_court_ref}}. Only required if \code{space} is "image"
-#' @param crop logical: if \code{space} is "image", and \code{crop} is TRUE, the data will be cropped to the c(0, 1, 0, 1) bounding box (i.e. the limits of the image, in normalized coordinates)
+#' @param crop logical: if \code{space} is "image", and \code{crop} is TRUE, the data will be cropped to the c(0, 1, 0, 1) bounding box (i.e. the limits of the image, in normalized coordinates). Requires that the \code{sf} package be installed
 #'
 #' @return A list of data.frames
 #'
@@ -21,6 +21,10 @@ ov_overlay_data <- function(zones = TRUE, serve_zones = TRUE, labels = FALSE, sp
     assert_that(is.string(space))
     space <- match.arg(tolower(space), c("court", "image"))
     assert_that(is.flag(crop), !is.na(crop))
+    if (crop && !requireNamespace("sf", quietly = TRUE)) {
+        warning("ignoring crop = TRUE (this requires the `sf` package to be installed, but it does not appear to be available)")
+        crop <- FALSE
+    }
     ##subzones = FALSE,
     labxy <- NULL
     polyxy <- NULL

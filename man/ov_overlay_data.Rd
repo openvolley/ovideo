@@ -24,7 +24,7 @@ ov_overlay_data(
 
 \item{court_ref}{data.frame: as returned by \code{\link{ov_get_court_ref}}. Only required if \code{space} is "image"}
 
-\item{crop}{logical: if \code{space} is "image", and \code{crop} is TRUE, the data will be cropped to the c(0, 1, 0, 1) bounding box (i.e. the limits of the image, in normalized coordinates)}
+\item{crop}{logical: if \code{space} is "image", and \code{crop} is TRUE, the data will be cropped to the c(0, 1, 0, 1) bounding box (i.e. the limits of the image, in normalized coordinates). Requires that the \code{sf} package be installed}
 }
 \value{
 A list of data.frames
