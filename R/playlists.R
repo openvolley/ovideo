@@ -114,7 +114,7 @@ ov_video_playlist <- function(x, meta, type = NULL, timing = ov_video_timing(), 
     idx <- !is.na(x$start_time) & x$start_time < 0
     x$duration[idx] <- x$duration[idx] + x$start_time[idx] ## shorten duration
     x$start_time[idx] <- 0
-    x <- x[!is.na(x$skill) & x$duration >= 0, ]
+    x <- x[!is.na(x$skill) & !is.na(x$duration) & x$duration >= 0, ]
     x$video_src <- as.character(x$video_src)
     if (type == "youtube") {
         ## ensure that we have youtube IDs, not e.g. full URLs
