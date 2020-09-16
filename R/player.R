@@ -2,7 +2,7 @@
 #'
 #' @param youtube logical: set to \code{TRUE} to include the Youtube API javascript. This isn't necessary if you are only using local video files
 #'
-#' @return A tag list
+#' @return A \code{head} tag containing script tags
 #'
 #' @seealso \code{\link{ov_video_playlist}}
 #'
