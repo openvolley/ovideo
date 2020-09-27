@@ -73,7 +73,7 @@ ov_video_playlist <- function(x, meta, type = NULL, timing = ov_video_timing(), 
         }
         meta <- bind_rows(lapply(meta, function(z) tibble(match_id = match_id_from_meta(z), video_src = as.character(video_file_from_meta(z)))))
         if (is.null(type)) {
-            if (all(is_youtube_id(meta$video_src) | grepl("https?://.*youtube", meta$video_src, ignore.case = TRUE))) {
+            if (all(is_youtube_id(meta$video_src) | grepl("https?://.*youtube", meta$video_src, ignore.case = TRUE) | grepl("https?://youtu\\.be", meta$video_src, ignore.case = TRUE))) {
                 type <- "youtube"
             } else {
                 type <- "local"
@@ -120,14 +120,26 @@ ov_video_playlist <- function(x, meta, type = NULL, timing = ov_video_timing(), 
         ## ensure that we have youtube IDs, not e.g. full URLs
         x$video_src <- vapply(x$video_src, function(z) {
             if (!is_youtube_id(z) && grepl("^https?://", z, ignore.case = TRUE)) {
-                tryCatch({
-                    temp <- httr::parse_url(z)
-                    if (!is.null(temp$query$v) && length(temp$query$v) == 1) {
-                        temp$query$v
-                    } else {
-                        z
-                    }
-                }, error = function(e) z)
+                if (grepl("youtu\\.be", z, ignore.case = TRUE)) {
+                    ## assume https://youtu.be/xyz form
+                    tryCatch({
+                        temp <- httr::parse_url(z)
+                        if (!is.null(temp$path) && length(temp$path) == 1 && is_youtube_id(temp$path)) {
+                            temp$path
+                        } else {
+                            z
+                        }
+                    }, error = function(e) z)
+                } else {
+                    tryCatch({
+                        temp <- httr::parse_url(z)
+                        if (!is.null(temp$query$v) && length(temp$query$v) == 1) {
+                            temp$query$v
+                        } else {
+                            z
+                        }
+                    }, error = function(e) z)
+                }
             } else {
                 z
             }
