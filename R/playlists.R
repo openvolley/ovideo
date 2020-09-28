@@ -359,7 +359,7 @@ ov_video_timing_df <- function(x) {
 #'
 #' @export
 ov_playlist_as_onclick <- function(playlist, video_id, normalize_paths = TRUE, dvjs_fun = "dvjs_set_playlist_and_play", seamless = TRUE) {
-    q2s <- function(z) gsub("\"", "'", z)
+    q2s <- function(z) gsub("\"", "'", gsub("'", "\\\\'", z))
     type <- unique(na.omit(playlist$type))
     if (is.factor(type)) type <- as.character(type)
     assert_that(is.string(type))
