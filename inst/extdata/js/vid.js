@@ -203,12 +203,17 @@ function dvjs_video_onstop() { }
 
 function dvjs_video_next(seamless = false) {
     // seamless should be true if we want to transition seamlessly to the next clip (i.e. no stop and seek)
-    dvjs_video_controller.current++;
-    if (seamless) {
-	dvjs_video_onstart();
-	dvjs_start_video_interval();
+    if (dvjs_video_controller.current < (dvjs_video_controller.queue.length - 1)) {
+	dvjs_video_controller.current++;
+	if (seamless) {
+	    dvjs_video_onstart();
+	    dvjs_start_video_interval();
+	} else {
+	    dvjs_video_play(); // next item, or stop if it was the last
+	}
     } else {
-	dvjs_video_play(); // next item, or stop if it was the last
+	// end of playlist, nothing to play
+	dvjs_video_stop();
     }
 }
 
