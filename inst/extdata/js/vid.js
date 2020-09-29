@@ -34,8 +34,6 @@ function dvjs_set_playlist(items, video_id, type, seamless = true) {
 	}
 	if (dvjs_yt_player == null) {
 	    dvjs_yt_player = new YT.Player(video_id, {
-		//height: "290",
-		//width: "1200",
 		videoId: items[0].video_src,
 		events: {
 		    "onStateChange": dvjs_yt_player_state_change
@@ -56,9 +54,8 @@ function dvjs_set_playlist_and_play(items, video_id, type, seamless = true) {
 	    dvjs_yt_player = null;
 	}
 	if (dvjs_yt_player == null) {
+	    //console.log("set_playlist_and_play ... new YT player");
 	    dvjs_yt_player = new YT.Player(video_id, {
-		//height: "290",
-		//width: "1200",
 		videoId: items[0].video_src,
 		events: {
                     "onReady": dvjs_video_play,
@@ -66,10 +63,12 @@ function dvjs_set_playlist_and_play(items, video_id, type, seamless = true) {
 		}
 	    });
 	} else {
+	    //console.log("set_playlist_and_play ... YT play");
 	    dvjs_video_play();
 	}
     } else {
 	// local media
+	//console.log("set_playlist_and_play ... play");
 	dvjs_video_play();
     }
 }
@@ -86,27 +85,8 @@ function dvjs_clear_playlist() {
     dvjs_video_controller = {id: null, queue: [], current: -1, type: "local", paused: false, seamless: true};
 }
 
-
-//function dvjs_new_player(items, video_id, type) {
-//    if (type == "youtube") {
-//	    dvjs_yt_player = new YT.Player(video_id, {
-//		//height: "290",
-//		//width: "1200",
-//		videoId: items[0].video_src,
-//		events: {
-//		    "onStateChange": dvjs_yt_player_state_change
-//		}
-//	    });
-//    } else {
-//	// local media
-//	// TODO
-//    }
-//}
-
 // this function does nothing by default but can be redefined by the user
 function dvjs_video_onstart() { }
-
-//player.setSize(width:Number, height:Number):Object
 
 function dvjs_yt_player_state_change(event) {
     if (event.data == YT.PlayerState.PAUSED || event.data == YT.PlayerState.ENDED) {
@@ -117,8 +97,8 @@ function dvjs_yt_player_state_change(event) {
 }
 
 function dvjs_video_play() {
+    //console.log("dvjs_video_play");
     dvjs_video_onstart();
-    //console.dir(dvjs_video_controller);
     if (dvjs_video_controller.current >= 0 && dvjs_video_controller.current <= (dvjs_video_controller.queue.length - 1)) {
 	var item = dvjs_video_controller.queue[dvjs_video_controller.current];
 	if (dvjs_video_controller.type == "youtube") {
@@ -126,13 +106,14 @@ function dvjs_video_play() {
 		dvjs_yt_player.mute();
 		dvjs_yt_first_mute = false;
 	    }
-	    if (dvjs_video_controller.current > 0 && dvjs_yt_player.getPlaylist() != null && dvjs_yt_player.getPlaylist()[0] == item.video_src) {
+//	    if (dvjs_video_controller.current > 0 && dvjs_yt_player.getPlaylist() != null && dvjs_yt_player.getPlaylist()[0] == item.video_src) {
 		// same video, so just seek to right spot
 		// don't use this on the first queue item (current == 0), maybe problems with slow connections and order of events being fired
-		dvjs_yt_player.seekTo(item.start_time);
-	    } else {
+//		dvjs_yt_player.seekTo(item.start_time);
+//	    } else {
+	    // this seems fine even when it's the same video, and less problematic than seekTo, so just use this
 		dvjs_yt_player.loadPlaylist(item.video_src, 0, item.start_time);
-	    }
+//	    }
 	} else {
 	    el = document.getElementById(dvjs_video_controller.id);
 	    if (el.getAttribute("src") != item.video_src) {
@@ -195,13 +176,16 @@ function dvjs_video_pause() {
 		document.getElementById(dvjs_video_controller.id).pause();
 	    }
 	}
+	dvjs_video_afterpause();
     }
 }
 
-// this function does nothing by default but can be redefined by the user
+// these functions do nothing by default but can be redefined by the user
 function dvjs_video_onstop() { }
+function dvjs_video_afterpause() { }
 
 function dvjs_video_next(seamless = false) {
+    //console.log("dvjs_video_next");
     // seamless should be true if we want to transition seamlessly to the next clip (i.e. no stop and seek)
     if (dvjs_video_controller.current < (dvjs_video_controller.queue.length - 1)) {
 	dvjs_video_controller.current++;
@@ -262,7 +246,6 @@ function dvjs_video_manage() {
 	    console.log("src mismatch");
 	    dvjs_video_stop();
         } else if (current_time > this_end_time) {
-	    //console.log("finished");
 	    // should we transition seamlessly to the next clip? (no stop and seek)
 	    var this_seamless = dvjs_video_controller.seamless;
 	    if (this_seamless && dvjs_video_controller.current >= 0 && dvjs_video_controller.current < (dvjs_video_controller.queue.length - 1)) {
@@ -276,7 +259,6 @@ function dvjs_video_manage() {
         }
     } else {
 	// no items
-	//console.log("nothing to play");
         dvjs_video_stop();
     }
 }
