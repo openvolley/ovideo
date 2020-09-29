@@ -350,7 +350,8 @@ ov_video_timing_df <- function(x) {
 #'   shinyApp(
 #'       ui = fluidPage(
 #'           ov_video_js(youtube = TRUE),
-#'           ov_video_player(id = "yt_player", style = "height: 480px; background-color: black;"),
+#'           ov_video_player(id = "yt_player", type = "youtube",
+#'                           style = "height: 480px; background-color: black;"),
 #'           tags$button("Go", onclick = ov_playlist_as_onclick(playlist, "yt_player"))
 #'       ),
 #'       server = function(input, output) {},
