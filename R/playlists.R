@@ -73,7 +73,7 @@ ov_video_playlist <- function(x, meta, type = NULL, timing = ov_video_timing(), 
         }
         meta <- bind_rows(lapply(meta, function(z) tibble(match_id = match_id_from_meta(z), video_src = as.character(video_file_from_meta(z)))))
         if (is.null(type)) {
-            if (all(is_youtube_id(meta$video_src) | grepl("https?://.*youtube", meta$video_src, ignore.case = TRUE))) {
+            if (all(is_youtube_id(meta$video_src) | grepl("https?://.*youtube", meta$video_src, ignore.case = TRUE) | grepl("https?://youtu\\.be", meta$video_src, ignore.case = TRUE))) {
                 type <- "youtube"
             } else {
                 type <- "local"
@@ -110,20 +110,36 @@ ov_video_playlist <- function(x, meta, type = NULL, timing = ov_video_timing(), 
     x <- left_join(x, timing, by = jby)
     if (any(is.na(x$start_offset) | is.na(x$duration))) warning("some NA start_time/duration values in playlist")
     x$start_time <- x$video_time + x$start_offset
-    x <- x[!is.na(x$skill), ]
+    ## cope with negative start_time values
+    idx <- !is.na(x$start_time) & x$start_time < 0
+    x$duration[idx] <- x$duration[idx] + x$start_time[idx] ## shorten duration
+    x$start_time[idx] <- 0
+    x <- x[!is.na(x$skill) & !is.na(x$duration) & x$duration >= 0, ]
     x$video_src <- as.character(x$video_src)
     if (type == "youtube") {
         ## ensure that we have youtube IDs, not e.g. full URLs
         x$video_src <- vapply(x$video_src, function(z) {
             if (!is_youtube_id(z) && grepl("^https?://", z, ignore.case = TRUE)) {
-                tryCatch({
-                    temp <- httr::parse_url(z)
-                    if (!is.null(temp$query$v) && length(temp$query$v) == 1) {
-                        temp$query$v
-                    } else {
-                        z
-                    }
-                }, error = function(e) z)
+                if (grepl("youtu\\.be", z, ignore.case = TRUE)) {
+                    ## assume https://youtu.be/xyz form
+                    tryCatch({
+                        temp <- httr::parse_url(z)
+                        if (!is.null(temp$path) && length(temp$path) == 1 && is_youtube_id(temp$path)) {
+                            temp$path
+                        } else {
+                            z
+                        }
+                    }, error = function(e) z)
+                } else {
+                    tryCatch({
+                        temp <- httr::parse_url(z)
+                        if (!is.null(temp$query$v) && length(temp$query$v) == 1) {
+                            temp$query$v
+                        } else {
+                            z
+                        }
+                    }, error = function(e) z)
+                }
             } else {
                 z
             }
@@ -334,7 +350,8 @@ ov_video_timing_df <- function(x) {
 #'   shinyApp(
 #'       ui = fluidPage(
 #'           ov_video_js(youtube = TRUE),
-#'           ov_video_player(id = "yt_player", style = "height: 480px; background-color: black;"),
+#'           ov_video_player(id = "yt_player", type = "youtube",
+#'                           style = "height: 480px; background-color: black;"),
 #'           tags$button("Go", onclick = ov_playlist_as_onclick(playlist, "yt_player"))
 #'       ),
 #'       server = function(input, output) {},
@@ -343,7 +360,7 @@ ov_video_timing_df <- function(x) {
 #'
 #' @export
 ov_playlist_as_onclick <- function(playlist, video_id, normalize_paths = TRUE, dvjs_fun = "dvjs_set_playlist_and_play", seamless = TRUE) {
-    q2s <- function(z) gsub("\"", "'", z)
+    q2s <- function(z) gsub("\"", "'", gsub("'", "\\\\'", z))
     type <- unique(na.omit(playlist$type))
     if (is.factor(type)) type <- as.character(type)
     assert_that(is.string(type))
