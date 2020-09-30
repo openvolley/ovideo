@@ -157,15 +157,46 @@ function dvjs_video_stop() {
 
 function dvjs_video_pause() {
     if (dvjs_video_controller.type != null) {
-	if (dvjs_video_controller.paused) {
-	    // restart
-	    if (dvjs_video_controller.type == "youtube") {
-		dvjs_yt_player.playVideo();
+	if (!dvjs_video_timer_active) {
+	    // paused or stopped
+	    if (dvjs_video_controller.paused) {
+		// restart
+		// check that we are still within the current item
+		var item = dvjs_video_controller.queue[dvjs_video_controller.current];
+		var current_time;
+		var current_src;
+		var this_end_time = item.start_time+item.duration;
+		if (dvjs_video_controller.seamless && typeof item.seamless_start_time !== "undefined" && typeof item.seamless_duration !== "undefined") {
+		    this_end_time = item.seamless_start_time+item.seamless_duration;
+		}
+		if (dvjs_video_controller.type == "youtube") {
+		    current_time = dvjs_yt_player.getCurrentTime();
+		    current_src = dvjs_yt_player.getPlaylist()[0];
+		} else {
+		    var el = document.getElementById(dvjs_video_controller.id);
+		    current_time = el.currentTime;
+		    current_src = el.getAttribute("src");
+		}
+		if (current_src != item.video_src) {
+		    // we are out of whack somehow
+		    console.log("src mismatch");
+		    dvjs_video_stop();
+		} else if (current_time > this_end_time) {
+		    // not on current item any more
+		    dvjs_video_play();
+		} else {
+		    if (dvjs_video_controller.type == "youtube") {
+			dvjs_yt_player.playVideo();
+		    } else {
+			document.getElementById(dvjs_video_controller.id).play();
+		    }
+		    dvjs_video_controller.paused = false;
+		    dvjs_start_video_interval();
+		}
 	    } else {
-		document.getElementById(dvjs_video_controller.id).play();
+		// we were just stopped
+		dvjs_video_play();
 	    }
-	    dvjs_video_controller.paused = false;
-	    dvjs_start_video_interval();
 	} else {
 	    // pause
 	    dvjs_stop_video_interval();
@@ -226,7 +257,7 @@ function dvjs_jog(howmuch) {
 
 function dvjs_video_manage() {
     if (dvjs_video_controller.queue.length > 0 && dvjs_video_controller.current >= 0 && (dvjs_video_controller.current <= (dvjs_video_controller.queue.length - 1))) {
-	var item = dvjs_video_controller.queue[dvjs_video_controller.current];//0];
+	var item = dvjs_video_controller.queue[dvjs_video_controller.current];
 	var current_time;
 	var current_src;
 	var this_end_time = item.start_time+item.duration;
