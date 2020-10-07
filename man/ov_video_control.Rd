@@ -18,7 +18,7 @@ ov_video_control(what, ...)
 \item "set_playback_rate" - set the playback rate: 1 = normal speed, 2 = double speed, etc
 }}
 
-\item{...}{: parameters used by those commands}
+\item{...}{: parameters used by those commands. For version 2 of the video controller, \code{...} must include \code{controller_var = "my_controller_var"}}
 }
 \description{
 The video element and the controls provided by this function are javascript-based, and so are probably most useful in Shiny apps.

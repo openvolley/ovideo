@@ -4,7 +4,14 @@
 \alias{ov_video_player}
 \title{Video player tag element}
 \usage{
-ov_video_player(id, type, controls = FALSE, ...)
+ov_video_player(
+  id,
+  type,
+  controls = FALSE,
+  version = 1,
+  controller_var = paste0(id, "_controller"),
+  ...
+)
 }
 \arguments{
 \item{id}{string: the id of the tag}
@@ -12,6 +19,10 @@ ov_video_player(id, type, controls = FALSE, ...)
 \item{type}{string: either "youtube" or "local"}
 
 \item{controls}{logical: add "previous", "next", "pause", and "stop" buttons. If \code{controls} is an object of class \code{shiny.tag} (created by \code{htmltools::tags}) or \code{shiny.tag.list} (\code{htmltools::tagList}) then it will be appended to the controls}
+
+\item{version}{numeric: code version. Default = 1, experimental = 2}
+
+\item{controller_var}{string: (for version 2 only) the js variable name to use for the controller object that controls this video player}
 
 \item{...}{: other attributes of the player element (passed to the player \code{tags$div} call for youtube or \code{tags$video} for local)}
 }

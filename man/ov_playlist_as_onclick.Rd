@@ -9,7 +9,8 @@ ov_playlist_as_onclick(
   video_id,
   normalize_paths = TRUE,
   dvjs_fun = "dvjs_set_playlist_and_play",
-  seamless = TRUE
+  seamless = TRUE,
+  controller_var
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ ov_playlist_as_onclick(
 \item{dvjs_fun}{string: the javascript function to use}
 
 \item{seamless}{logical: if clips overlap, should we transition seamlessly from one to the next?}
+
+\item{controller_var}{string: (for version 2 only) the js variable name of the controller object to assign this playlist to}
 }
 \value{
 A string suitable for inclusion as an 'onclick' tag attribute
@@ -34,8 +37,8 @@ Convert playlist to 'onclick' string
   library(shiny)
 
   ## hand-crafted playlist for this example
-  playlist <- data.frame(video_src = "xL7qEpOdtio",
-                         start_time = c(5417, 7252, 6222, 7656, 7369),
+  playlist <- data.frame(video_src = "NisDpPFPQwU",
+                         start_time = c(624, 3373, 4320),
                          duration = 8,
                          type = "youtube")
   shinyApp(
@@ -47,6 +50,27 @@ Convert playlist to 'onclick' string
       ),
       server = function(input, output) {},
   )
+
+  ## or using v2, which supports multiple video elements in a page
+  shinyApp(
+      ui = fluidPage(
+          ov_video_js(youtube = TRUE, version = 2),
+          ## first player
+          ov_video_player(id = "yt_player", type = "youtube",
+                          style = "height: 480px; background-color: black;",
+                          version = 2, controller_var = "my_dv"),
+          tags$button("Go", onclick = ov_playlist_as_onclick(playlist, "yt_player",
+                                                             controller_var = "my_dv")),
+          ## second player
+          ov_video_player(id = "yt_player2", type = "youtube",
+                          style = "height: 480px; background-color: black;",
+                          version = 2, controller_var = "my_dv2"),
+          tags$button("Go", onclick = ov_playlist_as_onclick(playlist, "yt_player2",
+                                                             controller_var = "my_dv2"))
+      ),
+      server = function(input, output) {},
+  )
+
 }
 
 }
