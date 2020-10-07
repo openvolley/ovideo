@@ -335,6 +335,7 @@ ov_video_timing_df <- function(x) {
 #' @param normalize_paths logical: if \code{TRUE}, apply \code{normalizePath} to local file paths. This will e.g. expand the tilde in paths like "~/path/to/video.mp4"
 #' @param dvjs_fun string: the javascript function to use
 #' @param seamless logical: if clips overlap, should we transition seamlessly from one to the next?
+#' @param controller_var string: (for version 2 only) the js variable name of the controller object to assign this playlist to
 #'
 #' @return A string suitable for inclusion as an 'onclick' tag attribute
 #'
@@ -343,8 +344,8 @@ ov_video_timing_df <- function(x) {
 #'   library(shiny)
 #'
 #'   ## hand-crafted playlist for this example
-#'   playlist <- data.frame(video_src = "xL7qEpOdtio",
-#'                          start_time = c(5417, 7252, 6222, 7656, 7369),
+#'   playlist <- data.frame(video_src = "NisDpPFPQwU",
+#'                          start_time = c(624, 3373, 4320),
 #'                          duration = 8,
 #'                          type = "youtube")
 #'   shinyApp(
@@ -356,16 +357,41 @@ ov_video_timing_df <- function(x) {
 #'       ),
 #'       server = function(input, output) {},
 #'   )
+#'
+#'   ## or using v2, which supports multiple video elements in a page
+#'   shinyApp(
+#'       ui = fluidPage(
+#'           ov_video_js(youtube = TRUE, version = 2),
+#'           ## first player
+#'           ov_video_player(id = "yt_player", type = "youtube",
+#'                           style = "height: 480px; background-color: black;",
+#'                           version = 2, controller_var = "my_dv"),
+#'           tags$button("Go", onclick = ov_playlist_as_onclick(playlist, "yt_player",
+#'                                                              controller_var = "my_dv")),
+#'           ## second player
+#'           ov_video_player(id = "yt_player2", type = "youtube",
+#'                           style = "height: 480px; background-color: black;",
+#'                           version = 2, controller_var = "my_dv2"),
+#'           tags$button("Go", onclick = ov_playlist_as_onclick(playlist, "yt_player2",
+#'                                                              controller_var = "my_dv2"))
+#'       ),
+#'       server = function(input, output) {},
+#'   )
+#'
 #' }
 #'
 #' @export
-ov_playlist_as_onclick <- function(playlist, video_id, normalize_paths = TRUE, dvjs_fun = "dvjs_set_playlist_and_play", seamless = TRUE) {
+ov_playlist_as_onclick <- function(playlist, video_id, normalize_paths = TRUE, dvjs_fun = "dvjs_set_playlist_and_play", seamless = TRUE, controller_var) {
     q2s <- function(z) gsub("\"", "'", gsub("'", "\\\\'", z))
     type <- unique(na.omit(playlist$type))
     if (is.factor(type)) type <- as.character(type)
     assert_that(is.string(type))
     assert_that(is.flag(normalize_paths), !is.na(normalize_paths))
     assert_that(is.flag(seamless), !is.na(seamless))
+    if (!missing(controller_var) && !is.null(controller_var)) {
+        assert_that(is.string(controller_var), !is.na(controller_var))
+        dvjs_fun <- sub("^dvjs_", paste0(controller_var, "."), dvjs_fun)
+    }
     if (normalize_paths) {
         local_srcs <- which(playlist$type == "local")
         if (length(local_srcs) > 0) {
