@@ -33,7 +33,7 @@ ov_images_to_video(
 The path to the video file
 }
 \description{
-Input files can either be specified as a list of image files, or alternatively as a directory name and image file mask. For the latter, the images must be numbered in sequential order.
+Requires that ffmpeg is available on your system path. Input files can either be specified as a list of image files, or alternatively as a directory name and image file mask. For the latter, the images must be numbered in sequential order.
 }
 \seealso{
 \code{\link[av]{av_encode_video}} if you don't have ffmpeg installed

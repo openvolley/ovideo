@@ -2,7 +2,7 @@
 #'
 #' @param zones logical: if \code{TRUE}, show zone lines
 # @param subzones logical: if \code{TRUE}, show subzone lines
-# @param cones logical: either \code{NULL} (do not show cones) or one or more of "L", "R", or "M" to show the cones for "L"eft or "R"ight-side or "M"iddle attacks
+# @param cones logical or string: either \code{FALSE} (do not show cones) or one or more of "L", "R", or "M" to show the cones for "L"eft or "R"ight-side or "M"iddle attacks
 #' @param serve_zones logical: if \code{TRUE}, show the serve zones behind the baselines
 #' @param labels logical: if \code{TRUE}, label the zones
 #' @param space string: if "court", the data will be in court coordinates. If "image", the data will be transformed to image coordinates via \code{\link{ov_transform_points}}
@@ -14,10 +14,11 @@
 #' @seealso \code{\link{ov_overlay_image}}
 #' @export
 ov_overlay_data <- function(zones = TRUE, serve_zones = TRUE, labels = FALSE, space = "court", court_ref, crop = TRUE) {
-    cones = NULL
+    cones = FALSE
     assert_that(is.flag(zones), !is.na(zones))
     assert_that(is.flag(serve_zones), !is.na(serve_zones))
     assert_that(is.flag(labels), !is.na(labels))
+    assert_that(is.flag(cones), !is.na(cones))
     assert_that(is.string(space))
     space <- match.arg(tolower(space), c("court", "image"))
     assert_that(is.flag(crop), !is.na(crop))
@@ -46,7 +47,7 @@ ov_overlay_data <- function(zones = TRUE, serve_zones = TRUE, labels = FALSE, sp
         cxy <- bind_rows(cxy, sxy)
     }
 
-    if (!is.null(cones)) {
+    if (cones) {
         stop("no cones yet")
 ##        sz <- if (rdata$dvw$plays$start_zone[ridx] %in% c(4, 7, 5)) "L" else if (rdata$dvw$plays$start_zone[ridx] %in% c(3, 8, 6)) "M" else "R"
 ##        polyxy <- dv_cone_polygons(zone = sz, end = "upper")

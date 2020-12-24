@@ -1,7 +1,24 @@
-context("ffmpeg-based functions")
-test_that("ffmpeg functions work", {
+context("ffmpeg and av-based functions")
+test_that("ffmpeg/av functions work", {
     skip_if_not(ovideo:::ov_ffmpeg_exists(), "ffmpeg executable not found")
-    chk <- ov_video_frame(system.file("extdata/2019_03_01-KATS-BEDS-clip.mp4", package = "ovideo"), t = 2+11/30, format = "png")
-    expect_equal(file.size(system.file("extdata/2019_03_01-KATS-BEDS-frame.png", package = "ovideo")), file.size(chk))
+    expect_message(chk <- ov_video_frame(system.file("extdata/2019_03_01-KATS-BEDS-clip.mp4", package = "ovideo"), t = 2+11/30, format = "png", method = "ffmpeg", debug = TRUE), "ov_video_frame using method 'ffmpeg'")
+    expect_gt(file.size(chk), 900e3)
+    ffmpeg_png_size <- file.size(chk)
+    expect_message(chk2 <- ov_video_frame(system.file("extdata/2019_03_01-KATS-BEDS-clip.mp4", package = "ovideo"), t = 2+11/30, format = "png", method = "auto", debug = TRUE), "ov_video_frame using method 'ffmpeg'")
+    expect_equal(file.size(chk2), file.size(chk))
+    expect_message(chk3 <- ov_video_frame(system.file("extdata/2019_03_01-KATS-BEDS-clip.mp4", package = "ovideo"), t = 2+11/30, format = "jpg", method = "ffmpeg", debug = TRUE), "ov_video_frame using method 'ffmpeg'")
+    expect_gt(file.size(chk3), 60e3)
+    expect_lt(file.size(chk3), ffmpeg_png_size)
+    ffmpeg_jpg_size <- file.size(chk3)
     unlink(chk)
+    unlink(chk2)
+    unlink(chk3)
+
+    expect_message(chk <- ov_video_frame(system.file("extdata/2019_03_01-KATS-BEDS-clip.mp4", package = "ovideo"), t = 2+11/30, format = "jpg", method = "av", debug = TRUE), "ov_video_frame using method 'av'")
+    expect_gt(file.size(chk), 60e3)
+    expect_gt(file.size(chk), ffmpeg_jpg_size) ## av produces larger files?
+    expect_message(chk2 <- ov_video_frame(system.file("extdata/2019_03_01-KATS-BEDS-clip.mp4", package = "ovideo"), t = 2+11/30, format = "png", method = "av", debug = TRUE), "ov_video_frame using method 'av'")
+    expect_equal(file.size(chk2), ffmpeg_png_size)
+    unlink(chk)
+    unlink(chk2)
 })

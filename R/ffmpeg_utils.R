@@ -1,3 +1,12 @@
+resolve_ffmpeg_method <- function(method) {
+    if (missing(method) || is.null(method)) method <- "auto"
+    method <- tolower(method)
+    method <- match.arg(method, c("av", "ffmpeg", "auto"))
+    if (method == "ffmpeg" && !ov_ffmpeg_exists()) stop("could not find the ffmpeg executable")
+    if (method == "auto") method <- if (isTRUE(options()$ovideo$ffmpeg_exists)) "ffmpeg" else "av"
+    method
+}
+
 #' Try and locate a video file, when the path embedded in the dvw file is for another computer
 #'
 #' @param dvw_filename string: the full path to the DataVolley file
@@ -36,25 +45,44 @@ ov_find_video_file <- function(dvw_filename, video_filename = NULL) {
 
 #' Extract a single frame from a video file
 #'
-#' Requires that ffmpeg is available on your system path.
-#'
 #' @param video_file string: path to the video file
 #' @param t numeric: the time of the frame to extract (in seconds)
 #' @param format string: "jpg" or "png"
 #' @param debug logical: if \code{TRUE}, echo the ffmpeg output to the console
+#' @param framerate numeric: the framerate of the video. If not supplied, it will be found using [[av::av_video_info]]
+#' @param method string: the method to use, either "ffmpeg", "av", or "auto". "ffmpeg" is faster than "av" but requires that ffmpeg is available on your system path. If `method` is "auto", "ffmpeg" will be used if available and "av" if not
 #'
 #' @return The path to the frame image file
 #'
 #' @seealso \code{\link{ov_video_frames}}
+#'
+#' @examples
+#' video_file <- ov_example_video(1)
+#' img <- ov_video_frame(video_file, t = 5)
 #' @export
-ov_video_frame <- function(video_file, t, format = "jpg", debug = FALSE) {
+ov_video_frame <- function(video_file, t, format = "jpg", debug = FALSE, framerate, method = "auto") {
     assert_that(is.string(video_file), fs::file_exists(video_file))
     assert_that(is.numeric(t), t >= 0)
-    format <- match.arg(tolower(format), c("jpg", "png"))
-    if (!ov_ffmpeg_exists()) stop("could not find the ffmpeg executable")
+    format <- tolower(format)
+    format <- match.arg(format, c("jpg", "png"))
+    method <- resolve_ffmpeg_method(method)
     imfs <- tempfile(fileext = paste0(".", format))
-    execfun <- if (isTRUE(debug)) sys::exec_wait else sys::exec_internal
-    res <- execfun("ffmpeg", c("-y", "-ss", t, "-i", fs::path_real(video_file), "-vframes", 1, imfs))
+    if (method == "ffmpeg") {
+        if (debug) message("ov_video_frame using method 'ffmpeg'")
+        execfun <- if (isTRUE(debug)) sys::exec_wait else sys::exec_internal
+        res <- execfun("ffmpeg", c("-y", "-ss", t, "-i", fs::path_real(video_file), "-vframes", 1, imfs))
+    } else {
+        if (debug) message("ov_video_frame using method 'av'")
+        if (missing(framerate) || is.null(framerate) || is.na(framerate)) {
+            framerate <- av::av_video_info(video_file)$video$framerate
+        }
+        if (is.null(framerate) || is.na(framerate)) {
+            if (missing(framerate)) stop("could not find framerate, you will need to supply it") else stop("framerate is invalid")
+        }
+        frame_n <- round(t*framerate)
+        codec <- if (format == "png") "png" else "mjpeg"
+        res <- av::av_encode_video(video_file, output = imfs, codec = codec, framerate = 1, vfilter = paste0("select='between(n,", frame_n, ",", frame_n, ")'"), verbose = debug)
+    }
     imfs
 }
 
@@ -69,11 +97,12 @@ ov_video_frame <- function(video_file, t, format = "jpg", debug = FALSE) {
 #' @param end_time numeric: end time in seconds. If missing, will be calculated from start_time and duration
 #' @param extra : additional parameters passed to ffmpeg, in the form c("param", "value", "param2", "value2")
 #' @param debug logical: if \code{TRUE}, echo the ffmpeg output to the console
+# @param method string: the method to use, either "ffmpeg", "av", or "auto". "ffmpeg" is faster than "av" but requires that ffmpeg is available on your system path. If `method` is "auto", "ffmpeg" will be used if available and "av" if not
 #'
 #' @return The path to the video clip file
 #'
 #' @export
-ov_video_extract_clip <- function(video_file, outfile, start_time, duration, end_time, extra = NULL, debug = FALSE) {
+ov_video_extract_clip <- function(video_file, outfile, start_time, duration, end_time, extra = NULL, debug = FALSE) { ## method = "auto"
     if (!ov_ffmpeg_exists()) stop("could not find the ffmpeg executable")
     if (missing(duration) && !missing(end_time)) duration <- end_time - start_time
     if (missing(outfile)) outfile <- tempfile(fileext = ".mp4")
@@ -97,13 +126,14 @@ ov_video_extract_clip <- function(video_file, outfile, start_time, duration, end
 #' @param jpg_quality numeric: jpg quality from 1-31, lower is better (this is passed to ffmpeg as the \code{-qscale:v} parameter)
 #' @param extra : additional parameters passed to ffmpeg, in the form c("param", "value", "param2", "value2")
 #' @param debug logical: if \code{TRUE}, echo the ffmpeg output to the console
+# @param method string: the method to use, either "ffmpeg", "av", or "auto". "ffmpeg" is faster than "av" but requires that ffmpeg is available on your system path. If `method` is "auto", "ffmpeg" will be used if available and "av" if not
 #'
 #' @return A character vector of file names, one per frame
 #'
 #' @seealso \code{\link{ov_video_frame}}
 #'
 #' @export
-ov_video_frames <- function(video_file, start_time, duration, end_time, outdir, fps, format = "jpg", jpg_quality = 1, extra = NULL, debug = FALSE) {
+ov_video_frames <- function(video_file, start_time, duration, end_time, outdir, fps, format = "jpg", jpg_quality = 1, extra = NULL, debug = FALSE) { ## method = "auto"
     create_clip <- TRUE ## internal method choice
     if (!ov_ffmpeg_exists()) stop("could not find the ffmpeg executable")
     if (missing(outdir) || is.null(outdir)) {
@@ -141,7 +171,7 @@ ov_video_frames <- function(video_file, start_time, duration, end_time, outdir, 
 
 #' Encode a set of images into a video
 #'
-#' Input files can either be specified as a list of image files, or alternatively as a directory name and image file mask. For the latter, the images must be numbered in sequential order.
+#' Requires that ffmpeg is available on your system path. Input files can either be specified as a list of image files, or alternatively as a directory name and image file mask. For the latter, the images must be numbered in sequential order.
 #'
 #' @param input_dir string: path to the input directory
 #' @param image_file_mask string: the mask that specifies the image files, e.g. "image_%06d.jpg" for images named "image_000001.jpg", "image_000002.jpg" etc
@@ -245,7 +275,9 @@ ov_playlist_to_video <- function(playlist, filename, subtitle_column = NULL) {
 }
 
 ov_ffmpeg_exists <- function() {
-    sys::exec_internal("ffmpeg", "-version")$status == 0
+    out <- sys::exec_internal("ffmpeg", "-version")$status == 0
+    options(ovideo = list(ffmpeg_exists = out))
+    out
 }
 
 

@@ -1,6 +1,6 @@
 Package: ovideo
 Title: Volleyball video utilities
-Version: 0.6.0
+Version: 0.7.0
 Authors@R: c(person(given = "Ben", family = "Raymond", role = c("aut", "cre"), email = "ben@untan.gl"),
              person(given = "Adrien", family = "Ickowicz", role = "aut"))
 Description: Playlists and other video support functions from volleyball match files.
@@ -13,6 +13,7 @@ Roxygen: list(markdown = TRUE)
 Depends: datavolley (> 0.12.999)
 Imports:
     assertthat,
+    av,
     dplyr,
     future.apply,
     fs,
@@ -28,4 +29,4 @@ Suggests:
     sf,
     testthat
 Remotes: openvolley/datavolley
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1

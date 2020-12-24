@@ -4,7 +4,14 @@
 \alias{ov_video_frame}
 \title{Extract a single frame from a video file}
 \usage{
-ov_video_frame(video_file, t, format = "jpg", debug = FALSE)
+ov_video_frame(
+  video_file,
+  t,
+  format = "jpg",
+  debug = FALSE,
+  framerate,
+  method = "auto"
+)
 }
 \arguments{
 \item{video_file}{string: path to the video file}
@@ -14,12 +21,20 @@ ov_video_frame(video_file, t, format = "jpg", debug = FALSE)
 \item{format}{string: "jpg" or "png"}
 
 \item{debug}{logical: if \code{TRUE}, echo the ffmpeg output to the console}
+
+\item{framerate}{numeric: the framerate of the video. If not supplied, it will be found using [\link[av:info]{av::av_video_info}]}
+
+\item{method}{string: the method to use, either "ffmpeg", "av", or "auto". "ffmpeg" is faster than "av" but requires that ffmpeg is available on your system path. If \code{method} is "auto", "ffmpeg" will be used if available and "av" if not}
 }
 \value{
 The path to the frame image file
 }
 \description{
-Requires that ffmpeg is available on your system path.
+Extract a single frame from a video file
+}
+\examples{
+video_file <- ov_example_video(1)
+img <- ov_video_frame(video_file, t = 5)
 }
 \seealso{
 \code{\link{ov_video_frames}}
