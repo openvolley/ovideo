@@ -33,11 +33,13 @@ ov_get_court_ref <- function(image_file, video_file, t = 60, type = "corners") {
   rasterImage(img, 0, 0, 1, 1)
   cat("Click the near left baseline corner\n")
   this <- locator(1)
+  if (is.null(this)) return(NULL)
   imx <- this$x
   imy <- this$y
   points(this$x, this$y, col = 3)
   cat("Click the near right baseline corner\n")
   this <- locator(1)
+  if (is.null(this)) return(NULL)
   points(this$x, this$y, col = 3)
   imx <- c(imx, this$x)
   imy <- c(imy, this$y)
@@ -47,11 +49,13 @@ ov_get_court_ref <- function(image_file, video_file, t = 60, type = "corners") {
   }
   cat("Click the far right baseline corner\n")
   this <- locator(1)
+  if (is.null(this)) return(NULL)
   points(this$x, this$y, col = 3)
   imx <- c(imx, this$x)
   imy <- c(imy, this$y)
   cat("Click the far left baseline corner\n")
   this <- locator(1)
+  if (is.null(this)) return(NULL)
   points(this$x, this$y, col = 3)
   imx <- c(imx, this$x)
   imy <- c(imy, this$y)
