@@ -275,7 +275,7 @@ ov_playlist_to_video <- function(playlist, filename, subtitle_column = NULL) {
 }
 
 ov_ffmpeg_exists <- function() {
-    out <- sys::exec_internal("ffmpeg", "-version")$status == 0
+    out <- tryCatch(sys::exec_internal("ffmpeg", "-version")$status == 0, error = function(e) FALSE)
     options(ovideo = list(ffmpeg_exists = out))
     out
 }
