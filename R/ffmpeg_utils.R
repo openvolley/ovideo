@@ -47,22 +47,26 @@ ov_find_video_file <- function(dvw_filename, video_filename = NULL) {
 #'
 #' @param video_file string: path to the video file
 #' @param t numeric: the time of the frame to extract (in seconds)
+#' @param n integer: the frame number of the frame to extract. Ignored if `t` is provided
 #' @param format string: "jpg" or "png"
-#' @param debug logical: if \code{TRUE}, echo the ffmpeg output to the console
+#' @param debug logical: if `TRUE`, echo the ffmpeg output to the console
 #' @param framerate numeric: the framerate of the video. If not supplied, it will be found using [[av::av_video_info]]
 #' @param method string: the method to use, either "ffmpeg", "av", or "auto". "ffmpeg" is faster than "av" but requires that ffmpeg is available on your system path. If `method` is "auto", "ffmpeg" will be used if available and "av" if not
 #'
 #' @return The path to the frame image file
 #'
-#' @seealso \code{\link{ov_video_frames}}
+#' @seealso [ov_video_frames()]
 #'
 #' @examples
 #' video_file <- ov_example_video(1)
 #' img <- ov_video_frame(video_file, t = 5)
+#' img <- ov_video_frame(video_file, n = 150)
 #' @export
-ov_video_frame <- function(video_file, t, format = "jpg", debug = FALSE, framerate, method = "auto") {
+ov_video_frame <- function(video_file, t, n, format = "jpg", debug = FALSE, framerate, method = "auto") {
     assert_that(is.string(video_file), fs::file_exists(video_file))
-    assert_that(is.numeric(t), t >= 0)
+    if ((missing(t) || is.na(t) || is.null(t)) && (missing(n) || is.na(n) || is.null(n))) stop("either t or n must be specified")
+    if (!missing(t)) assert_that(is.numeric(t), t >= 0)
+    if (!missing(n)) assert_that(is.numeric(n), n >= 0)
     format <- tolower(format)
     format <- match.arg(format, c("jpg", "png"))
     method <- resolve_ffmpeg_method(method)
@@ -70,16 +74,24 @@ ov_video_frame <- function(video_file, t, format = "jpg", debug = FALSE, framera
     if (method == "ffmpeg") {
         if (debug) message("ov_video_frame using method 'ffmpeg'")
         execfun <- if (isTRUE(debug)) sys::exec_wait else sys::exec_internal
-        res <- execfun("ffmpeg", c("-y", "-ss", t, "-i", fs::path_real(video_file), "-vframes", 1, imfs))
+        if (!missing(t)) {
+            res <- execfun("ffmpeg", c("-y", "-ss", t, "-i", fs::path_real(video_file), "-vframes", 1, imfs))
+        } else {
+            res <- execfun("ffmpeg", c("-y", "-r", "1", "-i", fs::path_real(video_file), "-vf", paste0("select='between(n\\,", n, "\\,", n, ")'"), "-vframes", 1, imfs))
+        }
     } else {
         if (debug) message("ov_video_frame using method 'av'")
-        if (missing(framerate) || is.null(framerate) || is.na(framerate)) {
-            framerate <- av::av_video_info(video_file)$video$framerate
+        if (!missing(t)) {
+            if (missing(framerate) || is.null(framerate) || is.na(framerate)) {
+                framerate <- av::av_video_info(video_file)$video$framerate
+            }
+            if (is.null(framerate) || is.na(framerate)) {
+                if (missing(framerate)) stop("could not find framerate, you will need to supply it") else stop("framerate is invalid")
+            }
+            frame_n <- round(t*framerate)
+        } else {
+            frame_n <- n
         }
-        if (is.null(framerate) || is.na(framerate)) {
-            if (missing(framerate)) stop("could not find framerate, you will need to supply it") else stop("framerate is invalid")
-        }
-        frame_n <- round(t*framerate)
         codec <- if (format == "png") "png" else "mjpeg"
         res <- av::av_encode_video(video_file, output = imfs, codec = codec, framerate = 1, vfilter = paste0("select='between(n,", frame_n, ",", frame_n, ")'"), verbose = debug)
     }

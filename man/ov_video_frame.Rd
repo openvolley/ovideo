@@ -7,6 +7,7 @@
 ov_video_frame(
   video_file,
   t,
+  n,
   format = "jpg",
   debug = FALSE,
   framerate,
@@ -17,6 +18,8 @@ ov_video_frame(
 \item{video_file}{string: path to the video file}
 
 \item{t}{numeric: the time of the frame to extract (in seconds)}
+
+\item{n}{integer: the frame number of the frame to extract. Ignored if \code{t} is provided}
 
 \item{format}{string: "jpg" or "png"}
 
@@ -37,5 +40,5 @@ video_file <- ov_example_video(1)
 img <- ov_video_frame(video_file, t = 5)
 }
 \seealso{
-\code{\link{ov_video_frames}}
+\code{\link[=ov_video_frames]{ov_video_frames()}}
 }
