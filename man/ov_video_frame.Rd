@@ -38,6 +38,7 @@ Extract a single frame from a video file
 \examples{
 video_file <- ov_example_video(1)
 img <- ov_video_frame(video_file, t = 5)
+img <- ov_video_frame(video_file, n = 150)
 }
 \seealso{
 \code{\link[=ov_video_frames]{ov_video_frames()}}
