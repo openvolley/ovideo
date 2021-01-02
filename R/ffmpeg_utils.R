@@ -77,7 +77,16 @@ ov_video_frame <- function(video_file, t, n, format = "jpg", debug = FALSE, fram
         if (!missing(t)) {
             res <- execfun("ffmpeg", c("-y", "-ss", t, "-i", fs::path_real(video_file), "-vframes", 1, imfs))
         } else {
-            res <- execfun("ffmpeg", c("-y", "-r", "1", "-i", fs::path_real(video_file), "-vf", paste0("select='between(n\\,", n, "\\,", n, ")'"), "-vframes", 1, imfs))
+            ##res <- execfun("ffmpeg", c("-y", "-r", "1", "-i", fs::path_real(video_file), "-vf", paste0("select='between(n\\,", n, "\\,", n, ")'"), "-vframes", 1, imfs))
+            ## that is excruciatingly slow
+            if (missing(framerate) || is.null(framerate) || is.na(framerate)) {
+                framerate <- av::av_video_info(video_file)$video$framerate
+            }
+            if (is.null(framerate) || is.na(framerate)) {
+                if (missing(framerate)) stop("could not find framerate, you will need to supply it") else stop("framerate is invalid")
+            }
+            t <- n / framerate
+            res <- execfun("ffmpeg", c("-y", "-ss", t, "-i", fs::path_real(video_file), "-vframes", 1, imfs))
         }
     } else {
         if (debug) message("ov_video_frame using method 'av'")
