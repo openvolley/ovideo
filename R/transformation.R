@@ -82,7 +82,7 @@ ov_get_court_ref <- function(image_file, video_file, t = 60, type = "corners") {
 #' @seealso \code{\link{ov_get_court_ref}}, \code{\link[datavolley]{dv_court}},  \code{\link[datavolley]{ggcourt}}
 #'
 #' @examples
-#' ## the ref data for the example iomage
+#' ## the ref data for the example image
 #' crt <- data.frame(image_x = c(0.05397063, 0.95402573, 0.75039756, 0.28921230),
 #'                   image_y = c(0.02129301, 0.02294600, 0.52049712, 0.51884413),
 #'                   court_x = c(0.5, 3.5, 3.5, 0.5),
