@@ -400,3 +400,59 @@ ov_playlist_as_onclick <- function(playlist, video_id, normalize_paths = TRUE, d
     }
     paste0(dvjs_fun, "(", q2s(jsonlite::toJSON(playlist)), ", '", video_id, "', '", type, "', ", ifelse(seamless, "true", "false"), ");")
 }
+
+
+#' Convert playlist to VLC m3u format
+#'
+#' Converts a playlist object to a m3u file that can be opened with VLC. Note that the video files must be present on your local file system in order for this to work.
+#'
+#' @references <https://www.videolan.org/>, <https://wiki.videolan.org/M3U/>
+#' @param playlist data.frame: as returned by [ov_video_playlist()]
+#' @param outfile string: the file name to write to. If not supplied, a file will be created in the temporary directory. Note that the directory of `outfile` must already exist
+#' @param no_paths logical: if `TRUE`, remove the paths from video files. The m3u file must be saved into the same directory as the video source file(s)
+#' @param seamless logical: if `TRUE`, merge adjacent items into a single clip
+#'
+#' @return The path to the m3u file
+#'
+#' @seealso [ov_video_playlist()]
+#'
+#' @export
+ov_playlist_to_vlc <- function(playlist, outfile, no_paths = FALSE, seamless = TRUE) {
+    if (missing(playlist) || is.null(playlist) || nrow(playlist) < 1) return(character())
+    if (missing(outfile)) outfile <- tempfile(fileext = ".m3u")
+    assert_that(is.flag(no_paths), !is.na(no_paths))
+    assert_that(is.flag(seamless), !is.na(seamless))
+    if (seamless) {
+        ## merge seamless transitions into single entry
+        all_start <- playlist$start_time
+        all_duration <- playlist$duration
+        all_end <- all_start + all_duration
+        current <- 1
+        to_del <- rep(FALSE, nrow(playlist))
+        i <- 1
+        while (i < nrow(playlist)) {
+            if (all_end[current] >= all_start[i + 1]) {
+                all_end[current] <- all_end[i + 1]
+                to_del[i+1] <- TRUE
+            } else {
+                current <- i + 1
+            }
+            i <- i + 1
+        }
+        all_duration <- all_end - all_start
+        playlist$start_time <- all_start
+        playlist$duration <- all_duration
+        playlist <- playlist[!to_del, ]
+    }
+    if (!"subtitle" %in% names(playlist)) playlist$subtitle <- ""
+    if (!"subtitleskill" %in% names(playlist)) playlist$subtitleskill <- ""
+    playlist$file <- if (no_paths) basename(playlist$video_src) else playlist$video_src
+    out <- vapply(seq_len(nrow(playlist)), function(i) item2m3u(playlist[i, ], seamless = seamless), FUN.VALUE = "", USE.NAMES = FALSE)
+    cat(out, file = outfile, sep = "\n")
+    outfile
+}
+
+## playlist entry to m3u item
+item2m3u <- function(item, seamless = TRUE) {
+    paste0("#EXTM3U\n#EXTINF:", item$duration, ",", item$subtitle, if (!seamless) ". ", if (!seamless) item$subtitleskill, "\n#EXTVLCOPT:start-time=", item$start_time, "\n#EXTVLCOPT:stop-time=", item$start_time + item$duration, "\n", item$file, "\n\n")
+}
