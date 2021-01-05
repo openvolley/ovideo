@@ -7,7 +7,7 @@
 ov_playlist_to_vlc(playlist, outfile, no_paths = FALSE, seamless = TRUE)
 }
 \arguments{
-\item{playlist}{data.frame: as returned by \code{\link[=ov_video_playlist]{ov_video_playlist()}}}
+\item{playlist}{data.frame: as returned by \code{\link[=ov_video_playlist]{ov_video_playlist()}}. If the playlist contains one or both of the columns \code{subtitle} or \code{subtitleskill}, these will be used as subtitle information associated with each clip}
 
 \item{outfile}{string: the file name to write to. If not supplied, a file will be created in the temporary directory. Note that the directory of \code{outfile} must already exist}
 
@@ -19,11 +19,11 @@ ov_playlist_to_vlc(playlist, outfile, no_paths = FALSE, seamless = TRUE)
 The path to the m3u file
 }
 \description{
-Converts a playlist object to a m3u file that can be opened with VLC. Note that the video files must be present on your local file system in order for this to work.
+Converts a playlist object to a m3u file that can be opened with VLC. Note that this only works with local video files (not YouTube or other URLs) and the video files must be present on your local file system in order for this to work.
 }
 \references{
 \url{https://www.videolan.org/}, \url{https://wiki.videolan.org/M3U/}
 }
 \seealso{
-\code{\link[=ov_video_playlist]{ov_video_playlist()}}
+\code{\link[=ov_video_playlist]{ov_video_playlist()}} \code{\link[=ov_playlist_to_html]{ov_playlist_to_html()}}
 }

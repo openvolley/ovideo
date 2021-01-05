@@ -1,6 +1,6 @@
 Package: ovideo
 Title: Volleyball video utilities
-Version: 0.8.1
+Version: 0.9.0
 Authors@R: c(person(given = "Ben", family = "Raymond", role = c("aut", "cre"), email = "ben@untan.gl"),
              person(given = "Adrien", family = "Ickowicz", role = "aut"))
 Description: Playlists and other video support functions from volleyball match files.
@@ -15,19 +15,23 @@ Imports:
     assertthat,
     av,
     dplyr,
+    DT,
     future.apply,
     fs,
     ggplot2,
     htmltools,
     httr,
+    knitr,
     lubridate,
     jpeg,
     jsonlite,
     R.utils,
+    rmarkdown,
     shiny,
     sys
 Suggests:
+    ovdata,
     sf,
     testthat
-Remotes: openvolley/datavolley
+Remotes: openvolley/datavolley, openvolley/ovdata
 RoxygenNote: 7.1.1
