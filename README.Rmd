@@ -77,7 +77,7 @@ ply$subtitle <- ply$player_name
 f <- ov_playlist_to_html(ply, table_cols = extra_cols)
 
 ## and finally open it!
-browseFile(f)
+browseURL(f)
 ```
 And you should see something like:
 
