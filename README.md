@@ -39,7 +39,7 @@ We need to make sure that the video metadata element points somewhere
 meaningful. We can either use a local video file as the source:
 
 ``` r
-x$meta$video <- data.frame(file = ovdata_example_video("190301_kats_beds"))
+dv_meta_video(x) <- ovdata_example_video("190301_kats_beds")
 ```
 
 But if we use a local video file, we can’t share the resulting HTML file
@@ -47,7 +47,7 @@ with anyone else. Instead we can use an online video URL, in this case
 on YouTube:
 
 ``` r
-x$meta$video <- data.frame(file = "https://youtu.be/4YH89aSlc6M")
+dv_meta_video(x) <- "https://youtu.be/4YH89aSlc6M"
 ```
 
 And now on with the rest of the process:

@@ -13,7 +13,7 @@
 #' ## read data file
 #' x <- datavolley::dv_read(datavolley::dv_example_file())
 #' ## note that this data file has no video specified, so put a dummy value in
-#' x$meta$video <- data.frame(camera = "", file = "c:\\my_video.mp4", stringsAsFactors = FALSE)
+#' dv_meta_video(x) <- "c:\\my_video.mp4"
 #'
 #' ## extract play-by-play data
 #' px <- datavolley::plays(x)
@@ -464,7 +464,7 @@ item2m3u <- function(item, seamless = TRUE) {
 #'   x <- ovdata_example("190301_kats_beds-clip", as = "parsed")
 #'
 #'   ## make sure its video element points to our local copy of the corresponding video clip
-#'   x$meta$video <- tibble(camera = 0, file = ovdata_example_video("190301_kats_beds"))
+#'   dv_meta_video(x) <- ovdata_example_video("190301_kats_beds")
 #'
 #'   ## extract the plays
 #'   px <- datavolley::plays(x)

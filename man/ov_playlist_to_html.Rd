@@ -43,7 +43,7 @@ Converts a playlist object to an HTML file that can be opened in any browser. No
   x <- ovdata_example("190301_kats_beds-clip", as = "parsed")
 
   ## make sure its video element points to our local copy of the corresponding video clip
-  x$meta$video <- tibble(camera = 0, file = ovdata_example_video("190301_kats_beds"))
+  dv_meta_video(x) <- ovdata_example_video("190301_kats_beds")
 
   ## extract the plays
   px <- datavolley::plays(x)

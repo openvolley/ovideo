@@ -251,7 +251,7 @@ ov_images_to_video <- function(input_dir, image_file_mask = "image_%06d.jpg", im
 #'   ##  this example won't actually work in practice
 #'   x <- read_dv(dv_example_file())
 #'   ## fudge the video entry
-#'   x$meta$video <- tibble(camera = "Camera0", file = "~/my_video.mp4")
+#'   dv_meta_video(x) <- "~/my_video.mp4"
 #'   ## make the playlist
 #'   my_playlist <- ov_video_playlist(
 #'     x$plays %>% dplyr::filter(skill == "Reception") %>% slice(1:10),
