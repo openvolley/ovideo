@@ -2,7 +2,7 @@
 % Please edit documentation in R/ffmpeg_utils.R
 \name{ov_video_frame}
 \alias{ov_video_frame}
-\title{Extract a single frame from a video file}
+\title{Extract one or more specific frames from a video file}
 \usage{
 ov_video_frame(
   video_file,
@@ -17,9 +17,9 @@ ov_video_frame(
 \arguments{
 \item{video_file}{string: path to the video file}
 
-\item{t}{numeric: the time of the frame to extract (in seconds)}
+\item{t}{numeric: the times of the frames to extract (in seconds)}
 
-\item{n}{integer: the frame number of the frame to extract. Ignored if \code{t} is provided}
+\item{n}{integer: the frame numbers of the frames to extract. Ignored if \code{t} is provided}
 
 \item{format}{string: "jpg" or "png"}
 
@@ -30,10 +30,10 @@ ov_video_frame(
 \item{method}{string: the method to use, either "ffmpeg", "av", or "auto". "ffmpeg" is faster than "av" but requires that ffmpeg is available on your system path. If \code{method} is "auto", "ffmpeg" will be used if available and "av" if not}
 }
 \value{
-The path to the frame image file
+The paths to the frame image files
 }
 \description{
-Extract a single frame from a video file
+Extract one or more specific frames from a video file
 }
 \examples{
 video_file <- ov_example_video(1)

@@ -24,7 +24,7 @@ Try \code{plot(c(0, 4), c(0, 7), type = "n", asp = 1); datavolley::dv_court()} o
 Image coordinates are returned as normalized coordinates in the range \code{[0, 1]}. You may need to scale these by the width and height of the image, depending on how you are plotting things.
 }
 \examples{
-## the ref data for the example iomage
+## the ref data for the example image
 crt <- data.frame(image_x = c(0.05397063, 0.95402573, 0.75039756, 0.28921230),
                   image_y = c(0.02129301, 0.02294600, 0.52049712, 0.51884413),
                   court_x = c(0.5, 3.5, 3.5, 0.5),

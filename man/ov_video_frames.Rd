@@ -2,7 +2,7 @@
 % Please edit documentation in R/ffmpeg_utils.R
 \name{ov_video_frames}
 \alias{ov_video_frames}
-\title{Extract multiple frames from a video file}
+\title{Extract multiple consecutive frames from a video file}
 \usage{
 ov_video_frames(
   video_file,
