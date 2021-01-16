@@ -2,18 +2,18 @@
 
 #' Define the reference points on a court image
 #'
-#' This function is used to define the reference points on a court image, to be used with \code{\link{ov_transform_points}}.
-#' The court coordinate system is that used in \code{\link[datavolley]{dv_court}}, \code{\link[datavolley]{ggcourt}}, and related functions.
-#' Try \code{plot(c(0, 4), c(0, 7), type = "n", asp = 1); datavolley::dv_court()} or \code{ggplot2::ggplot() + datavolley::ggcourt() + ggplot2::theme_bw()} for a visual depiction.
+#' This function is used to define the reference points on a court image, to be used with [ov_transform_points()].
+#' The court coordinate system is that used in [datavolley::dv_court()], [datavolley::ggcourt()], and related functions.
+#' Try `plot(c(0, 4), c(0, 7), type = "n", asp = 1); datavolley::dv_court()` or `ggplot2::ggplot() + datavolley::ggcourt() + ggplot2::theme_bw()` for a visual depiction.
 #'
-#' @param image_file string: path to an image file (jpg) containing the court image (not required if \code{video_file} is supplied)
-#' @param video_file string: path to a video file from which to extract the court image (not required if \code{image_file} is supplied)
-#' @param t numeric: the time of the video frame to use as the court image (not required if \code{image_file} is supplied)
+#' @param image_file string: path to an image file (jpg) containing the court image (not required if `video_file` is supplied)
+#' @param video_file string: path to a video file from which to extract the court image (not required if `image_file` is supplied)
+#' @param t numeric: the time of the video frame to use as the court image (not required if `image_file` is supplied)
 #' @param type string: currently only "corners"
 #'
 #' @return A data.frame containing the reference information
 #'
-#' @seealso \code{\link{ov_transform_points}}, \code{\link[datavolley]{dv_court}},  \code{\link[datavolley]{ggcourt}}
+#' @seealso [ov_transform_points()], [datavolley::dv_court()],  [datavolley::ggcourt()]
 #'
 #' @examples
 #' if (interactive()) {
@@ -68,18 +68,18 @@ ov_get_court_ref <- function(image_file, video_file, t = 60, type = "corners") {
 
 #' Transform points from image coordinates to court coordinates or vice-versa
 #'
-#' The court coordinate system is that used in \code{\link[datavolley]{dv_court}}, \code{\link[datavolley]{ggcourt}}, and related functions.
-#' Try \code{plot(c(0, 4), c(0, 7), type = "n", asp = 1); datavolley::dv_court()} or \code{ggplot2::ggplot() + datavolley::ggcourt() + ggplot2::theme_bw()} for a visual depiction.
-#' Image coordinates are returned as normalized coordinates in the range \code{[0, 1]}. You may need to scale these by the width and height of the image, depending on how you are plotting things.
+#' The court coordinate system is that used in [datavolley::dv_court()], [datavolley::ggcourt()], and related functions.
+#' Try `plot(c(0, 4), c(0, 7), type = "n", asp = 1); datavolley::dv_court()` or `ggplot2::ggplot() + datavolley::ggcourt() + ggplot2::theme_bw()` for a visual depiction.
+#' Image coordinates are returned as normalized coordinates in the range `[0, 1]`. You may need to scale these by the width and height of the image, depending on how you are plotting things.
 #'
-#' @param x numeric: input x points. \code{x} can also be a two-column data.frame or matrix
+#' @param x numeric: input x points. `x` can also be a two-column data.frame or matrix
 #' @param y numeric: input y points
-#' @param ref data.frame: reference, as returned by \code{\link{ov_get_court_ref}}
+#' @param ref data.frame: reference, as returned by [ov_get_court_ref()]
 #' @param direction string: either "to_court" (to transform image coordinates to court coordinates) or "to_image" (the reverse) 
 #'
 #' @return A two-column data.frame with transformed values
 #'
-#' @seealso \code{\link{ov_get_court_ref}}, \code{\link[datavolley]{dv_court}},  \code{\link[datavolley]{ggcourt}}
+#' @seealso [ov_get_court_ref()], [datavolley::dv_court()],  [datavolley::ggcourt()]
 #'
 #' @examples
 #' ## the ref data for the example image
