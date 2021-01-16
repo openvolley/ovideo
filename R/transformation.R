@@ -74,7 +74,7 @@ ov_get_court_ref <- function(image_file, video_file, t = 60, type = "corners") {
 #'
 #' @param x numeric: input x points. `x` can also be a two-column data.frame or matrix
 #' @param y numeric: input y points
-#' @param ref data.frame: reference, as returned by [ov_get_court_ref()]
+#' @param ref data.frame: reference, as returned by [ov_get_court_ref()] or [ov_shiny_court_ref()]
 #' @param direction string: either "to_court" (to transform image coordinates to court coordinates) or "to_image" (the reverse) 
 #'
 #' @return A two-column data.frame with transformed values

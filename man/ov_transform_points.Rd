@@ -11,7 +11,7 @@ ov_transform_points(x, y, ref, direction = "to_court")
 
 \item{y}{numeric: input y points}
 
-\item{ref}{data.frame: reference, as returned by \code{\link[=ov_get_court_ref]{ov_get_court_ref()}}}
+\item{ref}{data.frame: reference, as returned by \code{\link[=ov_get_court_ref]{ov_get_court_ref()}} or \code{\link[=ov_shiny_court_ref]{ov_shiny_court_ref()}}}
 
 \item{direction}{string: either "to_court" (to transform image coordinates to court coordinates) or "to_image" (the reverse)}
 }
