@@ -34,7 +34,10 @@ A shiny app to define a court reference
 }
 \examples{
 if (interactive()) {
-  ## an existing guess at the court ref data for the example video
+  ## define a court reference from scratch
+  ov_shiny_court_ref(video_file = ov_example_video(), t = 5)
+
+  ## or modify an existing one
   crt <- data.frame(image_x = c(0.05397063, 0.95402573, 0.75039756, 0.28921230),
                     image_y = c(0.02129301, 0.02294600, 0.52049712, 0.51884413),
                     court_x = c(0.5, 3.5, 3.5, 0.5),

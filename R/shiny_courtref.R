@@ -20,7 +20,7 @@ s_courtref_ui_main <- function(app_data) {
     tagList(fluidRow(column(8, plotOutput("srplot", height = "600px", click = "sr_plot_click", hover = hoverOpts("sr_plot_hover", delay = 50, delayType = "throttle"))), ##height = paste0(ph, "px"))
                      column(4, uiOutput("srui_table"),
                             tags$hr(),
-                            shiny::fixedRow(column(6, textInput("net_height", label = "Net height (m):", value = if (!is.null(app_data$ref) && !is.null(app_data$ref$net_height) && !is.na(app_data$ref$net_height)) app_data$ref$net_height else "", width = "10ex")),
+                            shiny::fixedRow(if (isTRUE(app_data$include_net)) column(6, textInput("net_height", label = "Net height (m):", value = if (!is.null(app_data$ref) && !is.null(app_data$ref$net_height) && !is.na(app_data$ref$net_height)) app_data$ref$net_height else "", width = "10ex")),
                                             column(6, textInput("video_framerate", label = "Video frame rate:", value = if (!is.null(app_data$ref) && !is.null(app_data$ref$video_framerate) && !is.na(app_data$ref$video_framerate)) app_data$ref$video_framerate else "", width = "10ex"))),
                             tags$hr(),
                             actionButton("exit_app", "Exit app"))
@@ -32,23 +32,27 @@ s_courtref_server <- function(app_data) {
     function(input, output, session) {
         DEBUG <- FALSE
         ## define points on court and their corresponding coordinates
-        court_refs_data <- tibble(pos = c("nlb", "nrb", "nl3", "nr3", "lm", "rm", "fl3", "fr3", "flb", "frb", "lnt", "rnt"),
-                                  lab = c("Near left baseline corner", "Near right baseline corner", "Left end of near 3m line", "Right end of near 3m line", "Left end of the midline", "Right end of the midline", "Left end of far 3m line", "Right end of far 3m line", "Far left baseline corner", "Far right baseline corner", "Left top of the net", "Right top of the net"),
-                                  court_x = c(0.5, 3.5, 0.5, 3.5, 0.5, 3.5, 0.5, 3.5, 0.5, 3.5, 0.5, 3.5),
-                                  court_y = c(0.5, 0.5, 2.5, 2.5, 3.5, 3.5, 4.5, 4.5, 6.5, 6.5, 3.5, 3.5))
+        if (!is.null(app_data$court_refs_data)) {
+            court_refs_data <- app_data$court_refs_data
+        } else {
+            court_refs_data <- tibble(pos = c("nlb", "nrb", "nl3", "nr3", "lm", "rm", "fl3", "fr3", "flb", "frb", "lnt", "rnt"),
+                                      lab = c("Near left baseline corner", "Near right baseline corner", "Left end of near 3m line", "Right end of near 3m line", "Left end of the midline", "Right end of the midline", "Left end of far 3m line", "Right end of far 3m line", "Far left baseline corner", "Far right baseline corner", "Left top of the net", "Right top of the net"),
+                                      court_x = c(0.5, 3.5, 0.5, 3.5, 0.5, 3.5, 0.5, 3.5, 0.5, 3.5, 0.5, 3.5),
+                                      court_y = c(0.5, 0.5, 2.5, 2.5, 3.5, 3.5, 4.5, 4.5, 6.5, 6.5, 3.5, 3.5))
+        }
 
         ## crvt holds the edited court ref data
         ## initially populate this from app_data
         ## TODO add net_height, possible video width, height, framerate
-        crvt <- reactiveValues(court = if (!is.null(app_data$ref))
-                                           left_join(ref$court_ref, court_refs_data[, c("court_x", "court_y", "pos")], by = c("court_x", "court_y")) ## add pos col
+        crvt <- reactiveValues(court = if (!is.null(app_data$ref) && !is.null(app_data$ref$court_ref))
+                                           left_join(app_data$ref$court_ref, court_refs_data[, c("court_x", "court_y", "pos")], by = c("court_x", "court_y")) ## add pos col
                                        else
                                            tibble(image_x = rep(NA_real_, 4), image_y = NA_real_, court_x = NA_real_, court_y = NA_real_, pos = NA_character_),
                                antenna = if (!is.null(app_data$ref) && !is.null(app_data$ref$antenna) && nrow(app_data$ref$antenna) == 4)
-                                             ref$antenna
+                                             app_data$ref$antenna
                                          else
                                              tibble(image_x = rep(NA_real_, 4), image_y = NA_real_,  antenna = c("left", "right", "right", "left"), where = c(rep("floor", 2), rep("net_top", 2))),
-                               net_height = if (!is.null(app_data$ref) && !is.null(app_data$ref$net_height)) ref$net_height else NA_real_,
+                               net_height = if (!is.null(app_data$ref) && !is.null(app_data$ref$net_height)) app_data$ref$net_height else NA_real_,
                                video_height = if (!is.null(app_data$ref) && !is.null(app_data$ref$video_height)) app_data$ref$video_height else NA_integer_,
                                video_width = if (!is.null(app_data$ref) && !is.null(app_data$ref$video_width)) app_data$ref$video_width else NA_integer_,
                                video_framerate = if (!is.null(app_data$ref) && !is.null(app_data$ref$video_framerate)) app_data$ref$video_framerate else NA_integer_)
@@ -57,6 +61,10 @@ s_courtref_server <- function(app_data) {
             ref <- reactiveValuesToList(crvt)
             ref$court_ref <- dplyr::select(left_join(dplyr::select(ref$court, -"court_x", -"court_y"), court_refs_data[, c("court_x", "court_y", "pos")], by = "pos"), -"pos")
             ref$court <- NULL ## want it named court_ref
+            if (!isTRUE(app_data$include_net)) {
+                ref$antenna <- NULL
+                ref$net_height <- NULL
+            }
             shiny::stopApp(ref)
         })
 
@@ -76,10 +84,10 @@ s_courtref_server <- function(app_data) {
             do.call(tags$div, ## the four court ref points can vary
                     c(lapply(1:4, function(n) cr_dropdown(paste0("crdd", n), n = n, what = if (n <= nrow(cr)) cr$pos[n] else NULL)),
                       ## antenna points are fixed
-                      list(tags$div(tags$strong("Reference point 5"), "Left end of the midline"),
-                           tags$div(tags$strong("Reference point 6"), "Right end of the midline"),
-                           tags$div(tags$strong("Reference point 7"), "Top of net at right antenna"),
-                           tags$div(tags$strong("Reference point 8"), "Top of net at left antenna"))
+                      if (isTRUE(app_data$include_net)) list(tags$div(tags$strong("Reference point 5"), "Left end of the midline"),
+                                                            tags$div(tags$strong("Reference point 6"), "Right end of the midline"),
+                                                            tags$div(tags$strong("Reference point 7"), "Top of net at right antenna"),
+                                                            tags$div(tags$strong("Reference point 8"), "Top of net at left antenna"))
                       ))
         })
         ## watch these inputs
@@ -88,7 +96,7 @@ s_courtref_server <- function(app_data) {
         observeEvent(input$crdd3, {if (nrow(crvt$court) > 2) { crvt$court$pos[3] <- input$crdd3; } })
         observeEvent(input$crdd4, {if (nrow(crvt$court) > 3) { crvt$court$pos[4] <- input$crdd4; } })
         observe({
-            crvt$net_height <- if (nzchar(input$net_height)) as.numeric(input$net_height) else NA_real_
+            crvt$net_height <- if (!is.null(input$net_height) && nzchar(input$net_height)) as.numeric(input$net_height) else NA_real_
         })
         observe({
             crvt$video_framerate <- if (nzchar(input$video_framerate)) as.numeric(input$video_framerate) else NA_real_
@@ -99,7 +107,11 @@ s_courtref_server <- function(app_data) {
                 cr <- crvt$court
                 ## account for changes in dropdowns, i.e. the image location might now be assigned to a different court ref location
                 if (!is.null(cr)) cr <- left_join(dplyr::select(cr, -"court_x", -"court_y"), court_refs_data[, c("court_x", "court_y", "pos")], by = "pos")
-                out <- ovideo::ov_overlay_data(zones = FALSE, serve_zones = FALSE, space = "image", court_ref = cr, crop = requireNamespace("sf", quietly = TRUE))
+                if (!is.null(app_data$overlay_data_function)) {
+                    out <- app_data$overlay_data_function(court_ref = cr, space = "image", crop = requireNamespace("sf", quietly = TRUE))
+                } else {
+                    out <- ovideo::ov_overlay_data(zones = FALSE, serve_zones = FALSE, space = "image", court_ref = cr, crop = requireNamespace("sf", quietly = TRUE))
+                }
                 out$courtxy <- dplyr::rename(out$courtxy, image_x = "x", image_y = "y")
                 out
             }, error = function(e) NULL)
@@ -121,7 +133,7 @@ s_courtref_server <- function(app_data) {
                     p <- p + geom_label(data = mutate(crvt$court, point_num = row_number()), ## double check that point_num always matches the UI inputs ordering
                                         aes_string(label = "point_num"), color = "white", fill = court_colour)
                 }
-                if (!is.null(crvt$antenna)) {
+                if (isTRUE(app_data$include_net) && !is.null(crvt$antenna)) {
                     plotx <- mutate(crvt$antenna, n = case_when(.data$antenna == "left" & .data$where == "floor" ~ 5L,
                                                                 .data$antenna == "right" & .data$where == "floor" ~ 6L,
                                                                 .data$antenna == "right" & .data$where == "net_top" ~ 7L,
@@ -198,11 +210,13 @@ s_courtref_server <- function(app_data) {
                         crvt$court[next_pt, c("image_x", "image_y")] <- as.list(px)
                         crvt$court$pos[next_pt] <- input[[paste0("crdd", next_pt)]]
                         ## TODO court_x and court_y here need updating
-                    } else if (is.null(crvt$antenna) || nrow(crvt$antenna) < 4) {
-                        warning("empty crtvt$antenna??")
-                    } else if (any(is.na(crvt$antenna$image_x))) {
-                        next_pt <- min(which(is.na(crvt$antenna$image_x)))
-                        crvt$antenna[next_pt, c("image_x", "image_y")] <- as.list(px)
+                    } else if (isTRUE(app_data$include_net)) {
+                        if (is.null(crvt$antenna) || nrow(crvt$antenna) < 4) {
+                            warning("empty crtvt$antenna??")
+                        } else if (any(is.na(crvt$antenna$image_x))) {
+                            next_pt <- min(which(is.na(crvt$antenna$image_x)))
+                            crvt$antenna[next_pt, c("image_x", "image_y")] <- as.list(px)
+                        }
                     }
                 } else {
                     ##if (DEBUG) cat("drag or null start/end point\n")
@@ -262,7 +276,10 @@ s_courtref_server <- function(app_data) {
 #'
 #' @examples
 #' if (interactive()) {
-#'   ## an existing guess at the court ref data for the example video
+#'   ## define a court reference from scratch
+#'   ov_shiny_court_ref(video_file = ov_example_video(), t = 5)
+#'
+#'   ## or modify an existing one
 #'   crt <- data.frame(image_x = c(0.05397063, 0.95402573, 0.75039756, 0.28921230),
 #'                     image_y = c(0.02129301, 0.02294600, 0.52049712, 0.51884413),
 #'                     court_x = c(0.5, 3.5, 3.5, 0.5),
@@ -285,6 +302,7 @@ ov_shiny_court_ref <- function(image_file, video_file, t = 60, existing_ref = NU
         }
     }
     app_data <- list(image = image_file, ref = existing_ref, ...)
+    if (!"include_net" %in% names(app_data)) app_data$include_net <- TRUE
     this_app <- list(ui = s_courtref_ui(app_data = app_data), server = s_courtref_server(app_data = app_data))
     shiny::runApp(this_app, display.mode = "normal", launch.browser = launch_browser)
 }
