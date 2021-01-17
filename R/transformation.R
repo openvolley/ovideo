@@ -136,3 +136,101 @@ ov_transform_points <- function(x, y, ref, direction = "to_court") {
     tmp <- apply(cbind(x, y, z), 1, function(xx) H %*% matrix(xx, ncol = 1))
     data.frame(x = tmp[1, ] / tmp[3, ], y = tmp[2, ] / tmp[3, ])
 }
+
+
+#' Estimate the camera matrix
+#'
+#' The camera matrix characterizes the mapping of a camera from 3D real-world coordinates to 2D coordinates in an image.
+#'
+#' @references <https://en.wikipedia.org/wiki/Camera_matrix>
+#' @param X matrix or data.frame: Nx3 matrix of 3D real-world coordinates
+#' @param x matrix or data.frame: Nx2 matrix of image coordinates
+#'
+#' @return A list with components `coef` (fitted transformation coefficients) and `rmse` (root mean squared error of the fitted transformation)
+#'
+#' @seealso [ov_cmat_apply()]
+#'
+#' @examples
+#'
+#' ## define real-world and corresponding image coordinates
+#' xX <- dplyr::tribble(~image_x, ~image_y, ~court_x, ~court_y,   ~z,
+#'                         0.054,    0.023,      0.5,      0.5,    0, ## near left baseline
+#'                         0.951,    0.025,      3.5,      0.5,    0, ## near right baseline
+#'                         0.752,    0.519,      3.5,      6.5,    0, ## far right baseline
+#'                         0.288,    0.519,      0.5,      6.5,    0, ## far left baseline
+#'                         0.199,    0.644,      0.5,      3.5, 2.43, ## left net top
+#'                         0.208,    0.349,      0.5,      3.5, 0.00, ## left net floor
+#'                         0.825,    0.644,      3.5,      3.5, 2.43, ## right net top
+#'                         0.821,    0.349,      3.5,      3.5, 0.00) ## right net floor
+#'
+#' C <- ov_cmat_estimate(X = xX[, 3:5], x = xX[, 1:2])
+#'
+#' ## fitted image coordinates using C
+#' ov_cmat_apply(C, X = xX[, 3:5])
+#'
+#' ## compare to actual image positions
+#' xX[, 1:2]
+#'
+#' @export
+ov_cmat_estimate <- function(X, x) {
+    ## code here adapted from the StereoMorph package and elsewhere
+    if (!is.matrix(X)) X <- as.matrix(X)
+    if (!is.matrix(x)) x <- as.matrix(x)
+    if (nrow(X) != nrow(x)) stop("X, x have different number of rows")
+    coef <- matrix(NA_real_, nrow = 11, ncol = 1)
+    nna_idx <- (rowSums(is.na(x)) < 1) & (rowSums(is.na(X)) < 1)
+    if (sum(nna_idx) < 6) {
+        warning("insufficient points to estimate camera matrix")
+        return(NULL)
+    }
+    x <- x[nna_idx, ]
+    X <- X[nna_idx, ]
+    A <- matrix(NA_real_, nrow = 2 * nrow(X), ncol = 11)
+    for (k in seq_len(nrow(X))) {
+        A[2 * k - 1, ] <- c(X[k, 1], X[k, 2], X[k, 3], 1, 0, 0, 0, 0, -x[k, 1]*X[k, 1], -x[k, 1]*X[k, 2], -x[k, 1]*X[k, 3])
+        A[2 * k, ] <- c(0, 0, 0, 0, X[k, 1], X[k, 2], X[k, 3], 1, -x[k, 2]*X[k, 1], -x[k, 2]*X[k, 2], -x[k, 2]*X[k, 3])
+    }
+    coef <- solve(t(A) %*% A) %*% (t(A) %*% c(t(x)))
+    list(coef = coef, rmse = sqrt(mean((ov_cmat_apply(C = coef, X = X) - x)^2)))
+}
+
+#' Apply the camera matrix to 3D coordinates
+#'
+#' The camera matrix characterizes the mapping of a camera from 3D real-world coordinates to 2D coordinates in an image.
+#'
+#' @references <https://en.wikipedia.org/wiki/Camera_matrix>
+#' @param C : camera matrix as returned by [ov_cmat_estimate()], or the coefficients from that object
+#' @param X matrix or data.frame: Nx3 matrix of 3D real-world coordinates
+#'
+#' @return An Nx2 matrix of image coordinates
+#'
+#' @seealso [ov_cmat_estimate()]
+#'
+#' @examples
+#'
+#' ## define real-world and corresponding image coordinates
+#' xX <- dplyr::tribble(~image_x, ~image_y, ~court_x, ~court_y,   ~z,
+#'                         0.054,    0.023,      0.5,      0.5,    0, ## near left baseline
+#'                         0.951,    0.025,      3.5,      0.5,    0, ## near right baseline
+#'                         0.752,    0.519,      3.5,      6.5,    0, ## far right baseline
+#'                         0.288,    0.519,      0.5,      6.5,    0, ## far left baseline
+#'                         0.199,    0.644,      0.5,      3.5, 2.43, ## left net top
+#'                         0.208,    0.349,      0.5,      3.5, 0.00, ## left net floor
+#'                         0.825,    0.644,      3.5,      3.5, 2.43, ## right net top
+#'                         0.821,    0.349,      3.5,      3.5, 0.00) ## right net floor
+#'
+#' C <- ov_cmat_estimate(X = xX[, 3:5], x = xX[, 1:2])
+#'
+#' ## fitted image coordinates using C
+#' ov_cmat_apply(C, X = xX[, 3:5])
+#'
+#' ## compare to actual image positions
+#' xX[, 1:2]
+#'
+#' @export
+ov_cmat_apply <- function(C, X) {
+    if (is.list(C) && "coef" %in% names(C)) C <- C$coef
+    if (!is.matrix(X)) X <- as.matrix(X)
+    cbind((X[, 1] * C[1] + X[, 2] * C[2] + X[, 3] * C[3] + C[4])/(X[, 1] * C[9] + X[, 2] * C[10] + X[, 3] * C[11] + 1),
+          (X[, 1] * C[5] + X[, 2] * C[6] + X[, 3] * C[7] + C[8])/(X[, 1] * C[9] + X[, 2] * C[10] + X[, 3] * C[11] + 1))
+}
