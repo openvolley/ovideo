@@ -19,9 +19,9 @@ ov_get_court_ref(image_file, video_file, t = 60, type = "corners")
 A data.frame containing the reference information
 }
 \description{
-This function is used to define the reference points on a court image, to be used with \code{\link{ov_transform_points}}.
-The court coordinate system is that used in \code{\link[datavolley]{dv_court}}, \code{\link[datavolley]{ggcourt}}, and related functions.
-Try \code{plot(c(0, 4), c(0, 7), type = "n", asp = 1); datavolley::dv_court()} or \code{ggplot2::ggplot() + datavolley::ggcourt() + ggplot2::theme_bw()} for a visual depiction.
+This function is used to define the reference points on a court image, to be used with \code{\link[=ov_transform_points]{ov_transform_points()}}.
+The court coordinate system is that used in \code{\link[datavolley:dv_court]{datavolley::dv_court()}}, \code{\link[datavolley:ggcourt]{datavolley::ggcourt()}}, and related functions.
+Try \verb{plot(c(0, 4), c(0, 7), type = "n", asp = 1); datavolley::dv_court()} or \code{ggplot2::ggplot() + datavolley::ggcourt() + ggplot2::theme_bw()} for a visual depiction.
 }
 \examples{
 if (interactive()) {
@@ -31,5 +31,5 @@ if (interactive()) {
 }
 }
 \seealso{
-\code{\link{ov_transform_points}}, \code{\link[datavolley]{dv_court}},  \code{\link[datavolley]{ggcourt}}
+\code{\link[=ov_transform_points]{ov_transform_points()}}, \code{\link[datavolley:dv_court]{datavolley::dv_court()}},  \code{\link[datavolley:ggcourt]{datavolley::ggcourt()}}
 }
