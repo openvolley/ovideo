@@ -135,6 +135,7 @@ ov_transform_points <- function(x, y, ref, direction = "to_court") {
     H <- matrix(Hres, ncol = 3, byrow = TRUE)
     tmp <- apply(cbind(x, y, z), 1, function(xx) H %*% matrix(xx, ncol = 1))
     data.frame(x = tmp[1, ] / tmp[3, ], y = tmp[2, ] / tmp[3, ])
+
 }
 
 
@@ -234,3 +235,4 @@ ov_cmat_apply <- function(C, X) {
     cbind((X[, 1] * C[1] + X[, 2] * C[2] + X[, 3] * C[3] + C[4])/(X[, 1] * C[9] + X[, 2] * C[10] + X[, 3] * C[11] + 1),
           (X[, 1] * C[5] + X[, 2] * C[6] + X[, 3] * C[7] + C[8])/(X[, 1] * C[9] + X[, 2] * C[10] + X[, 3] * C[11] + 1))
 }
+
