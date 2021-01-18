@@ -67,7 +67,11 @@ print(jsstuff$children[[1]][[2]])
 playlist <- vsx$playlist$playlist
 plays_cols_to_show <- if (length(vsx$playlist$table_cols) > 0) vsx$playlist$table_cols else c("video_time", "code", "set_number", "home_team_score", "visiting_team_score")
 plays_cols_to_show <- intersect(names(playlist), plays_cols_to_show)
-playlist$code <- vapply(playlist$code, function(x) paste0('<strong style="background-color:white;border-radius: 5px;padding: 3px; border: 2px solid #73AD21;">',x,'</strong>'), FUN.VALUE = "", USE.NAMES = FALSE)
+if ("code" %in% plays_cols_to_show) playlist$code <- vapply(playlist$code, function(x) paste0("<strong style=\"background-color:white;border-radius: 5px;padding: 3px; border: 2px solid #73AD21;\">", x ,"</strong>"), FUN.VALUE = "", USE.NAMES = FALSE)
+if("home_team_score" %in% plays_cols_to_show)  playlist$home_team_score <- vapply(playlist$home_team_score, function(x) paste0("<strong style=\"background-color:grey;border-radius: 5px;padding: 3px;\">", x ,"</strong>"), FUN.VALUE = "", USE.NAMES = FALSE)
+if("visiting_team_score" %in% plays_cols_to_show)  playlist$visiting_team_score <- vapply(playlist$visiting_team_score, function(x) paste0("<strong style=\"background-color:grey;border-radius: 5px;padding: 3px;\">", x ,"</strong>"), FUN.VALUE = "", USE.NAMES = FALSE)
+
+
 playstable <- DT::datatable(names_first_to_capital(playlist[, plays_cols_to_show, drop = FALSE]), rownames = FALSE,
                             width = "100%", extensions = "Scroller", selection = list(mode = "single", selected = 1, target = "row"),
                             escape = FALSE,
