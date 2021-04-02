@@ -34,8 +34,8 @@ ov_video_js <- function(youtube = FALSE, version = 1) {
 #'   library(shiny)
 #'
 #'   ## hand-crafted playlist for this example
-#'   playlist <- data.frame(video_src = "xL7qEpOdtio",
-#'                          start_time = c(5417, 7252, 6222, 7656, 7369),
+#'   playlist <- data.frame(video_src = "NisDpPFPQwU",
+#'                          start_time = c(589, 1036, 1163, 2731, 4594),
 #'                          duration = 8,
 #'                          type = "youtube")
 #'
