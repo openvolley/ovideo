@@ -76,7 +76,7 @@ function dvjs_set_playlist_and_play(items, video_id, type, seamless = true) {
 function dvjs_clear_playlist() {
     dvjs_video_stop();
     if (dvjs_video_controller.type == "local") {
-	document.getElementById(dvjs_video_controller.id).removeAttribute("src");
+	if (document.getElementById(dvjs_video_controller.id)) { document.getElementById(dvjs_video_controller.id).removeAttribute("src"); }
     }
     if (dvjs_yt_player != null) {
 	dvjs_yt_player.destroy();
@@ -103,32 +103,27 @@ function dvjs_video_play() {
 	var item = dvjs_video_controller.queue[dvjs_video_controller.current];
 	if (dvjs_video_controller.type == "youtube") {
 	    if (dvjs_yt_first_mute) {
-		dvjs_yt_player.mute();
+		if (dvjs_yt_player) { dvjs_yt_player.mute(); }
 		dvjs_yt_first_mute = false;
 	    }
-//	    if (dvjs_video_controller.current > 0 && dvjs_yt_player.getPlaylist() != null && dvjs_yt_player.getPlaylist()[0] == item.video_src) {
-		// same video, so just seek to right spot
-		// don't use this on the first queue item (current == 0), maybe problems with slow connections and order of events being fired
-//		dvjs_yt_player.seekTo(item.start_time);
-//	    } else {
-	    // this seems fine even when it's the same video, and less problematic than seekTo, so just use this
-		dvjs_yt_player.loadPlaylist(item.video_src, 0, item.start_time);
-//	    }
+	    dvjs_yt_player.loadPlaylist(item.video_src, 0, item.start_time);
 	} else {
 	    el = document.getElementById(dvjs_video_controller.id);
-	    if (el.getAttribute("src") != item.video_src) {
-		el.setAttribute("src", item.video_src)
-	        // TO CHECK: should this wait until the file metadata is available, so that we can seek to currentTime?
-	        //el.addEventListener("loadedmetadata", function() {
-		//  // Video is loaded and can be played
-		//  this.currentTime = dvjs_video_controller.queue[dvjs_video_controller.current].start_time;
-		//  this.play();
-		//}, false);
-		el.currentTime = item.start_time;
-		el.play();
-	    } else {
-		el.currentTime = item.start_time;
-		el.play();
+	    if (el) {
+		if (el.getAttribute("src") != item.video_src) {
+		    el.setAttribute("src", item.video_src)
+	            // TO CHECK: should this wait until the file metadata is available, so that we can seek to currentTime?
+	            //el.addEventListener("loadedmetadata", function() {
+		    //  // Video is loaded and can be played
+		    //  this.currentTime = dvjs_video_controller.queue[dvjs_video_controller.current].start_time;
+		    //  this.play();
+		    //}, false);
+		    el.currentTime = item.start_time;
+		    el.play();
+		} else {
+		    el.currentTime = item.start_time;
+		    el.play();
+		}
 	    }
 	}
 	dvjs_start_video_interval();
@@ -147,7 +142,7 @@ function dvjs_video_stop() {
 	if (dvjs_video_controller.type == "youtube") {
 	    dvjs_yt_player.stopVideo();
 	} else {
-	    document.getElementById(dvjs_video_controller.id).pause();
+	    if (document.getElementById(dvjs_video_controller.id)) { document.getElementById(dvjs_video_controller.id).pause(); }
 	}
 	dvjs_video_onstop();
     }
@@ -174,8 +169,10 @@ function dvjs_video_pause() {
 		    current_src = dvjs_yt_player.getPlaylist()[0];
 		} else {
 		    var el = document.getElementById(dvjs_video_controller.id);
-		    current_time = el.currentTime;
-		    current_src = el.getAttribute("src");
+		    if (el) {
+			current_time = el.currentTime;
+			current_src = el.getAttribute("src");
+		    }
 		}
 		if (current_src != item.video_src) {
 		    // we are out of whack somehow
@@ -188,7 +185,7 @@ function dvjs_video_pause() {
 		    if (dvjs_video_controller.type == "youtube") {
 			dvjs_yt_player.playVideo();
 		    } else {
-			document.getElementById(dvjs_video_controller.id).play();
+			if (document.getElementById(dvjs_video_controller.id)) { document.getElementById(dvjs_video_controller.id).play(); }
 		    }
 		    dvjs_video_controller.paused = false;
 		    dvjs_start_video_interval();
@@ -204,7 +201,7 @@ function dvjs_video_pause() {
 	    if (dvjs_video_controller.type == "youtube") {
 		dvjs_yt_player.pauseVideo();
 	    } else {
-		document.getElementById(dvjs_video_controller.id).pause();
+		if (document.getElementById(dvjs_video_controller.id)) { document.getElementById(dvjs_video_controller.id).pause(); }
 	    }
 	}
 	dvjs_video_afterpause();
@@ -239,10 +236,9 @@ function dvjs_video_prev() {
 
 function dvjs_set_playback_rate(rate) {
     if (dvjs_video_controller.type == "youtube") {
-        dvjs_yt_player.setPlaybackRate(rate)
+        if (dvjs_yt_player) { dvjs_yt_player.setPlaybackRate(rate); }
     } else {
-        var el = document.getElementById(dvjs_video_controller.id);
-        el.playbackRate=rate;
+        if (document.getElementById(dvjs_video_controller.id)) { document.getElementById(dvjs_video_controller.id).playbackRate=rate; }
     }
 }
 
@@ -250,8 +246,7 @@ function dvjs_jog(howmuch) {
     if (dvjs_video_controller.type == "youtube") {
       dvjs_yt_player.seekTo(dvjs_yt_player.getCurrentTime() + howmuch);
     } else {
-        var el = document.getElementById(dvjs_video_controller.id);
-        el.currentTime = (el.currentTime + howmuch);
+        if (document.getElementById(dvjs_video_controller.id)) { document.getElementById(dvjs_video_controller.id).currentTime = (el.currentTime + howmuch); }
     }
 }
 
@@ -267,10 +262,16 @@ function dvjs_video_manage() {
 	if (dvjs_video_controller.type == "youtube") {
 	    current_time = dvjs_yt_player.getCurrentTime();
 	    current_src = dvjs_yt_player.getPlaylist()[0];
+	    if (current_time < 0.5 && item.start_time >= 0.5) {
+		// YT sometimes resets the video to the start of the video AFTER seeking to the startSeconds time. Whaaat?
+		dvjs_yt_player.seekTo(item.start_time, true);
+	    }
 	} else {
 	    var el = document.getElementById(dvjs_video_controller.id);
-	    current_time = el.currentTime;
-	    current_src = el.getAttribute("src");
+	    if (el) {
+		current_time = el.currentTime;
+		current_src = el.getAttribute("src");
+	    }
 	}
 	if (current_src != item.video_src) {
 	    // we are out of whack somehow

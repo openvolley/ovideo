@@ -78,7 +78,7 @@ function dvjs_controller(id, type, seamless = true) {
     this.clear_playlist = function() {
 	that.video_stop();
 	if (that.video_controller.type == "local") {
-	    document.getElementById(that.video_controller.id).removeAttribute("src");
+	    if (document.getElementById(that.video_controller.id)) { document.getElementById(that.video_controller.id).removeAttribute("src"); }
 	}
 	if (that.yt_player != null) {
 	    that.yt_player.destroy();
@@ -105,19 +105,21 @@ function dvjs_controller(id, type, seamless = true) {
 	    var item = that.video_controller.queue[that.video_controller.current];
 	    if (that.video_controller.type == "youtube") {
 		if (that.yt_first_mute) {
-		    that.yt_player.mute();
+		    if (that.yt_player) { that.yt_player.mute(); }
 		    that.yt_first_mute = false;
 		}
 		that.yt_player.loadPlaylist(item.video_src, 0, item.start_time);
 	    } else {
 		el = document.getElementById(that.video_controller.id);
-		if (el.getAttribute("src") != item.video_src) {
-		    el.setAttribute("src", item.video_src)
-		    el.currentTime = item.start_time;
-		    el.play();
-		} else {
-		    el.currentTime = item.start_time;
-		    el.play();
+		if (el) {
+		    if (el.getAttribute("src") != item.video_src) {
+			el.setAttribute("src", item.video_src)
+			el.currentTime = item.start_time;
+			el.play();
+		    } else {
+			el.currentTime = item.start_time;
+			el.play();
+		    }
 		}
 	    }
 	    that.start_video_interval();
@@ -126,17 +128,13 @@ function dvjs_controller(id, type, seamless = true) {
 	}
     }
 
-//    function onYouTubeIframeAPIReady() {
-//	// don't need to do anything
-//    }
-
     this.video_stop = function() {
 	that.stop_video_interval();
 	if (that.video_controller.type != null) {
 	    if (that.video_controller.type == "youtube") {
 		that.yt_player.stopVideo();
 	    } else {
-		document.getElementById(that.video_controller.id).pause();
+		if (document.getElementById(that.video_controller.id)) { document.getElementById(that.video_controller.id).pause(); }
 	    }
 	    that.video_onstop();
 	}
@@ -161,8 +159,10 @@ function dvjs_controller(id, type, seamless = true) {
 			current_src = that.yt_player.getPlaylist()[0];
 		    } else {
 			var el = document.getElementById(that.video_controller.id);
-			current_time = el.currentTime;
-			current_src = el.getAttribute("src");
+			if (el) {
+			    current_time = el.currentTime;
+			    current_src = el.getAttribute("src");
+			}
 		    }
 		    if (current_src != item.video_src) {
 			// we are out of whack somehow
@@ -175,7 +175,7 @@ function dvjs_controller(id, type, seamless = true) {
 			if (that.video_controller.type == "youtube") {
 			    that.yt_player.playVideo();
 			} else {
-			    document.getElementById(that.video_controller.id).play();
+			    if (document.getElementById(that.video_controller.id)) { document.getElementById(that.video_controller.id).play(); }
 			}
 			that.video_controller.paused = false;
 			that.start_video_interval();
@@ -191,7 +191,7 @@ function dvjs_controller(id, type, seamless = true) {
 		if (that.video_controller.type == "youtube") {
 		    that.yt_player.pauseVideo();
 		} else {
-		    document.getElementById(that.video_controller.id).pause();
+		    if (document.getElementById(that.video_controller.id)) { document.getElementById(that.video_controller.id).pause(); }
 		}
 	    }
 	    that.video_afterpause();
@@ -226,10 +226,9 @@ function dvjs_controller(id, type, seamless = true) {
 
     this.set_playback_rate = function(rate) {
 	if (that.video_controller.type == "youtube") {
-            that.yt_player.setPlaybackRate(rate)
+            if (that.yt_player) { that.yt_player.setPlaybackRate(rate); }
 	} else {
-            var el = document.getElementById(that.video_controller.id);
-            el.playbackRate=rate;
+            if (document.getElementById(that.video_controller.id)) { document.getElementById(that.video_controller.id).playbackRate=rate; }
 	}
     }
 
@@ -237,8 +236,7 @@ function dvjs_controller(id, type, seamless = true) {
 	if (that.video_controller.type == "youtube") {
 	    that.yt_player.seekTo(that.yt_player.getCurrentTime() + howmuch);
 	} else {
-            var el = document.getElementById(that.video_controller.id);
-            el.currentTime = (el.currentTime + howmuch);
+            if (document.getElementById(that.video_controller.id)) { document.getElementById(that.video_controller.id).currentTime = (el.currentTime + howmuch); }
 	}
     }
 
@@ -254,10 +252,16 @@ function dvjs_controller(id, type, seamless = true) {
 	    if (that.video_controller.type == "youtube") {
 		current_time = that.yt_player.getCurrentTime();
 		current_src = that.yt_player.getPlaylist()[0];
+		if (current_time < 0.5 && item.start_time >= 0.5) {
+		    // YT sometimes resets the video to the start of the video AFTER seeking to the startSeconds time. Whaaat?
+		    that.yt_player.seekTo(item.start_time, true);
+		}
 	    } else {
 		var el = document.getElementById(that.video_controller.id);
-		current_time = el.currentTime;
-		current_src = el.getAttribute("src");
+		if (el) {
+		    current_time = el.currentTime;
+		    current_src = el.getAttribute("src");
+		}
 	    }
 	    if (current_src != item.video_src) {
 		// we are out of whack somehow
