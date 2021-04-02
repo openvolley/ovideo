@@ -1,8 +1,9 @@
 Package: ovideo
 Title: Volleyball video utilities
-Version: 0.11.2
+Version: 0.12.0
 Authors@R: c(person(given = "Ben", family = "Raymond", role = c("aut", "cre"), email = "ben@untan.gl"),
-             person(given = "Adrien", family = "Ickowicz", role = "aut"))
+             person(given = "Adrien", family = "Ickowicz", role = "aut"),
+             person("openvolley.org", role = "org"))
 Description: Playlists and other video support functions from volleyball match files.
 URL: https://github.com/openvolley/ovideo
 BugReports: https://github.com/openvolley/ovideo/issues

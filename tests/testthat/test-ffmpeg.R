@@ -18,7 +18,7 @@ test_that("ffmpeg/av functions work", {
     expect_gt(file.size(chk), 60e3)
     expect_gt(file.size(chk), ffmpeg_jpg_size) ## av produces larger files?
     expect_message(chk2 <- ov_video_frame(system.file("extdata/2019_03_01-KATS-BEDS-clip.mp4", package = "ovideo"), t = 2+11/30, format = "png", method = "av", debug = TRUE), "ov_video_frame using method 'av'")
-    expect_equal(file.size(chk2), ffmpeg_png_size)
+    expect_lt(abs(file.size(chk2) - ffmpeg_png_size), 10e3)
     unlink(chk)
     unlink(chk2)
 })
