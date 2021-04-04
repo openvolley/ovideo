@@ -147,7 +147,7 @@ ov_video_playlist <- function(x, meta, type = NULL, timing = ov_video_timing(), 
     }
     x$type <- type
     if (normalize_paths) {
-        local_srcs <- which(x$type == "local" & !grepl("^https://", x$video_src, ignore.case = TRUE))
+        local_srcs <- which(x$type == "local" & !grepl("^https?://", x$video_src, ignore.case = TRUE))
         x$video_src[local_srcs] <- normalizePath(x$video_src[local_srcs], mustWork = FALSE)
     }
     ## add timings for seamless transitions
@@ -248,7 +248,7 @@ ov_video_playlist_pid <- function(x, meta, type = NULL, extra_cols = NULL, norma
     x$video_src <- as.character(x$video_src)
     x$type <- type
     if (normalize_paths) {
-        local_srcs <- which(x$type == "local" && !grepl("^https?://", x$video_src, ignore.case = TRUE))
+        local_srcs <- which(x$type == "local" & !grepl("^https?://", x$video_src, ignore.case = TRUE))
         x$video_src[local_srcs] <- normalizePath(x$video_src[local_srcs], mustWork = FALSE)
     }
     dplyr::distinct(x[, c("video_src", "start_time", "duration", "type", extra_cols)])
@@ -393,7 +393,7 @@ ov_playlist_as_onclick <- function(playlist, video_id, normalize_paths = TRUE, d
         dvjs_fun <- sub("^dvjs_", paste0(controller_var, "."), dvjs_fun)
     }
     if (normalize_paths) {
-        local_srcs <- which(playlist$type == "local" && !grepl("^https?://", playlist$video_src, ignore.case = TRUE))
+        local_srcs <- which(playlist$type == "local" & !grepl("^https?://", playlist$video_src, ignore.case = TRUE))
         if (length(local_srcs) > 0) {
             playlist$video_src[local_srcs] <- normalizePath(playlist$video_src[local_srcs], mustWork = FALSE)
         }
