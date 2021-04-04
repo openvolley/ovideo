@@ -37,6 +37,9 @@ function dvjs_controller(id, type, seamless = true) {
 	    if (that.yt_player == null) {
 		that.yt_player = new YT.Player(video_id, {
 		    videoId: items[0].video_src,
+		    playerVars: {
+			"controls": 0 //"rel": 0
+		    },
 		    events: {
 			"onStateChange": that.yt_player_state_change
 		    }
@@ -59,6 +62,9 @@ function dvjs_controller(id, type, seamless = true) {
 		//console.log("set_playlist_and_play ... new YT player");
 		that.yt_player = new YT.Player(video_id, {
 		    videoId: items[0].video_src,
+		    playerVars: {
+			"controls": 0 //"rel": 0
+		    },
 		    events: {
 			"onReady": that.video_play,
 			"onStateChange": that.yt_player_state_change

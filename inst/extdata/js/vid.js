@@ -35,6 +35,9 @@ function dvjs_set_playlist(items, video_id, type, seamless = true) {
 	if (dvjs_yt_player == null) {
 	    dvjs_yt_player = new YT.Player(video_id, {
 		videoId: items[0].video_src,
+		playerVars: {
+		    "controls": 0 //"rel": 0
+		},
 		events: {
 		    "onStateChange": dvjs_yt_player_state_change
 		}
@@ -57,6 +60,9 @@ function dvjs_set_playlist_and_play(items, video_id, type, seamless = true) {
 	    //console.log("set_playlist_and_play ... new YT player");
 	    dvjs_yt_player = new YT.Player(video_id, {
 		videoId: items[0].video_src,
+		playerVars: {
+		    "controls": 0 //"rel": 0
+		},
 		events: {
                     "onReady": dvjs_video_play,
 		    "onStateChange": dvjs_yt_player_state_change
