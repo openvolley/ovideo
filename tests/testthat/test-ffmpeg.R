@@ -1,6 +1,6 @@
 context("ffmpeg and av-based functions")
 test_that("ffmpeg/av functions work", {
-    skip_if_not(ovideo:::ov_ffmpeg_exists(), "ffmpeg executable not found")
+    skip_if_not(ovideo:::ov_ffmpeg_ok(), "ffmpeg executable not found")
     expect_message(chk <- ov_video_frame(system.file("extdata/2019_03_01-KATS-BEDS-clip.mp4", package = "ovideo"), t = 2+11/30, format = "png", method = "ffmpeg", debug = TRUE), "ov_video_frame using method 'ffmpeg'")
     expect_gt(file.size(chk), 900e3)
     ffmpeg_png_size <- file.size(chk)

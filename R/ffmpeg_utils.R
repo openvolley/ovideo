@@ -2,8 +2,8 @@ resolve_ffmpeg_method <- function(method) {
     if (missing(method) || is.null(method)) method <- "auto"
     method <- tolower(method)
     method <- match.arg(method, c("av", "ffmpeg", "auto"))
-    if (method == "ffmpeg" && !ov_ffmpeg_exists()) stop("could not find the ffmpeg executable")
-    if (method == "auto") method <- if (isTRUE(options()$ovideo$ffmpeg_exists)) "ffmpeg" else "av"
+    if (method == "ffmpeg") ov_ffmpeg_ok(do_error = TRUE)
+    if (method == "auto") method <- if (ov_ffmpeg_ok()) "ffmpeg" else "av"
     method
 }
 
@@ -90,12 +90,12 @@ ov_video_frame <- function(video_file, t, n, format = "jpg", debug = FALSE, fram
         if (debug) message("ov_video_frame using method 'ffmpeg'")
         execfun <- if (isTRUE(debug)) sys::exec_wait else sys::exec_internal
         if (!missing(t)) {
-            res <- execfun("ffmpeg", c("-y", "-ss", t, "-i", fs::path_real(video_file), "-vframes", 1, imfs))
+            res <- execfun(ov_ffmpeg_exe(), c("-y", "-ss", t, "-i", fs::path_real(video_file), "-vframes", 1, imfs))
         } else {
-            ##res <- execfun("ffmpeg", c("-y", "-r", "1", "-i", fs::path_real(video_file), "-vf", paste0("select='between(n\\,", n, "\\,", n, ")'"), "-vframes", 1, imfs))
+            ##res <- execfun(ov_ffmpeg_exe(), c("-y", "-r", "1", "-i", fs::path_real(video_file), "-vf", paste0("select='between(n\\,", n, "\\,", n, ")'"), "-vframes", 1, imfs))
             ## that is excruciatingly slow
             t <- n / framerate
-            res <- execfun("ffmpeg", c("-y", "-ss", t, "-i", fs::path_real(video_file), "-vframes", 1, imfs))
+            res <- execfun(ov_ffmpeg_exe(), c("-y", "-ss", t, "-i", fs::path_real(video_file), "-vframes", 1, imfs))
         }
     } else {
         if (debug) message("ov_video_frame using method 'av'")
@@ -123,12 +123,12 @@ ov_video_frame <- function(video_file, t, n, format = "jpg", debug = FALSE, fram
 #'
 #' @export
 ov_video_extract_clip <- function(video_file, outfile, start_time, duration, end_time, extra = NULL, debug = FALSE) { ## method = "auto"
-    if (!ov_ffmpeg_exists()) stop("could not find the ffmpeg executable")
+    ov_ffmpeg_ok(do_error = TRUE)
     if (missing(duration) && !missing(end_time)) duration <- end_time - start_time
     if (missing(outfile)) outfile <- tempfile(fileext = ".mp4")
     cargs <- c("-ss", as.character(start_time), "-i", fs::path_real(video_file), "-t", as.character(duration), "-c", "copy", extra, fs::path_real(outfile))
     execfun <- if (isTRUE(debug)) sys::exec_wait else sys::exec_internal
-    res <- execfun("ffmpeg", cargs)
+    res <- execfun(ov_ffmpeg_exe(), cargs)
     outfile
 }
 
@@ -155,7 +155,7 @@ ov_video_extract_clip <- function(video_file, outfile, start_time, duration, end
 #' @export
 ov_video_frames <- function(video_file, start_time, duration, end_time, outdir, fps, format = "jpg", jpg_quality = 1, extra = NULL, debug = FALSE) { ## method = "auto"
     create_clip <- TRUE ## internal method choice
-    if (!ov_ffmpeg_exists()) stop("could not find the ffmpeg executable")
+    ov_ffmpeg_ok(do_error = TRUE)
     if (missing(outdir) || is.null(outdir)) {
         outdir <- tempfile()
         dir.create(outdir)
@@ -185,7 +185,7 @@ ov_video_frames <- function(video_file, start_time, duration, end_time, outdir, 
     ##av::av_video_images(vidclip, format = format)
     cargs <- c("-i", fs::path_real(video_file), vf, "-vsync", "0", "-qscale:v", jpg_quality, extra, file.path(outdir, paste0("image_%06d.", format)))
     execfun <- if (isTRUE(debug)) sys::exec_wait else sys::exec_internal
-    res <- execfun("ffmpeg", cargs)
+    res <- execfun(ov_ffmpeg_exe(), cargs)
     dir(outdir, pattern = paste0("\\.", format, "$"), full.names = TRUE)
 }
 
@@ -206,7 +206,7 @@ ov_video_frames <- function(video_file, start_time, duration, end_time, outdir, 
 #'
 #' @export
 ov_images_to_video <- function(input_dir, image_file_mask = "image_%06d.jpg", image_files, outfile, fps = 30, extra = NULL, debug = FALSE) {
-    if (!ov_ffmpeg_exists()) stop("could not find the ffmpeg executable")
+    ov_ffmpeg_ok(do_error = TRUE)
     if (missing(outfile)) outfile <- tempfile(fileext = ".mp4")
     if (grepl("mp4$", outfile)) extra <- c(extra, "-pix_fmt", "yuv420p") ## https://trac.ffmpeg.org/wiki/Slideshow: "when outputting H.264, adding -vf format=yuv420p or -pix_fmt yuv420p will ensure compatibility"
     if (missing(input_dir)) {
@@ -219,7 +219,7 @@ ov_images_to_video <- function(input_dir, image_file_mask = "image_%06d.jpg", im
         cargs <- c("-framerate", as.character(fps), "-i", file.path(fs::path_real(input_dir), image_file_mask), extra, fs::path_real(outfile))
     }
     execfun <- if (isTRUE(debug)) sys::exec_wait else sys::exec_internal
-    res <- execfun("ffmpeg", cargs)
+    res <- execfun(ov_ffmpeg_exe(), cargs)
     outfile
 }
 
@@ -262,17 +262,17 @@ ov_images_to_video <- function(input_dir, image_file_mask = "image_%06d.jpg", im
 #'
 #' @export
 ov_playlist_to_video <- function(playlist, filename, subtitle_column = NULL) {
-    if (!ov_ffmpeg_exists()) stop("could not find the ffmpeg executable")
+    ov_ffmpeg_ok(do_error = TRUE)
     if (missing(filename) || is.null(filename)) filename <- tempfile(fileext = ".mp4")
     tempfiles <- future.apply::future_lapply(seq_len(nrow(playlist)), function(ri) {
         outfile <- tempfile(fileext = paste0(".", fs::path_ext(playlist$video_src[ri])))
         if (file.exists(outfile)) unlink(outfile)
         infile <- fs::path_real(playlist$video_src[ri])
-        ##sys::exec_wait("ffmpeg", c("-i", infile, "-ss", playlist$start_time[ri], "-t", playlist$duration[ri], "-q", 0, "-c:a", "copy", outfile)) ## works, but slow because it uses very slow seek method to find the start of the clip
-        ##sys::exec_wait("ffmpeg", c("-ss", playlist$start_time[ri], "-i", infile, "-t", playlist$duration[ri], "-q", 0, "-c:a", "copy", outfile)) ## faster but glitchy because keyframes are typically sparse
-        ##sys::exec_wait("ffmpeg", c("-i", infile, "-ss", playlist$start_time[ri], "-t", playlist$duration[ri], "-c", "copy", outfile)) ## fast but glitchy because keyframes are typically sparse
+        ##sys::exec_wait(ov_ffmpeg_exe(), c("-i", infile, "-ss", playlist$start_time[ri], "-t", playlist$duration[ri], "-q", 0, "-c:a", "copy", outfile)) ## works, but slow because it uses very slow seek method to find the start of the clip
+        ##sys::exec_wait(ov_ffmpeg_exe(), c("-ss", playlist$start_time[ri], "-i", infile, "-t", playlist$duration[ri], "-q", 0, "-c:a", "copy", outfile)) ## faster but glitchy because keyframes are typically sparse
+        ##sys::exec_wait(ov_ffmpeg_exe(), c("-i", infile, "-ss", playlist$start_time[ri], "-t", playlist$duration[ri], "-c", "copy", outfile)) ## fast but glitchy because keyframes are typically sparse
         ## reencode
-        res <- sys::exec_internal("ffmpeg", c("-ss", playlist$start_time[ri], "-i", infile, "-strict", "-2", "-t", playlist$duration[ri], outfile))
+        res <- sys::exec_internal(ov_ffmpeg_exe(), c("-ss", playlist$start_time[ri], "-i", infile, "-strict", "-2", "-t", playlist$duration[ri], outfile))
         if (res$status != 0) stop("failed to get video clip, ", rawToChar(res$stderr))
         outfile
     })
@@ -282,7 +282,7 @@ ov_playlist_to_video <- function(playlist, filename, subtitle_column = NULL) {
     on.exit(unlink(c(cfile, tempfiles)))
     cat(paste0("file ", tempfiles), file = cfile, sep = "\n")
     if (file.exists(filename)) unlink(filename)
-    res <- sys::exec_internal("ffmpeg", c("-safe", 0, "-f", "concat", "-i", cfile, "-c", "copy", filename))
+    res <- sys::exec_internal(ov_ffmpeg_exe(), c("-safe", 0, "-f", "concat", "-i", cfile, "-c", "copy", filename))
     if (res$status != 0) stop("failed to combine clips, ", rawToChar(res$stderr))
     srtfile <- NULL
     if (!is.null(subtitle_column)) {
@@ -294,10 +294,23 @@ ov_playlist_to_video <- function(playlist, filename, subtitle_column = NULL) {
     list(video = filename, subtitles = srtfile)
 }
 
-ov_ffmpeg_exists <- function() {
-    out <- tryCatch(sys::exec_internal("ffmpeg", "-version")$status == 0, error = function(e) FALSE)
-    options(ovideo = list(ffmpeg_exists = out))
-    out
+ov_ffmpeg_exe <- function() {
+    exe_name <- paste0("ffmpeg", if (get_os() == "windows") ".exe")
+    chk <- Sys.which(exe_name)
+    if (nzchar(chk)) return(chk)
+    ## is it installed in user appdir?
+    mydir <- file.path(ovideo_app_dir(), "ffmpeg")
+    if (!dir.exists(mydir)) return(NULL)
+    chk <- fs::dir_ls(path = mydir, recurse = TRUE, regexp = paste0(exe_name, "$"), type = "file")
+    chk <- chk[basename(chk) == exe_name]
+    if (length(chk) == 1 && file.exists(chk)) chk else NULL
+}
+
+ov_ffmpeg_ok <- function(do_error = FALSE) {
+    exe <- ov_ffmpeg_exe()
+    ok <- !is.null(exe) && tryCatch(sys::exec_internal(exe, "-version")$status == 0, error = function(e) FALSE)
+    if (!ok && do_error) stop("could not find the ffmpeg executable")
+    invisible(ok)
 }
 
 
