@@ -9,15 +9,15 @@ ov_install_ffmpeg(force = FALSE, bits, check_hash = TRUE)
 \arguments{
 \item{force}{logical: force reinstallation if ffmpeg already exists}
 
-\item{bits}{integer: 32 or 64, for 32- or 64-bit install. If missing or \code{NULL}, will be guessed based on \code{.Machine$sizeof.pointer}}
+\item{bits}{integer: 32 or 64, for 32- or 64-bit install. If missing or \code{NULL}, will be guessed based on \code{.Machine$sizeof.pointer}. Note that only 64-bit is supported on Windows}
 
-\item{check_hash}{logical: don't check the hash of the downloaded file}
+\item{check_hash}{logical: don't check the hash of the downloaded file. Ignored on windows}
 }
 \value{
 the path to the installed executable
 }
 \description{
-This is a helper function to install ffmpeg. Currently it only works on Windows and Linux platforms. The ffmpeg bundle will be downloaded from \url{https://www.gyan.dev/ffmpeg/builds/} (Windows) or \url{https://johnvansickle.com/ffmpeg/} (Linux) and saved to your user appdata directory.
+This is a helper function to install ffmpeg. Currently it only works on Windows and Linux platforms. The ffmpeg bundle will be downloaded from \url{https://github.com/BtbN/FFmpeg-Builds/releases/latest} (Windows) or \url{https://johnvansickle.com/ffmpeg/} (Linux) and saved to your user appdata directory.
 }
 \examples{
 \dontrun{
@@ -26,5 +26,5 @@ This is a helper function to install ffmpeg. Currently it only works on Windows 
 
 }
 \references{
-\url{https://www.gyan.dev/ffmpeg/builds/} \url{https://johnvansickle.com/ffmpeg/}
+\url{https://github.com/BtbN/FFmpeg-Builds/releases/latest} \url{https://johnvansickle.com/ffmpeg/}
 }

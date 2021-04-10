@@ -1,11 +1,11 @@
 #' Install ffmpeg
 #'
-#' This is a helper function to install ffmpeg. Currently it only works on Windows and Linux platforms. The ffmpeg bundle will be downloaded from <https://www.gyan.dev/ffmpeg/builds/> (Windows) or <https://johnvansickle.com/ffmpeg/> (Linux) and saved to your user appdata directory.
+#' This is a helper function to install ffmpeg. Currently it only works on Windows and Linux platforms. The ffmpeg bundle will be downloaded from <https://github.com/BtbN/FFmpeg-Builds/releases/latest> (Windows) or <https://johnvansickle.com/ffmpeg/> (Linux) and saved to your user appdata directory.
 #'
-#' @references <https://www.gyan.dev/ffmpeg/builds/> <https://johnvansickle.com/ffmpeg/>
+#' @references <https://github.com/BtbN/FFmpeg-Builds/releases/latest> <https://johnvansickle.com/ffmpeg/>
 #' @param force logical: force reinstallation if ffmpeg already exists
-#' @param bits integer: 32 or 64, for 32- or 64-bit install. If missing or `NULL`, will be guessed based on `.Machine$sizeof.pointer`
-#' @param check_hash logical: don't check the hash of the downloaded file
+#' @param bits integer: 32 or 64, for 32- or 64-bit install. If missing or `NULL`, will be guessed based on `.Machine$sizeof.pointer`. Note that only 64-bit is supported on Windows
+#' @param check_hash logical: don't check the hash of the downloaded file. Ignored on windows
 #'
 #' @return the path to the installed executable
 #'
@@ -39,8 +39,8 @@ ov_install_ffmpeg <- function(force = FALSE, bits, check_hash = TRUE) {
             unlink(path, recursive = TRUE)
         }
     }
-    ## check that archive is available
-    if (!requireNamespace("archive", quietly = TRUE)) {
+    ## check that archive is available (not needed on windows)
+    if (my_os != "windows" && !requireNamespace("archive", quietly = TRUE)) {
         msg <- "the 'archive' package is required: install it with\n"
         if (!requireNamespace("remotes", quietly = TRUE)) msg <- paste0(msg, "  install.packages(\"remotes\")\n")
         stop(paste0(msg, "  remotes::install_github(\"jimhester/archive\")"))
@@ -49,9 +49,22 @@ ov_install_ffmpeg <- function(force = FALSE, bits, check_hash = TRUE) {
     if (!dir.exists(path)) stop("could not create directory ", path, " for ffmpeg")
 
     if (my_os == "windows") {
-        dl_url <- "https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-essentials.7z"
-        hash_url <- "https://www.gyan.dev/ffmpeg/builds/sha256-git-essentials"
-        hash_algo <- "sha256"
+        ## e.g. https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2021-04-09-12-38/ffmpeg-N-101901-gb593abda6c-win64-gpl.zip
+        pg <- readLines("https://github.com/BtbN/FFmpeg-Builds/releases/latest")
+        pg <- pg[grep("\\/ffmpeg\\-N.+\\-win64\\-gpl.zip\"", pg)]
+        rgxp <- paste0("href[[:space:]]*=[[:space:]]*\"(.+?)\"")
+        dl_url <- pg[grep(rgxp, pg, ignore.case = TRUE)]
+        dl_url <- regmatches(dl_url, regexpr(rgxp, dl_url, ignore.case = TRUE))
+        if (length(dl_url) == 1) {
+            dl_url <- paste0("https://github.com", gsub("\"", "", sub("href[[:space:]]*=[[:space:]]*\"", "", dl_url)))
+        } else {
+            stop("could not find download URL on https://github.com/BtbN/FFmpeg-Builds/releases/latest")
+        }
+        hash_url <- NULL
+        ## alternative, requires archive to extract 7z though, which needs Rtools to compile from source on windows
+        ##dl_url <- "https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-essentials.7z"
+        ##hash_url <- "https://www.gyan.dev/ffmpeg/builds/sha256-git-essentials"
+        ##hash_algo <- "sha256"
     } else if (my_os == "linux") {
         dl_url <- if (bits == 64) "https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-amd64-static.tar.xz" else "https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-i686-static.tar.xz"
         hash_url <- paste0(dl_url, ".md5")
@@ -63,7 +76,7 @@ ov_install_ffmpeg <- function(force = FALSE, bits, check_hash = TRUE) {
     zipname <- file.path(path, basename(dl_url))
     err <- utils::download.file(dl_url, destfile = zipname, mode = "wb")
     if (!err) {
-        if (check_hash) {
+        if (!is.null(hash_url) && check_hash) {
             expected_hash <- tryCatch(readLines(hash_url, warn = FALSE), error = function(e) NULL)
             if (is.null(expected_hash)) {
                 warning("could not download the file hash for checking, but proceeding anyway")
@@ -73,7 +86,11 @@ ov_install_ffmpeg <- function(force = FALSE, bits, check_hash = TRUE) {
                     stop("the hash of the downloaded file does not match the expected value. The downloaded file might be incomplete or compromised. If you wish to proceed anyway, run this function again with `check_hash = FALSE`")
             }
         }
-        archive::archive_extract(zipname, dir = path)
+        if (grepl("\\.zip$", zipname, ignore.case = TRUE)) {
+            utils::unzip(zipname, exdir = path)
+        } else {
+            archive::archive_extract(zipname, dir = path)
+        }
     }
     ## now we should see the executable
     chk <- ov_ffmpeg_exe()
