@@ -4,7 +4,7 @@
 \alias{ov_playlist_to_video}
 \title{Playlist to video file}
 \usage{
-ov_playlist_to_video(playlist, filename, subtitle_column = NULL)
+ov_playlist_to_video(playlist, filename, subtitle_column = NULL, debug = FALSE)
 }
 \arguments{
 \item{playlist}{data.frame: a playlist as returned by \code{ov_video_playlist}. Note that only local video sources are supported}
@@ -12,6 +12,8 @@ ov_playlist_to_video(playlist, filename, subtitle_column = NULL)
 \item{filename}{string: file to write to. If not specified (or \code{NULL}), a file in the temporary directory will be created. If \code{filename} exists, it will be overwritten. The extension of \code{filename} will determine the output format}
 
 \item{subtitle_column}{string: if not \code{NULL}, a subtitle file will be produced using the contents of this column (in the playlist) as the subtitle for each clip. The subtitle file will have the same name as \code{filename} but with extension ".srt"}
+
+\item{debug}{logical: if \code{TRUE}, echo the ffmpeg output to the console}
 }
 \value{
 A list with the filenames of the created video and subtitle files.

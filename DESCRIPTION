@@ -18,6 +18,7 @@ Imports:
     digest,
     dplyr,
     DT,
+    future,
     future.apply,
     fs,
     ggplot2,

@@ -202,7 +202,7 @@ ov_video_frames <- function(video_file, start_time, duration, end_time, outdir, 
 #' @param debug logical: if \code{TRUE}, echo the ffmpeg output to the console
 #'
 #' @return The path to the video file
-#' @seealso \code{\link[av]{av_encode_video}} if you don't have ffmpeg installed
+#' @seealso [av::av_encode_video()] as an alternative
 #'
 #' @export
 ov_images_to_video <- function(input_dir, image_file_mask = "image_%06d.jpg", image_files, outfile, fps = 30, extra = NULL, debug = FALSE) {
@@ -210,6 +210,8 @@ ov_images_to_video <- function(input_dir, image_file_mask = "image_%06d.jpg", im
     if (missing(outfile)) outfile <- tempfile(fileext = ".mp4")
     if (grepl("mp4$", outfile)) extra <- c(extra, "-pix_fmt", "yuv420p") ## https://trac.ffmpeg.org/wiki/Slideshow: "when outputting H.264, adding -vf format=yuv420p or -pix_fmt yuv420p will ensure compatibility"
     if (missing(input_dir)) {
+        ## ffmpeg needs forward slashes in the demux file?
+        input_files <- normalizePath(input_files, winslash = "/")
         demux_file <- tempfile(fileext = ".txt")
         cat(paste0("file ", image_files, "\nduration ", 1/fps), sep = "\n", file = demux_file)
         cat("file ", tail(image_files, 1), "\n", sep = "", file = demux_file, append = TRUE)
@@ -233,6 +235,7 @@ ov_images_to_video <- function(input_dir, image_file_mask = "image_%06d.jpg", im
 #' @param playlist data.frame: a playlist as returned by `ov_video_playlist`. Note that only local video sources are supported
 #' @param filename string: file to write to. If not specified (or `NULL`), a file in the temporary directory will be created. If `filename` exists, it will be overwritten. The extension of `filename` will determine the output format
 #' @param subtitle_column string: if not `NULL`, a subtitle file will be produced using the contents of this column (in the playlist) as the subtitle for each clip. The subtitle file will have the same name as `filename` but with extension ".srt"
+#' @param debug logical: if \code{TRUE}, echo the ffmpeg output to the console
 #'
 #' @return A list with the filenames of the created video and subtitle files.
 #'
@@ -261,29 +264,35 @@ ov_images_to_video <- function(input_dir, image_file_mask = "image_%06d.jpg", im
 #' }
 #'
 #' @export
-ov_playlist_to_video <- function(playlist, filename, subtitle_column = NULL) {
+ov_playlist_to_video <- function(playlist, filename, subtitle_column = NULL, debug = FALSE) {
     ov_ffmpeg_ok(do_error = TRUE)
     if (missing(filename) || is.null(filename)) filename <- tempfile(fileext = ".mp4")
-    tempfiles <- future.apply::future_lapply(seq_len(nrow(playlist)), function(ri) {
+    execfun <- if (isTRUE(debug)) sys::exec_wait else sys::exec_internal
+    lapplyfun <- if (inherits(future::plan(), "sequential")) lapply else future.apply::future_lapply
+    tempfiles <- lapplyfun(seq_len(nrow(playlist)), function(ri) {
         outfile <- tempfile(fileext = paste0(".", fs::path_ext(playlist$video_src[ri])))
         if (file.exists(outfile)) unlink(outfile)
         infile <- fs::path_real(playlist$video_src[ri])
         ##sys::exec_wait(ov_ffmpeg_exe(), c("-i", infile, "-ss", playlist$start_time[ri], "-t", playlist$duration[ri], "-q", 0, "-c:a", "copy", outfile)) ## works, but slow because it uses very slow seek method to find the start of the clip
         ##sys::exec_wait(ov_ffmpeg_exe(), c("-ss", playlist$start_time[ri], "-i", infile, "-t", playlist$duration[ri], "-q", 0, "-c:a", "copy", outfile)) ## faster but glitchy because keyframes are typically sparse
         ##sys::exec_wait(ov_ffmpeg_exe(), c("-i", infile, "-ss", playlist$start_time[ri], "-t", playlist$duration[ri], "-c", "copy", outfile)) ## fast but glitchy because keyframes are typically sparse
+        if (FALSE) sys::exec_internal() else if (FALSE) sys::exec_wait() ## needed to ensure that funcs are available inside future_lapply??
         ## reencode
-        res <- sys::exec_internal(ov_ffmpeg_exe(), c("-ss", playlist$start_time[ri], "-i", infile, "-strict", "-2", "-t", playlist$duration[ri], outfile))
-        if (res$status != 0) stop("failed to get video clip, ", rawToChar(res$stderr))
+        res <- execfun(ov_ffmpeg_exe(), c("-ss", playlist$start_time[ri], "-i", infile, "-strict", "-2", "-t", playlist$duration[ri], outfile))
+        res_status <- if (isTRUE(debug)) res else res$status
+        if (res_status != 0) stop("failed to get video clip, ", if (!isTRUE(debug)) rawToChar(res$stderr))
         outfile
     })
-    tempfiles <- unlist(tempfiles)
+    ## ffmpeg wants forward slashes in concat input file?
+    tempfiles <- normalizePath(unlist(tempfiles), winslash = "/")
     ## concatentate them
     cfile <- tempfile(fileext = ".txt")
     on.exit(unlink(c(cfile, tempfiles)))
     cat(paste0("file ", tempfiles), file = cfile, sep = "\n")
     if (file.exists(filename)) unlink(filename)
-    res <- sys::exec_internal(ov_ffmpeg_exe(), c("-safe", 0, "-f", "concat", "-i", cfile, "-c", "copy", filename))
-    if (res$status != 0) stop("failed to combine clips, ", rawToChar(res$stderr))
+    res <- execfun(ov_ffmpeg_exe(), c("-safe", 0, "-f", "concat", "-i", cfile, "-c", "copy", filename))
+    res_status <- if (isTRUE(debug)) res else res$status
+    if (res_status != 0) stop("failed to combine clips, ", if (!isTRUE(debug)) rawToChar(res$stderr))
     srtfile <- NULL
     if (!is.null(subtitle_column)) {
         srts <- ov_playlist_subtitles(playlist, subtitle_column = subtitle_column)
