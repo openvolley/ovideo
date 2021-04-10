@@ -211,7 +211,7 @@ ov_images_to_video <- function(input_dir, image_file_mask = "image_%06d.jpg", im
     if (grepl("mp4$", outfile)) extra <- c(extra, "-pix_fmt", "yuv420p") ## https://trac.ffmpeg.org/wiki/Slideshow: "when outputting H.264, adding -vf format=yuv420p or -pix_fmt yuv420p will ensure compatibility"
     if (missing(input_dir)) {
         ## ffmpeg needs forward slashes in the demux file?
-        input_files <- normalizePath(input_files, winslash = "/")
+        image_files <- normalizePath(image_files, winslash = "/")
         demux_file <- tempfile(fileext = ".txt")
         cat(paste0("file ", image_files, "\nduration ", 1/fps), sep = "\n", file = demux_file)
         cat("file ", tail(image_files, 1), "\n", sep = "", file = demux_file, append = TRUE)

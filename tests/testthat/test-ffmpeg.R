@@ -21,4 +21,17 @@ test_that("ffmpeg/av functions work", {
     expect_lt(abs(file.size(chk2) - ffmpeg_png_size), 10e3)
     unlink(chk)
     unlink(chk2)
+
+    chk <- ov_video_extract_clip(system.file("extdata/2019_03_01-KATS-BEDS-clip.mp4", package = "ovideo"), start_time = 1, duration = 3)
+    expect_true(file.exists(chk))
+    expect_gt(file.size(chk), 1e6)
+    imfiles <- ov_video_frames(chk)
+    expect_equal(length(imfiles), 90) ## 90 frames = 90 files
+    expect_true(file.exists(imfiles[1]))
+    ## put back into video
+    chk2 <- ov_images_to_video(dirname(imfiles[1]))
+    expect_true(file.exists(chk2))
+    chk3 <- ov_images_to_video(image_files = imfiles)
+    expect_true(file.exists(chk3))
+    expect_lt(abs(file.size(chk2) - file.size(chk3)), 50e3) ## the two files should be about the same size
 })

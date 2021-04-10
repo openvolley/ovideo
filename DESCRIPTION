@@ -1,6 +1,6 @@
 Package: ovideo
 Title: Volleyball video utilities
-Version: 0.12.6
+Version: 0.12.7
 Authors@R: c(person(given = "Ben", family = "Raymond", role = c("aut", "cre"), email = "ben@untan.gl"),
              person(given = "Adrien", family = "Ickowicz", role = "aut"),
              person("openvolley.org", role = "org"))
