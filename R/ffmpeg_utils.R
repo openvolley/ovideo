@@ -126,7 +126,7 @@ ov_video_extract_clip <- function(video_file, outfile, start_time, duration, end
     ov_ffmpeg_ok(do_error = TRUE)
     if (missing(duration) && !missing(end_time)) duration <- end_time - start_time
     if (missing(outfile)) outfile <- tempfile(fileext = ".mp4")
-    cargs <- c("-ss", as.character(start_time), "-i", fs::path_real(video_file), "-t", as.character(duration), "-c", "copy", extra, fs::path_real(outfile))
+    cargs <- c("-ss", as.character(start_time), "-i", fs::path_real(video_file), "-t", as.character(duration), "-c", "copy", extra, outfile)
     execfun <- if (isTRUE(debug)) sys::exec_wait else sys::exec_internal
     res <- execfun(ov_ffmpeg_exe(), cargs)
     outfile
@@ -216,9 +216,9 @@ ov_images_to_video <- function(input_dir, image_file_mask = "image_%06d.jpg", im
         cat(paste0("file ", image_files, "\nduration ", 1/fps), sep = "\n", file = demux_file)
         cat("file ", tail(image_files, 1), "\n", sep = "", file = demux_file, append = TRUE)
         on.exit(unlink(demux_file))
-        cargs <- c("-f", "concat", "-safe", "0", "-i", demux_file, extra, fs::path_real(outfile))
+        cargs <- c("-f", "concat", "-safe", "0", "-i", demux_file, extra, outfile)
     } else {
-        cargs <- c("-framerate", as.character(fps), "-i", file.path(fs::path_real(input_dir), image_file_mask), extra, fs::path_real(outfile))
+        cargs <- c("-framerate", as.character(fps), "-i", file.path(fs::path_real(input_dir), image_file_mask), extra, outfile)
     }
     execfun <- if (isTRUE(debug)) sys::exec_wait else sys::exec_internal
     res <- execfun(ov_ffmpeg_exe(), cargs)
