@@ -26,7 +26,7 @@ test_that("ffmpeg/av functions work", {
     expect_true(file.exists(chk))
     expect_gt(file.size(chk), 1e6)
     imfiles <- ov_video_frames(chk)
-    expect_equal(length(imfiles), 90) ## 90 frames = 90 files
+    expect_gte(length(imfiles), 90)
     expect_true(file.exists(imfiles[1]))
     ## put back into video
     chk2 <- ov_images_to_video(dirname(imfiles[1]))
