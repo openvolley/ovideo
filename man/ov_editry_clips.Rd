@@ -43,6 +43,8 @@ Note that in order to use \code{ov_editry_clips}, the \code{editry} package must
 }
 \examples{
 \dontrun{
+  ## Example 1
+
   ## Step 1: create our playlist
 
   ## use data from the ovdata package
@@ -66,6 +68,7 @@ Note that in order to use \code{ov_editry_clips}, the \code{editry} package must
 
   ## Step 2: convert to editly clip objects and compile to mp4
 
+  library(editry)
   ## create the clips, one for each row of the playlist
   clips <- ov_editry_clips(ply, title = "GKS Katowice\nvs\nMKS Bedzin",
                                 title2 = "Attacks", label_col = "label")
@@ -79,6 +82,28 @@ Note that in order to use \code{ov_editry_clips}, the \code{editry} package must
   ## and view the output
   if (interactive()) browseURL(outfile)
 
+  ## ---
+
+  ## Example 2
+  ## without a playlist, make a simple clip from a known segment of video
+
+  library(editry)
+  library(ovdata) ## install via remotes::install_github("openvolley/ovdata") if needed
+  my_video <- ovdata_example_video("190301_kats_beds") ## path to your video file
+  my_logo <- "https://github.com/openvolley/community/raw/master/docs/talks/common/ovlogo-blur.png"
+
+  clips <- list(er_clip_video(path = my_video, cut_from = 1, cut_to = 8), ## video segment
+                ## add an outro banner with logo
+                er_clip(duration = 1.5, layers = list(er_layer_fill_color(),
+                                                      er_layer_image(path = my_logo))),
+                ##  and blank finishing screen
+                er_clip_pause(duration = 0.25))
+
+  outfile <- tempfile(fileext = ".mp4")
+  my_spec <- er_spec(clips = clips, out_path = outfile, allow_remote_requests = TRUE)
+
+  er_exec_wait(spec = my_spec, fast = TRUE)
+  if (interactive()) browseURL(outfile)
 }
 
 }
