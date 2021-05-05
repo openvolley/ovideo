@@ -30,7 +30,7 @@ s_courtref_ui_main <- function(app_data) {
 
 s_courtref_server <- function(app_data) {
     function(input, output, session) {
-        DEBUG <- FALSE
+        DEBUG <- 0L
         ## define points on court and their corresponding coordinates
         if (!is.null(app_data$court_refs_data)) {
             court_refs_data <- app_data$court_refs_data
@@ -116,12 +116,10 @@ s_courtref_server <- function(app_data) {
                 out
             }, error = function(e) NULL)
         })
-        output$srplot <- renderPlot({
+        srplotdat <- throttle(reactive({
             antenna_colour <- "magenta"
             court_colour <- "red"
             if (!is.null(crimg()$image)) {
-                ## add these handlers here so that the srplot div exists (it's inside the popup so doesn't exist before the pop is popped)
-                evaljs("$('#srplot').mouseup(function() { Shiny.setInputValue('did_sr_plot_mouseup', new Date().getTime()) }); $('#srplot').mousedown(function() { Shiny.setInputValue('did_sr_plot_mousedown', new Date().getTime()) });")
                 ## plot in 0,1 norm coords
                 p <- ggplot2::ggplot(mapping = aes_string(x = "image_x", y = "image_y")) +
                     ggplot2::annotation_custom(grid::rasterGrob(crimg()$image), xmin = 0, xmax = 1, ymin = 0, ymax = 1) +
@@ -147,7 +145,11 @@ s_courtref_server <- function(app_data) {
             } else {
                 NULL
             }
+        }), 500)
+        output$srplot <- renderPlot({
+            srplotdat()
         })
+        evaljs("$('#srplot').mouseup(function() { Shiny.setInputValue('did_sr_plot_mouseup', new Date().getTime()) }); $('#srplot').mousedown(function() { Shiny.setInputValue('did_sr_plot_mousedown', new Date().getTime()) });")
 
         crimg <- reactive({
             if (!is.null(app_data$image)) {
@@ -168,7 +170,9 @@ s_courtref_server <- function(app_data) {
         observeEvent(input$did_sr_plot_mousedown, {
             closest <- NULL
             if (!is.null(input$sr_plot_click)) {
-                px <- c(input$sr_plot_click$x, input$sr_plot_click$y)
+                ##px <- c(input$sr_plot_click$x, input$sr_plot_click$y)
+                ## somehow the click location is slightly out of whack with the hover location, which breaks our drag detection!
+                px <- c(input$sr_plot_hover$x, input$sr_plot_hover$y)
                 isolate({
                     refpts <- bind_rows(mutate(crvt$court, what = "court", rownum = row_number()),
                                         mutate(crvt$antenna, what = "antenna", rownum = row_number() + 4L))
@@ -180,17 +184,18 @@ s_courtref_server <- function(app_data) {
                 px <- NULL
             }
             sr_clickdrag$mousedown <- px
+            if (DEBUG > 0L) cat("\nmouse down at: ", px, "\n")
             sr_clickdrag$closest_down <- closest
         })
 
         was_drag <- function(start, end) {
-            ##cat("start: ", start, "\n")
-            ##cat("end: ", end, "\n")
+            cat("start: ", start, "\n")
+            cat("end: ", end, "\n")
             if (is.null(start) || is.null(end)) {
                 FALSE
             } else {
                 mmt <- sqrt(sum(start - end)^2)
-                if (DEBUG) cat("movement: ", mmt, "\n")
+                if (DEBUG > 0L) cat("movement: ", mmt, "\n")
                 mmt > 0.0001
             }
         }
@@ -201,10 +206,10 @@ s_courtref_server <- function(app_data) {
                 isolate(px <- last_mouse_pos())
                 if (is.null(px) || !was_drag(sr_clickdrag$mousedown, px)) {
                     ##if (is.null(px)) px <- sr_clickdrag$mousedown ## if hover is lagging use mouse down
-                    ##if (DEBUG) cat("click\n")
+                    if (DEBUG > 1L) cat("click\n")
                     ## enter new point if there is an empty slot, or ignore
                     if (is.null(crvt$court) || nrow(crvt$court) < 4) {
-                        warning("empty crtvt$court??")
+                        warning("empty crvt$court??")
                     } else if (any(is.na(crvt$court$image_x))) {
                         next_pt <- min(which(is.na(crvt$court$image_x)))
                         crvt$court[next_pt, c("image_x", "image_y")] <- as.list(px)
@@ -212,27 +217,32 @@ s_courtref_server <- function(app_data) {
                         ## TODO court_x and court_y here need updating
                     } else if (isTRUE(app_data$include_net)) {
                         if (is.null(crvt$antenna) || nrow(crvt$antenna) < 4) {
-                            warning("empty crtvt$antenna??")
+                            warning("empty crvt$antenna??")
                         } else if (any(is.na(crvt$antenna$image_x))) {
                             next_pt <- min(which(is.na(crvt$antenna$image_x)))
                             crvt$antenna[next_pt, c("image_x", "image_y")] <- as.list(px)
                         }
                     }
                 } else {
-                    ##if (DEBUG) cat("drag or null start/end point\n")
+                    if (DEBUG > 1L) cat("drag or null start/end point\n")
                     ## do nothing
                 }
             }
             ## stop dragging
-            sr_clickdrag$mousedown <- NULL
-            sr_clickdrag$closest_down <- NULL
+            isolate({
+                sr_clickdrag$mousedown <- NULL
+                sr_clickdrag$closest_down <- NULL
+            })
         })
 
         last_mouse_pos <- reactiveVal(NULL)
         observeEvent(input$sr_plot_hover, {
             ## triggered when mouse moved over the plot
             px <- c(input$sr_plot_hover$x, input$sr_plot_hover$y)
-            if (!is.null(px)) last_mouse_pos(px)
+            if (!is.null(px)) {
+                if (DEBUG > 1L) cat("updating mouse pos: ", px, "\n")
+                last_mouse_pos(px)
+            }
         })
         last_refresh_time <- NA_real_
         observe({
@@ -245,7 +255,7 @@ s_courtref_server <- function(app_data) {
                     last_refresh_time <<- now_time
                     refpts <- bind_rows(mutate(crvt$court, what = "court", rownum = row_number()),
                                         mutate(crvt$antenna, what = "antenna", rownum = row_number()))
-                    if (nrow(refpts) > 0) {
+                    if (nrow(refpts) > 0 && length(sr_clickdrag$closest_down) > 0) {
                         closest <- sr_clickdrag$closest_down
                         if (refpts$what[closest] == "court") {
                             crvt$court[refpts$rownum[closest], c("image_x", "image_y")] <- as.list(px)
