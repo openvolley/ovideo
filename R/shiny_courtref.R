@@ -128,8 +128,8 @@ s_courtref_server <- function(app_data) {
                     p <- p + geom_segment(data = crox()$courtxy, aes_string(xend = "xend", yend = "yend"), color = court_colour) + theme_bw()
                 }
                 if (!is.null(crvt$court)) {
-                    p <- p + geom_label(data = mutate(crvt$court, point_num = row_number()), ## double check that point_num always matches the UI inputs ordering
-                                        aes_string(label = "point_num"), color = "white", fill = court_colour)
+                    p <- p + geom_label(data = mutate(crvt$court, point_num = paste0("  ", row_number(), "  ")), ## double check that point_num always matches the UI inputs ordering
+                                        aes_string(label = "point_num"), color = "white", fill = court_colour, hjust = "outward")
                 }
                 if (isTRUE(app_data$include_net) && !is.null(crvt$antenna)) {
                     plotx <- mutate(crvt$antenna, n = case_when(.data$antenna == "left" & .data$where == "floor" ~ 5L,
