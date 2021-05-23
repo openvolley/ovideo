@@ -10,6 +10,19 @@ function dvjs_controller(id, type, seamless = true) {
     this.yt_first_mute = false; // override this to true to start the YT player muted on first play
     var that = this; // to use inside functions
 
+    this.fullscreen = function() {
+	var elem = document.getElementById(that.video_controller.id);
+	if (elem) {
+	    if (elem.requestFullscreen) {
+		elem.requestFullscreen();
+	    } else if (elem.webkitRequestFullscreen) {
+		elem.webkitRequestFullscreen();
+	    } else if (elem.msRequestFullscreen) {
+		elem.msRequestFullscreen();
+	    }
+	}
+    }
+
     this.start_video_interval = function() {
 	if (!that.video_timer_active) {
 	    that.video_timer = setInterval(that.video_manage, 200);

@@ -300,3 +300,16 @@ function dvjs_video_manage() {
         dvjs_video_stop();
     }
 }
+
+function dvjs_fullscreen() {
+    var elem = document.getElementById(dvjs_video_controller.id);
+    if (elem) {
+	if (elem.requestFullscreen) {
+	    elem.requestFullscreen();
+	} else if (elem.webkitRequestFullscreen) {
+	    elem.webkitRequestFullscreen();
+	} else if (elem.msRequestFullscreen) {
+	    elem.msRequestFullscreen();
+	}
+    }
+}
