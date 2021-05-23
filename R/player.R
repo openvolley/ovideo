@@ -22,7 +22,7 @@ ov_video_js <- function(youtube = FALSE, version = 1) {
 #'
 #' @param id string: the id of the tag
 #' @param type string: either "youtube" or "local"
-#' @param controls logical: add "previous", "next", "pause", and "stop" buttons. If `controls` is an object of class `shiny.tag` (created by `htmltools::tags`) or `shiny.tag.list` (`htmltools::tagList`) then it will be appended to the controls
+#' @param controls logical: if `TRUE`, add "previous", "next", "pause", "stop", and "fullscreen" buttons. If `controls` is an object of class `shiny.tag` (created by `htmltools::tags`) or `shiny.tag.list` (`htmltools::tagList`) then those controls will added with this tag or tag list appended
 #' @param version numeric: code version. Default = 1, experimental = 2
 #' @param controller_var string: (for version 2 only) the js variable name to use for the controller object that controls this video player
 #' @param ... : other attributes of the player element (passed to the player `tags$div` call for youtube or `tags$video` for local)
@@ -72,7 +72,8 @@ ov_video_player <- function(id, type, controls = FALSE, version = 1, controller_
         plyr <- do.call(tags$video, c(list(id = id, autoplay = "false", preload = "metadata"), list(...)))
     }
     out <- if (controls) {
-               list(tags$div(id = paste0(id, "_container"), plyr, tags$div(tags$button("Prev", onclick = "dvjs_video_prev();"), tags$button("Next", onclick = "dvjs_video_next();"), tags$button("Pause", onclick = "dvjs_video_pause();"), tags$button("Stop", onclick = "dvjs_video_stop();"), extra_controls)))
+               cstr <- if (v2) paste0(controller_var, ".") else "dvjs_"
+               list(tags$div(id = paste0(id, "_container"), plyr, tags$div(tags$button("Prev", onclick = paste0(cstr, "video_prev();")), tags$button("Next", onclick = paste0(cstr, "video_next();")), tags$button("Pause", onclick = paste0(cstr, "video_pause();")), tags$button("Stop", onclick = paste0(cstr, "video_stop();")), tags$button("Full screen", onclick = paste0(cstr, "fullscreen();")), extra_controls)))
            } else {
                list(tags$div(id = paste0(id, "_container"), plyr))
            }
@@ -109,7 +110,7 @@ ov_video_control <- function(what, ...) {
     myargs <- list(...)
     ## for v1, call dvjs_*; for v2 call [controller_var].*
     cstr <- if ("controller_var" %in% names(myargs)) paste0(myargs$controller_var, ".") else "dvjs_"
-    what <- match.arg(tolower(what), c("play", "stop", "prev", "next", "pause", "set_playback_rate", "jog"))
+    what <- match.arg(tolower(what), c("play", "stop", "prev", "next", "pause", "set_playback_rate", "jog", "fullscreen"))
     if (what == "play") {
         evaljs(paste0(cstr, "video_play();"))
     } else if (what == "stop") {
@@ -126,6 +127,8 @@ ov_video_control <- function(what, ...) {
     } else if (what == "jog") {
         if (length(myargs) < 1) stop("provide the number of seconds as the second parameter to ov_video_control")
         evaljs(paste0(cstr, "jog(", myargs[[1]], ");"))
+    } else if (what == "fullscreen") {
+        evaljs(paste0(cstr, "fullscreen();"))
     }
 }
 

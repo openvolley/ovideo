@@ -18,7 +18,7 @@ ov_video_player(
 
 \item{type}{string: either "youtube" or "local"}
 
-\item{controls}{logical: add "previous", "next", "pause", and "stop" buttons. If \code{controls} is an object of class \code{shiny.tag} (created by \code{htmltools::tags}) or \code{shiny.tag.list} (\code{htmltools::tagList}) then it will be appended to the controls}
+\item{controls}{logical: if \code{TRUE}, add "previous", "next", "pause", "stop", and "fullscreen" buttons. If \code{controls} is an object of class \code{shiny.tag} (created by \code{htmltools::tags}) or \code{shiny.tag.list} (\code{htmltools::tagList}) then those controls will added with this tag or tag list appended}
 
 \item{version}{numeric: code version. Default = 1, experimental = 2}
 
