@@ -55,7 +55,7 @@ test_that("playlist conversion to m3u works", {
     expect_equal(nrow(px), 2L)
     m3u <- ov_playlist_to_vlc(px, seamless = FALSE)
     expect_equal(readLines(m3u), c("#EXTM3U", "#EXTINF:8,. ", "#EXTVLCOPT:start-time=5", "#EXTVLCOPT:stop-time=13", "myvideo.mp4", "", "", "#EXTM3U", "#EXTINF:8,. ", "#EXTVLCOPT:start-time=6", "#EXTVLCOPT:stop-time=14", "myvideo.mp4", "", ""))
-    m3u <- ov_playlist_to_vlc(px, seamless = TRUE)
+    m3u <- ov_playlist_to_vlc(px, seamless = TRUE, no_paths = TRUE)
     expect_equal(readLines(m3u), c("#EXTM3U", "#EXTINF:9,", "#EXTVLCOPT:start-time=5", "#EXTVLCOPT:stop-time=14", "myvideo.mp4", "", ""))
     unlink(m3u)
 })
