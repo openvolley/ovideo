@@ -57,7 +57,8 @@ jobs:
 
       - name: Install system dependencies
         if: runner.os == 'Linux'
-        run: sudo apt-get install -y libavdevice-dev libcurl4-openssl-dev libarchive-dev
+        run: sudo apt-get install -y libavdevice-dev libcurl4-openssl-dev libarchive-dev libudunits2-dev libgdal1-dev libproj-dev libgeos-dev
+
 
       - name: Install dependencies
         run: |
