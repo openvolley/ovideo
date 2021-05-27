@@ -61,6 +61,7 @@ test_that("playlist conversion to m3u works", {
 })
 
 test_that("playlist conversion to HTML works", {
+    skip_if_not(rmarkdown::pandoc_available(version = "1.12.3"))
     ply <- dplyr::tribble(~video_src, ~start_time, ~duration, ~type, ~seamless_start_time, ~seamless_duration, ~subtitle, ~subtitleskill, ~home_team, ~visiting_team, ~video_time, ~code, ~set_number, ~home_team_score, ~visiting_team_score, ~file,
                           "NisDpPFPQwU",  589, 8, "youtube",  589, 8,   "Set 1 - POLAND 2017 9 - 7 Iran 2017", "Michal KUBIAK - Pipe : - POLAND 2017 Iran 2017", "Poland", "Iran",  594, "*13AM-XP~83~H1", 1,  9,  7, NA_character_,
                           "NisDpPFPQwU", 1036, 8, "youtube", 1036, 8, "Set 1 - POLAND 2017 17 - 10 Iran 2017", "Michal KUBIAK - Pipe : # POLAND 2017 Iran 2017", "Poland", "Iran", 1041, "*13AM#XP~86~H1", 1, 17, 10, NA_character_)
