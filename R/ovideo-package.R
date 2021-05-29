@@ -12,7 +12,7 @@
 #' @importFrom graphics locator plot points rasterImage
 #' @importFrom grDevices dev.off png
 #' @importFrom htmltools HTML tagList tags
-#' @importFrom shiny actionButton column fluidPage fluidRow hoverOpts invalidateLater isolate observe observeEvent plotOutput reactive reactiveVal reactiveValues reactiveValuesToList renderPlot renderUI selectInput textInput throttle uiOutput
+#' @importFrom shiny actionButton column fluidPage fluidRow hoverOpts icon invalidateLater isolate observe observeEvent plotOutput reactive reactiveVal reactiveValues reactiveValuesToList renderPlot renderUI selectInput textInput throttle uiOutput
 #' @importFrom stats na.omit setNames
 #' @importFrom utils tail
 NULL

@@ -73,7 +73,13 @@ ov_video_player <- function(id, type, controls = FALSE, version = 1, controller_
     }
     out <- if (controls) {
                cstr <- if (v2) paste0(controller_var, ".") else "dvjs_"
-               list(tags$div(id = paste0(id, "_container"), plyr, tags$div(tags$button("Prev", onclick = paste0(cstr, "video_prev();")), tags$button("Next", onclick = paste0(cstr, "video_next();")), tags$button("Pause", onclick = paste0(cstr, "video_pause();")), tags$button("Stop", onclick = paste0(cstr, "video_stop();")), tags$button("Full screen", onclick = paste0(cstr, "fullscreen();")), extra_controls)))
+               list(tags$div(id = paste0(id, "_container"), plyr,
+                             tags$div(tags$button(tags$span(icon("step-backward")), onclick = paste0(cstr, "video_prev();"), title = "Previous"),
+                                      tags$button(tags$span(icon("step-forward")), onclick = paste0(cstr, "video_next();"), title = "Next"),
+                                      tags$button(tags$span(icon("pause-circle")), onclick = paste0(cstr, "video_pause();"), title = "Pause"),
+                                      tags$button(tags$span(icon("stop-circle")), onclick = paste0(cstr, "video_stop();"), title = "Stop"),
+                                      tags$button(tags$span(icon("expand")), onclick = paste0(cstr, "fullscreen();"), title = "Full screen"), extra_controls)
+                             ))
            } else {
                list(tags$div(id = paste0(id, "_container"), plyr))
            }
