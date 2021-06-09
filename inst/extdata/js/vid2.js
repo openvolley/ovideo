@@ -226,10 +226,32 @@ function dvjs_controller(id, type, seamless = true) {
 	// seamless should be true if we want to transition seamlessly to the next clip (i.e. no stop and seek)
 	if (that.video_controller.current < (that.video_controller.queue.length - 1)) {
 	    that.video_controller.current++;
+
+	    var item = that.video_controller.queue[that.video_controller.current];
+	    if (item.playback_rate && item.playback_rate > 0) {
+		that.set_playback_rate(item.playback_rate);
+	    }
 	    if (seamless) {
 		that.video_onstart();
 		that.start_video_interval();
 	    } else {
+		// if not seamless, and item is repeated, then need to seek to the clip starting time to make playback work. Otherwise the current time is past the end time of this next clip, and it immediately skips to the next
+		if (that.video_controller.type == "youtube") {
+		    var current_time = that.yt_player.getCurrentTime();
+		    var current_src = that.yt_player.getPlaylist()[0];
+		    if (current_src == item.video_src && current_time > item.start_time) {
+			that.yt_player.seekTo(item.start_time, true);
+		    }
+		} else {
+		    var el = document.getElementById(that.video_controller.id);
+		    if (el) {
+			var current_time = el.currentTime;
+			var current_src = el.getAttribute("src");
+			if (current_src == item.video_src && current_time > item.start_time) {
+			    if (document.getElementById(that.video_controller.id)) { document.getElementById(that.video_controller.id).currentTime = item.start_time; }
+			}
+		    }
+		}
 		that.video_play(); // next item, or stop if it was the last
 	    }
 	} else {
@@ -253,7 +275,7 @@ function dvjs_controller(id, type, seamless = true) {
 
     this.jog = function(howmuch) {
 	if (that.video_controller.type == "youtube") {
-	    that.yt_player.seekTo(that.yt_player.getCurrentTime() + howmuch);
+	    that.yt_player.seekTo(that.yt_player.getCurrentTime() + howmuch, true);
 	} else {
             if (document.getElementById(that.video_controller.id)) { document.getElementById(that.video_controller.id).currentTime = (el.currentTime + howmuch); }
 	}

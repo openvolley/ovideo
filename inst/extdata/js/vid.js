@@ -8,6 +8,19 @@ var dvjs_video_timer_active = false;
 var dvjs_yt_player = null;
 var dvjs_yt_first_mute = false; // override this to true to start the YT player muted on first play
 
+function dvjs_fullscreen() {
+    var elem = document.getElementById(dvjs_video_controller.id);
+    if (elem) {
+	if (elem.requestFullscreen) {
+	    elem.requestFullscreen();
+	} else if (elem.webkitRequestFullscreen) {
+	    elem.webkitRequestFullscreen();
+	} else if (elem.msRequestFullscreen) {
+	    elem.msRequestFullscreen();
+	}
+    }
+}
+
 function dvjs_start_video_interval() {
     if (!dvjs_video_timer_active) {
 	dvjs_video_timer = setInterval(dvjs_video_manage, 200);
@@ -223,10 +236,31 @@ function dvjs_video_next(seamless = false) {
     // seamless should be true if we want to transition seamlessly to the next clip (i.e. no stop and seek)
     if (dvjs_video_controller.current < (dvjs_video_controller.queue.length - 1)) {
 	dvjs_video_controller.current++;
+	var item = dvjs_video_controller.queue[dvjs_video_controller.current];
+	if (item.playback_rate && item.playback_rate > 0) {
+	    dvjs_set_playback_rate(item.playback_rate);
+	}
 	if (seamless) {
 	    dvjs_video_onstart();
 	    dvjs_start_video_interval();
 	} else {
+	    // if not seamless, and item is repeated, then need to seek to the clip starting time to make playback work. Otherwise the current time is past the end time of this next clip, and it immediately skips to the next
+	    if (dvjs_video_controller.type == "youtube") {
+		var current_time = dvjs_yt_player.getCurrentTime();
+		var current_src = dvjs_yt_player.getPlaylist()[0];
+		if (current_src == item.video_src && current_time > item.start_time) {
+		    dvjs_yt_player.seekTo(item.start_time, true);
+		}
+	    } else {
+		var el = document.getElementById(dvjs_video_controller.id);
+		if (el) {
+		    var current_time = el.currentTime;
+		    var current_src = el.getAttribute("src");
+		    if (current_src == item.video_src && current_time > item.start_time) {
+			if (document.getElementById(dvjs_video_controller.id)) { document.getElementById(dvjs_video_controller.id).currentTime = item.start_time; }
+		    }
+		}
+	    }
 	    dvjs_video_play(); // next item, or stop if it was the last
 	}
     } else {
@@ -250,7 +284,7 @@ function dvjs_set_playback_rate(rate) {
 
 function dvjs_jog(howmuch) {
     if (dvjs_video_controller.type == "youtube") {
-      dvjs_yt_player.seekTo(dvjs_yt_player.getCurrentTime() + howmuch);
+	dvjs_yt_player.seekTo(dvjs_yt_player.getCurrentTime() + howmuch, true);
     } else {
         if (document.getElementById(dvjs_video_controller.id)) { document.getElementById(dvjs_video_controller.id).currentTime = (el.currentTime + howmuch); }
     }
@@ -298,18 +332,5 @@ function dvjs_video_manage() {
     } else {
 	// no items
         dvjs_video_stop();
-    }
-}
-
-function dvjs_fullscreen() {
-    var elem = document.getElementById(dvjs_video_controller.id);
-    if (elem) {
-	if (elem.requestFullscreen) {
-	    elem.requestFullscreen();
-	} else if (elem.webkitRequestFullscreen) {
-	    elem.webkitRequestFullscreen();
-	} else if (elem.msRequestFullscreen) {
-	    elem.msRequestFullscreen();
-	}
     }
 }
