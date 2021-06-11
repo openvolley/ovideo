@@ -122,6 +122,9 @@ function dvjs_controller(id, type, seamless = true) {
 	that.video_onstart();
 	if (that.video_controller.current >= 0 && that.video_controller.current <= (that.video_controller.queue.length - 1)) {
 	    var item = that.video_controller.queue[that.video_controller.current];
+	    if (item.playback_rate && item.playback_rate > 0) {
+		that.set_playback_rate(item.playback_rate);
+	    }
 	    if (that.video_controller.type == "youtube") {
 		if (that.yt_first_mute) {
 		    if (that.yt_player) { that.yt_player.mute(); }
@@ -219,6 +222,7 @@ function dvjs_controller(id, type, seamless = true) {
 
     // these functions do nothing by default but can be redefined by the user
     this.video_onstop = function() { }
+    this.video_onfinished = function() { }
     this.video_afterpause = function() { }
 
     this.video_next = function(seamless = false) {
@@ -257,6 +261,7 @@ function dvjs_controller(id, type, seamless = true) {
 	} else {
 	    // end of playlist, nothing to play
 	    that.video_stop();
+	    that.video_onfinished();
 	}
     }
 
@@ -323,6 +328,7 @@ function dvjs_controller(id, type, seamless = true) {
 	} else {
 	    // no items
             that.video_stop();
+	    that.video_onfinished();
 	}
     }
 }

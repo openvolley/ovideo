@@ -120,6 +120,9 @@ function dvjs_video_play() {
     dvjs_video_onstart();
     if (dvjs_video_controller.current >= 0 && dvjs_video_controller.current <= (dvjs_video_controller.queue.length - 1)) {
 	var item = dvjs_video_controller.queue[dvjs_video_controller.current];
+	if (item.playback_rate && item.playback_rate > 0) {
+	    dvjs_set_playback_rate(item.playback_rate);
+	}
 	if (dvjs_video_controller.type == "youtube") {
 	    if (dvjs_yt_first_mute) {
 		if (dvjs_yt_player) { dvjs_yt_player.mute(); }
@@ -165,8 +168,6 @@ function dvjs_video_stop() {
 	}
 	dvjs_video_onstop();
     }
-    /*dvjs_video_controller = {id:null, queue: [], current: -1, type: "", paused: false};*/
-    /* don't clear the playlist when stopping? */
 }
 
 function dvjs_video_pause() {
@@ -229,6 +230,7 @@ function dvjs_video_pause() {
 
 // these functions do nothing by default but can be redefined by the user
 function dvjs_video_onstop() { }
+function dvjs_video_onfinished() { }
 function dvjs_video_afterpause() { }
 
 function dvjs_video_next(seamless = false) {
@@ -266,6 +268,7 @@ function dvjs_video_next(seamless = false) {
     } else {
 	// end of playlist, nothing to play
 	dvjs_video_stop();
+	dvjs_video_onfinished();
     }
 }
 
@@ -332,5 +335,6 @@ function dvjs_video_manage() {
     } else {
 	// no items
         dvjs_video_stop();
+	dvjs_video_onfinished();
     }
 }
