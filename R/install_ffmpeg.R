@@ -39,12 +39,6 @@ ov_install_ffmpeg <- function(force = FALSE, bits, check_hash = TRUE) {
             unlink(path, recursive = TRUE)
         }
     }
-    ## check that archive is available (not needed on windows)
-    if (my_os != "windows" && !requireNamespace("archive", quietly = TRUE)) {
-        msg <- "the 'archive' package is required: install it with\n"
-        if (!requireNamespace("remotes", quietly = TRUE)) msg <- paste0(msg, "  install.packages(\"remotes\")\n")
-        stop(paste0(msg, "  remotes::install_github(\"jimhester/archive\")"))
-    }
     if (!dir.exists(path)) dir.create(path, recursive = TRUE)
     if (!dir.exists(path)) stop("could not create directory ", path, " for ffmpeg")
 
@@ -61,7 +55,7 @@ ov_install_ffmpeg <- function(force = FALSE, bits, check_hash = TRUE) {
             stop("could not find download URL on https://github.com/BtbN/FFmpeg-Builds/releases/latest")
         }
         hash_url <- NULL
-        ## alternative, requires archive to extract 7z though, which needs Rtools to compile from source on windows
+        ## alternative, requires archive to extract 7z
         ##dl_url <- "https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-essentials.7z"
         ##hash_url <- "https://www.gyan.dev/ffmpeg/builds/sha256-git-essentials"
         ##hash_algo <- "sha256"

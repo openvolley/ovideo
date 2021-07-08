@@ -1,6 +1,6 @@
 Package: ovideo
 Title: Volleyball video utilities
-Version: 0.13.1
+Version: 0.13.2
 Authors@R: c(person(given = "Ben", family = "Raymond", role = c("aut", "cre"), email = "ben@untan.gl"),
              person(given = "Adrien", family = "Ickowicz", role = "aut"),
              person("openvolley.org", role = "org"))
@@ -13,6 +13,7 @@ LazyData: true
 Roxygen: list(markdown = TRUE)
 Depends: datavolley (> 0.12.999)
 Imports:
+    archive,
     assertthat,
     av,
     digest,
@@ -34,10 +35,9 @@ Imports:
     shiny,
     sys
 Suggests:
-    archive,
     ovdata,
     remotes,
     sf,
     testthat
-Remotes: openvolley/datavolley, openvolley/ovdata, jimhester/archive, scienceuntangled/editry
+Remotes: openvolley/datavolley, openvolley/ovdata, scienceuntangled/editry
 RoxygenNote: 7.1.1
