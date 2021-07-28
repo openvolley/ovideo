@@ -43,7 +43,7 @@ function dvjs_controller(id, type, seamless = true) {
 	var old_id = that.video_controller.id; // HTML element with player attached, if any
 	that.video_controller = {id: video_id, queue: items, current: 0, type: type, paused: false, seamless: seamless};
 	if (type == "youtube") {
-	    if (old_id != null && old_id != video_id) {
+	    if (that.yt_player != null && old_id != null && old_id != video_id) {
 		that.yt_player.destroy();
 		that.yt_player = null;
 	    }
@@ -67,7 +67,7 @@ function dvjs_controller(id, type, seamless = true) {
 	var old_id = that.video_controller.id; // HTML element with player attached, if any
 	that.video_controller = {id: video_id, queue: items, current: 0, type: type, paused: false, seamless: seamless};
 	if (type == "youtube") {
-	    if (old_id != null && old_id != video_id) {
+	    if (that.yt_player != null && old_id != null && old_id != video_id) {
 		that.yt_player.destroy();
 		that.yt_player = null;
 	    }
