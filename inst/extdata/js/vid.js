@@ -128,7 +128,19 @@ function dvjs_video_play() {
 		if (dvjs_yt_player) { dvjs_yt_player.mute(); }
 		dvjs_yt_first_mute = false;
 	    }
-	    dvjs_yt_player.loadPlaylist(item.video_src, 0, item.start_time);
+		if (dvjs_yt_player && dvjs_yt_player.getPlaylist) {
+		    var current_src = dvjs_yt_player.getPlaylist()
+		    if (current_src != null) {
+			current_src = current_src[0];
+		    }
+		    if (current_src == item.video_src) {
+			dvjs_yt_player.seekTo(item.start_time, true);
+		    } else {
+			dvjs_yt_player.loadPlaylist(item.video_src, 0, item.start_time);
+		    }
+		} else {
+		    dvjs_yt_player.loadPlaylist(item.video_src, 0, item.start_time);
+		}
 	} else {
 	    el = document.getElementById(dvjs_video_controller.id);
 	    if (el) {
@@ -246,21 +258,12 @@ function dvjs_video_next(seamless = false) {
 	    dvjs_video_onstart();
 	    dvjs_start_video_interval();
 	} else {
-	    // if not seamless, and item is repeated, then need to seek to the clip starting time to make playback work. Otherwise the current time is past the end time of this next clip, and it immediately skips to the next
-	    if (dvjs_video_controller.type == "youtube") {
-		var current_time = dvjs_yt_player.getCurrentTime();
-		var current_src = dvjs_yt_player.getPlaylist()[0];
+	    var el = document.getElementById(dvjs_video_controller.id);
+	    if (el) {
+		var current_time = el.currentTime;
+		var current_src = el.getAttribute("src");
 		if (current_src == item.video_src && current_time > item.start_time) {
-		    dvjs_yt_player.seekTo(item.start_time, true);
-		}
-	    } else {
-		var el = document.getElementById(dvjs_video_controller.id);
-		if (el) {
-		    var current_time = el.currentTime;
-		    var current_src = el.getAttribute("src");
-		    if (current_src == item.video_src && current_time > item.start_time) {
-			if (document.getElementById(dvjs_video_controller.id)) { document.getElementById(dvjs_video_controller.id).currentTime = item.start_time; }
-		    }
+		    if (document.getElementById(dvjs_video_controller.id)) { document.getElementById(dvjs_video_controller.id).currentTime = item.start_time; }
 		}
 	    }
 	    dvjs_video_play(); // next item, or stop if it was the last

@@ -130,7 +130,19 @@ function dvjs_controller(id, type, seamless = true) {
 		    if (that.yt_player) { that.yt_player.mute(); }
 		    that.yt_first_mute = false;
 		}
-		that.yt_player.loadPlaylist(item.video_src, 0, item.start_time);
+		if (that.yt_player && that.yt_player.getPlaylist) {
+		    var current_src = that.yt_player.getPlaylist()
+		    if (current_src != null) {
+			current_src = current_src[0];
+		    }
+		    if (current_src == item.video_src) {
+			that.yt_player.seekTo(item.start_time, true);
+		    } else {
+			that.yt_player.loadPlaylist(item.video_src, 0, item.start_time);
+		    }
+		} else {
+		    that.yt_player.loadPlaylist(item.video_src, 0, item.start_time);
+		}
 	    } else {
 		el = document.getElementById(that.video_controller.id);
 		if (el) {
@@ -239,21 +251,12 @@ function dvjs_controller(id, type, seamless = true) {
 		that.video_onstart();
 		that.start_video_interval();
 	    } else {
-		// if not seamless, and item is repeated, then need to seek to the clip starting time to make playback work. Otherwise the current time is past the end time of this next clip, and it immediately skips to the next
-		if (that.video_controller.type == "youtube") {
-		    var current_time = that.yt_player.getCurrentTime();
-		    var current_src = that.yt_player.getPlaylist()[0];
+		var el = document.getElementById(that.video_controller.id);
+		if (el) {
+		    var current_time = el.currentTime;
+		    var current_src = el.getAttribute("src");
 		    if (current_src == item.video_src && current_time > item.start_time) {
-			that.yt_player.seekTo(item.start_time, true);
-		    }
-		} else {
-		    var el = document.getElementById(that.video_controller.id);
-		    if (el) {
-			var current_time = el.currentTime;
-			var current_src = el.getAttribute("src");
-			if (current_src == item.video_src && current_time > item.start_time) {
-			    if (document.getElementById(that.video_controller.id)) { document.getElementById(that.video_controller.id).currentTime = item.start_time; }
-			}
+			if (document.getElementById(that.video_controller.id)) { document.getElementById(that.video_controller.id).currentTime = item.start_time; }
 		    }
 		}
 		that.video_play(); // next item, or stop if it was the last
@@ -319,9 +322,9 @@ function dvjs_controller(id, type, seamless = true) {
 		if (this_seamless && that.video_controller.current >= 0 && that.video_controller.current < (that.video_controller.queue.length - 1)) {
 		    var item = that.video_controller.queue[that.video_controller.current];
 		    var next_item = that.video_controller.queue[that.video_controller.current+1];
-		    this_seamless = item.video_src == next_item.video_src && next_item.start_time <= (item.start_time + item.duration)
+		    this_seamless = item.video_src == next_item.video_src && next_item.start_time <= (item.start_time + item.duration);
 		}
-		that.video_next(this_seamless)
+		that.video_next(this_seamless);
             } else {
 		// current item still playing, do nothing
             }
