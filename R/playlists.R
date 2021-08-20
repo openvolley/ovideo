@@ -48,29 +48,6 @@ ov_video_playlist <- function(x, meta, type = NULL, timing = ov_video_timing(), 
             meta <- list(meta)
         }
         ## assume meta is a list of metadata objects
-        video_file_from_meta <- function(z) {
-            out <- z$meta$video
-            if (is.null(out)) out <- z$video
-            if (is.null(out)) {
-                NA_character_
-            } else if (nrow(out) < 1) {
-                NA_character_
-            } else if (nrow(out) > 1) {
-                warning("multiple video files found")
-                NA_character_
-            } else {
-                out$file
-            }
-        }
-        match_id_from_meta <- function(z) {
-            out <- z$meta$match_id
-            if (is.null(out)) out <- z$match_id
-            if (is.null(out) || !nzchar(out)) {
-                NA_character_
-            } else {
-                out
-            }
-        }
         meta <- bind_rows(lapply(meta, function(z) tibble(match_id = match_id_from_meta(z), video_src = as.character(video_file_from_meta(z)))))
         if (is.null(type)) {
             if (all(is_youtube_id(meta$video_src) | grepl("https?://.*youtube", meta$video_src, ignore.case = TRUE) | grepl("https?://youtu\\.be", meta$video_src, ignore.case = TRUE))) {
@@ -118,32 +95,7 @@ ov_video_playlist <- function(x, meta, type = NULL, timing = ov_video_timing(), 
     x$video_src <- as.character(x$video_src)
     if (type == "youtube") {
         ## ensure that we have youtube IDs, not e.g. full URLs
-        x$video_src <- vapply(x$video_src, function(z) {
-            if (!is_youtube_id(z) && grepl("^https?://", z, ignore.case = TRUE)) {
-                if (grepl("youtu\\.be", z, ignore.case = TRUE)) {
-                    ## assume https://youtu.be/xyz form
-                    tryCatch({
-                        temp <- httr::parse_url(z)
-                        if (!is.null(temp$path) && length(temp$path) == 1 && is_youtube_id(temp$path)) {
-                            temp$path
-                        } else {
-                            z
-                        }
-                    }, error = function(e) z)
-                } else {
-                    tryCatch({
-                        temp <- httr::parse_url(z)
-                        if (!is.null(temp$query$v) && length(temp$query$v) == 1) {
-                            temp$query$v
-                        } else {
-                            z
-                        }
-                    }, error = function(e) z)
-                }
-            } else {
-                z
-            }
-        }, FUN.VALUE = "", USE.NAMES = FALSE)
+        x$video_src <- vapply(x$video_src, youtube_url_to_id, FUN.VALUE = "", USE.NAMES = FALSE)
     }
     x$type <- type
     if (normalize_paths) {
@@ -151,19 +103,7 @@ ov_video_playlist <- function(x, meta, type = NULL, timing = ov_video_timing(), 
         x$video_src[local_srcs] <- normalizePath(x$video_src[local_srcs], mustWork = FALSE)
     }
     ## add timings for seamless transitions
-    x <- mutate(x, end_time = .data$start_time + .data$duration)
-    x <- mutate(group_by_at(x, "video_src"), overlap = .data$start_time <= lag(.data$end_time),
-                overlap = case_when(is.na(.data$overlap) ~ FALSE, TRUE ~ .data$overlap), ## TRUE means that this event overlaps with previous
-                ## may be better to calculate overlap in terms of point_id and/or team_touch_id?
-                seamless_start_time = pmin(.data$video_time, case_when(is.na(lag(.data$end_time)) ~ .data$start_time, TRUE ~ (lag(.data$end_time) + .data$start_time)/2)),
-                seamless_start_time = case_when(.data$overlap ~ .data$seamless_start_time, TRUE ~ .data$start_time),
-                seamless_end_time = case_when(lead(.data$overlap) ~ lead(.data$seamless_start_time), TRUE ~ .data$end_time),
-                seamless_duration = .data$seamless_end_time - .data$seamless_start_time)
-    x <- dplyr::ungroup(x)
-    if (any(x$seamless_duration < 0, na.rm = TRUE)) {
-        warning("seamless durations < 0, needs checking")
-        x$seamless_duration[which(x$seamless_duration < 0)] <- 0
-    }
+    x <- add_seamless_timings(x)
     x[, c("video_src", "start_time", "duration", "type", "seamless_start_time", "seamless_duration", extra_cols)]
 }
 
@@ -194,36 +134,20 @@ ov_video_playlist_pid <- function(x, meta, type = NULL, extra_cols = NULL, norma
             meta <- list(meta)
         }
         ## assume meta is a list of metadata objects
-        video_file_from_meta <- function(z) {
-            out <- z$meta$video
-            if (is.null(out)) out <- z$video
-            if (is.null(out)) {
-                NA_character_
-            } else if (nrow(out) < 1) {
-                NA_character_
-            } else if (nrow(out) > 1) {
-                warning("multiple video files found")
-                NA_character_
+        meta <- bind_rows(lapply(meta, function(z) tibble(match_id = match_id_from_meta(z), video_src = as.character(video_file_from_meta(z)))))
+        if (is.null(type)) {
+            if (all(is_youtube_id(meta$video_src) | grepl("https?://.*youtube", meta$video_src, ignore.case = TRUE) | grepl("https?://youtu\\.be", meta$video_src, ignore.case = TRUE))) {
+                type <- "youtube"
             } else {
-                out$file
+                type <- "local"
             }
         }
-        match_id_from_meta <- function(z) {
-            out <- z$meta$match_id
-            if (is.null(out)) out <- z$match_id
-            if (is.null(out) || !nzchar(out)) {
-                NA_character_
-            } else {
-                out
-            }
-        }
-        meta <- bind_rows(lapply(meta, function(z) tibble(match_id = match_id_from_meta(z), video_src = video_file_from_meta(z))))
-        if (is.null(type)) type <- "local"
     } else {
         stop("meta is an unexpected format")
     }
     assert_that(is.string(type))
     type <- match.arg(tolower(type), c("local", "youtube"))
+    x <- x[!is.na(x$skill), ]
     if (!all(x$match_id %in% meta$match_id)) stop("x contains match_ids that do not appear in meta")
     if (any(is.na(meta$video_src))) {
         missing_vid_matches <- meta$match_id[is.na(meta$video_src)]
@@ -231,29 +155,66 @@ ov_video_playlist_pid <- function(x, meta, type = NULL, extra_cols = NULL, norma
     }
     if (!is.null(extra_cols)) assert_that(is.character(extra_cols))
     x <- left_join(x, meta, by = "match_id")
-    
-    timing_tmp <- dplyr::full_join(
-        stats::aggregate(x = x$video_time, by = list(x$point_id), FUN = min,na.rm=TRUE),
-        stats::aggregate(x = x$video_time, by = list(x$point_id), FUN = range,na.rm=TRUE), by = "Group.1")
-    timing_tmp$duration <- apply(timing_tmp$x.y,1,diff) + 5
-    timing <- timing_tmp[,c("Group.1", "x.x", "duration")]
-    
-    names(timing) <- c("point_id", "start_time", "duration")
-    timing$start_time <- timing$start_time - 2
-    
-    x <- left_join(x, timing, by = "point_id")
-    #x$start_time <- x$video_time + x$start_offset
-    x <- x[!is.na(x$skill), ]
+
+    timing <- ungroup(dplyr::summarize(group_by(x, .data$match_id, .data$point_id), start_time = min(.data$video_time, na.rm = TRUE), duration = diff(range(.data$video_time, na.rm = TRUE)) + 5))
+    timing$start_time <- timing$start_time - 5 ## this is the default timing offset for serves, but should probably make this parameterizable
+    x <- left_join(x, timing, by = c("match_id", "point_id"))
     ## TODO check for NA video_time
     x$video_src <- as.character(x$video_src)
+    if (type == "youtube") {
+        ## ensure that we have youtube IDs, not e.g. full URLs
+        x$video_src <- vapply(x$video_src, youtube_url_to_id, FUN.VALUE = "", USE.NAMES = FALSE)
+    }
     x$type <- type
     if (normalize_paths) {
         local_srcs <- which(x$type == "local" & !grepl("^https?://", x$video_src, ignore.case = TRUE))
         x$video_src[local_srcs] <- normalizePath(x$video_src[local_srcs], mustWork = FALSE)
     }
-    dplyr::distinct(x[, c("video_src", "start_time", "duration", "type", extra_cols)])
+    add_seamless_timings(dplyr::distinct(x[, c("video_src", "start_time", "duration", "type", extra_cols)]))
 }
 
+
+video_file_from_meta <- function(z) {
+    out <- z$meta$video
+    if (is.null(out)) out <- z$video
+    if (is.null(out)) {
+        NA_character_
+    } else if (nrow(out) < 1) {
+        NA_character_
+    } else if (nrow(out) > 1) {
+        warning("multiple video files found")
+        NA_character_
+    } else {
+        out$file
+    }
+}
+
+match_id_from_meta <- function(z) {
+    out <- z$meta$match_id
+    if (is.null(out)) out <- z$match_id
+    if (is.null(out) || !nzchar(out)) {
+        NA_character_
+    } else {
+        out
+    }
+}
+
+add_seamless_timings <- function(x) {
+    x <- mutate(x, end_time = .data$start_time + .data$duration)
+    x <- mutate(group_by(x, .data$video_src), overlap = .data$start_time <= lag(.data$end_time),
+                overlap = case_when(is.na(.data$overlap) ~ FALSE, TRUE ~ .data$overlap), ## TRUE means that this event overlaps with previous
+                ## may be better to calculate overlap in terms of point_id and/or team_touch_id?
+                seamless_start_time = pmin(.data$video_time, case_when(is.na(lag(.data$end_time)) ~ .data$start_time, TRUE ~ (lag(.data$end_time) + .data$start_time)/2)),
+                seamless_start_time = case_when(.data$overlap ~ .data$seamless_start_time, TRUE ~ .data$start_time),
+                seamless_end_time = case_when(lead(.data$overlap) ~ lead(.data$seamless_start_time), TRUE ~ .data$end_time),
+                seamless_duration = .data$seamless_end_time - .data$seamless_start_time)
+    x <- dplyr::select(ungroup(x), -"end_time", -"seamless_end_time")
+    if (any(x$seamless_duration < 0, na.rm = TRUE)) {
+        warning("seamless durations < 0, needs checking")
+        x$seamless_duration[which(x$seamless_duration < 0)] <- 0
+    }
+    x
+}
 
 #' Timing to use when creating video playlist
 #'
