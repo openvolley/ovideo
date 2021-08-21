@@ -386,7 +386,7 @@ ov_playlist_to_vlc <- function(playlist, outfile, no_paths = FALSE, seamless = T
     if (missing(outfile) || length(outfile) < 1) outfile <- tempfile(fileext = ".m3u")
     assert_that(is.flag(no_paths), !is.na(no_paths))
     assert_that(is.flag(seamless), !is.na(seamless))
-    if (seamless) playlist <- playlist_to_seamless(playlist)
+    if (seamless) playlist <- merge_seamless(playlist)
     if (!"subtitle" %in% names(playlist)) playlist$subtitle <- ""
     if (!"subtitleskill" %in% names(playlist)) playlist$subtitleskill <- ""
     if (no_paths) playlist$video_src <- basename(playlist$video_src)
@@ -460,7 +460,7 @@ ov_playlist_to_html <- function(playlist, playlist_name = "Playlist", outfile, n
     if (missing(outfile) || length(outfile) < 1) outfile <- tempfile(fileext = ".html")
     assert_that(is.flag(no_paths), !is.na(no_paths))
     assert_that(is.flag(seamless), !is.na(seamless))
-    if (seamless) playlist <- playlist_to_seamless(playlist)
+    if (seamless) playlist <- merge_seamless(playlist)
     if (!"subtitle" %in% names(playlist)) playlist$subtitle <- ""
     if (!"subtitleskill" %in% names(playlist)) playlist$subtitleskill <- ""
     if (no_paths) {
@@ -492,7 +492,7 @@ render_pl <- function(pl, pl_name, bannerdir, outfile, table_cols, ...) {
     rmarkdown::render(rmd_template, output_file = outfile, output_options = NULL)
 }
 
-playlist_to_seamless <- function(playlist) {
+merge_seamless <- function(playlist) {
     ## merge seamless transitions into single entry
     all_start <- playlist$start_time
     all_duration <- playlist$duration
