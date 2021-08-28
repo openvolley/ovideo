@@ -8,8 +8,10 @@
 #' @return A named list of metadata values
 #' @seealso [ov_set_video_meta()]
 #' @examples
-#' newfile <- ov_set_video_meta(ov_example_video(), comment = "A comment")
-#' ov_get_video_meta(newfile)
+#' \dontrun{
+#'   newfile <- ov_set_video_meta(ov_example_video(), comment = "A comment")
+#'   ov_get_video_meta(newfile)
+#' }
 #'
 #' @export
 ov_get_video_meta <- function(video_file, debug = FALSE) {
@@ -45,8 +47,10 @@ ov_get_video_meta <- function(video_file, debug = FALSE) {
 #' @seealso [ov_get_video_meta()]
 #'
 #' @examples
-#' newfile <- ov_set_video_meta(ov_example_video(), comment = "A comment")
-#' ov_get_video_meta(newfile)
+#' \dontrun{
+#'   newfile <- ov_set_video_meta(ov_example_video(), comment = "A comment")
+#'   ov_get_video_meta(newfile)
+#' }
 #'
 #' @export
 ov_set_video_meta <- function(video_file, ..., movflags = FALSE, overwrite = FALSE, debug = FALSE) {

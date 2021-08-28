@@ -35,8 +35,10 @@ This function creates a new video file with the specified metadata added. This i
 Note that if \code{movflags = FALSE}, the supported video tag names (i.e. allowable names in the \code{...} parameters) depend on the video file type.
 }
 \examples{
-newfile <- ov_set_video_meta(ov_example_video(), comment = "A comment")
-ov_get_video_meta(newfile)
+\dontrun{
+  newfile <- ov_set_video_meta(ov_example_video(), comment = "A comment")
+  ov_get_video_meta(newfile)
+}
 
 }
 \seealso{

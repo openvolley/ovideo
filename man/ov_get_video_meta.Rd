@@ -18,8 +18,10 @@ A named list of metadata values
 Requires that ffmpeg is available on your system path.
 }
 \examples{
-newfile <- ov_set_video_meta(ov_example_video(), comment = "A comment")
-ov_get_video_meta(newfile)
+\dontrun{
+  newfile <- ov_set_video_meta(ov_example_video(), comment = "A comment")
+  ov_get_video_meta(newfile)
+}
 
 }
 \seealso{
