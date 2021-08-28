@@ -4,12 +4,20 @@
 \alias{ov_set_video_meta}
 \title{Set metadata tags in a video file}
 \usage{
-ov_set_video_meta(video_file, ..., overwrite = FALSE, debug = FALSE)
+ov_set_video_meta(
+  video_file,
+  ...,
+  movflags = FALSE,
+  overwrite = FALSE,
+  debug = FALSE
+)
 }
 \arguments{
 \item{video_file}{string: path to the video file}
 
 \item{...}{: named values to set}
+
+\item{movflags}{logical: if \code{TRUE}, add "-movflags use_metadata_tags" to the command-line ffmpeg call. This allows arbitrary tag names to be used with mp4/m4v/mov video formats, but note that these may be stored in a manner that some video software cannot read. If \code{movflags = FALSE}, the supported video tag names (i.e. allowable names in the \code{...} parameters) depend on the video file type}
 
 \item{overwrite}{logical: if \code{TRUE} overwrite the \code{video_file}, see Details}
 
@@ -19,18 +27,16 @@ ov_set_video_meta(video_file, ..., overwrite = FALSE, debug = FALSE)
 The path to the new video file, which if \code{overwrite = TRUE} will be the input file, otherwise a file in the temporary directory
 }
 \description{
-Experimental! Requires that ffmpeg is available on your system path.
+Requires that ffmpeg is available on your system path.
 }
 \details{
 This function creates a new video file with the specified metadata added. This is always a file in the temporary directory. If \code{overwrite = TRUE}, the original file is deleted and replaced with the new file.
 
-Note that the supported video tags (i.e. allowable names in the \code{...} parameters) depend on the video file type.
+Note that if \code{movflags = FALSE}, the supported video tag names (i.e. allowable names in the \code{...} parameters) depend on the video file type.
 }
 \examples{
-\dontrun{
-  newfile <- ov_set_video_meta("blah.mp4", comment = "A comment")
-  ov_get_video_meta(newfile)
-}
+newfile <- ov_set_video_meta(ov_example_video(), comment = "A comment")
+ov_get_video_meta(newfile)
 
 }
 \seealso{

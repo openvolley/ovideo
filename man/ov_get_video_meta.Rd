@@ -15,13 +15,11 @@ ov_get_video_meta(video_file, debug = FALSE)
 A named list of metadata values
 }
 \description{
-Experimental! Requires that ffmpeg is available on your system path.
+Requires that ffmpeg is available on your system path.
 }
 \examples{
-\dontrun{
-  newfile <- ov_set_video_meta("blah.mp4", comment = "A comment")
-  ov_get_video_meta(newfile)
-}
+newfile <- ov_set_video_meta(ov_example_video(), comment = "A comment")
+ov_get_video_meta(newfile)
 
 }
 \seealso{
