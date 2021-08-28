@@ -26,13 +26,17 @@ ov_get_video_meta <- function(video_file, debug = FALSE) {
     setNames(vals, nms)
 }
 
-#' Retrieve metadata tags from a video file
+#' Set metadata tags in a video file
 #'
-#' Experimental! Requires that ffmpeg is available on your system path. Note that this function creates a new video file with the specified metadata added. This is always a file in the temporary directory. If `overwrite = TRUE`, the original file is deleted and replaced with the new file. Note also that the supported video tags depend on the video file type
+#' Experimental! Requires that ffmpeg is available on your system path.
+#'
+#' This function creates a new video file with the specified metadata added. This is always a file in the temporary directory. If `overwrite = TRUE`, the original file is deleted and replaced with the new file.
+#'
+#' Note that the supported video tags (i.e. allowable names in the `...` parameters) depend on the video file type.
 #'
 #' @param video_file string: path to the video file
 #' @param ... : named values to set
-#' @param overwrite logical: if `TRUE`
+#' @param overwrite logical: if `TRUE` overwrite the `video_file`, see Details
 #' @param debug logical: if `TRUE`, echo the ffmpeg output to the console
 #'
 #' @return The path to the new video file, which if `overwrite = TRUE` will be the input file, otherwise a file in the temporary directory

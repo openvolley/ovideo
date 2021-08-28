@@ -2,7 +2,7 @@
 % Please edit documentation in R/tags.R
 \name{ov_set_video_meta}
 \alias{ov_set_video_meta}
-\title{Retrieve metadata tags from a video file}
+\title{Set metadata tags in a video file}
 \usage{
 ov_set_video_meta(video_file, ..., overwrite = FALSE, debug = FALSE)
 }
@@ -11,7 +11,7 @@ ov_set_video_meta(video_file, ..., overwrite = FALSE, debug = FALSE)
 
 \item{...}{: named values to set}
 
-\item{overwrite}{logical: if \code{TRUE}}
+\item{overwrite}{logical: if \code{TRUE} overwrite the \code{video_file}, see Details}
 
 \item{debug}{logical: if \code{TRUE}, echo the ffmpeg output to the console}
 }
@@ -19,7 +19,12 @@ ov_set_video_meta(video_file, ..., overwrite = FALSE, debug = FALSE)
 The path to the new video file, which if \code{overwrite = TRUE} will be the input file, otherwise a file in the temporary directory
 }
 \description{
-Experimental! Requires that ffmpeg is available on your system path. Note that this function creates a new video file with the specified metadata added. This is always a file in the temporary directory. If \code{overwrite = TRUE}, the original file is deleted and replaced with the new file. Note also that the supported video tags depend on the video file type
+Experimental! Requires that ffmpeg is available on your system path.
+}
+\details{
+This function creates a new video file with the specified metadata added. This is always a file in the temporary directory. If \code{overwrite = TRUE}, the original file is deleted and replaced with the new file.
+
+Note that the supported video tags (i.e. allowable names in the \code{...} parameters) depend on the video file type.
 }
 \examples{
 \dontrun{
