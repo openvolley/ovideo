@@ -75,3 +75,71 @@ ov_set_video_meta <- function(video_file, ..., movflags = FALSE, overwrite = FAL
     }
 }
 
+#' Retrieve a data object stored in a video file metadata tag
+#'
+#' @param video_file string: path to the video file
+#' @param tag string: the tag name to use
+#' @param b64 logical: was `obj` serialized and base64-encoded before storing?
+#'
+#' @return The stored information, or `NULL` if there was none
+#'
+#' @seealso [ov_set_video_data()]
+#' @examples
+#' \dontrun{
+#'   if (interactive()) {
+#'     ## mark the geometry of the court in the video
+#'     ref <- ov_shiny_court_ref(video_file = ov_example_video(), t = 5)
+#'
+#'     ## store it
+#'     newfile <- ov_set_video_data(ov_example_video(), obj = ref)
+#'
+#'     ## retrieve it
+#'     ov_get_video_data(newfile)
+#'   }
+#' }
+#' @export
+ov_get_video_data <- function(video_file, tag = "ov_court_info", b64 = TRUE) {
+    md <- ov_get_video_meta(video_file)[[tag]]
+    if (!is.null(md) && isTRUE(b64)) md <- unserialize(base64enc::base64decode(md))
+    md
+}
+
+#' Store a data object in a video file metadata tag
+#'
+#' This function stores an R data object (data frame, list, etc) within a metadata tag inside a video file. This is primarily intended to store video-specific information, so that this information is carried with the video file itself. By default the `ov_court_info` metadata tag is used (intended to store the geometry of the playing court in the video, see Examples).
+#'
+#' @param video_file string: path to the video file
+#' @param obj : data object to store, typically a list as returned by [ovideo::ov_shiny_court_ref()]. `obj` will be serialized and base64-encoded before storing unless `b64 = FALSE`
+#' @param tag string: the tag name to use
+#' @param b64 logical: serialize `obj` and base64-encode before storing?
+#' @param replace logical: if `FALSE` and the specified metadata tag is already present in the video file, don't replace it
+#' @param overwrite logical: if `TRUE` overwrite the `video_file`, otherwise create a new file in the temporary directory. See [ov_set_video_meta()] for details
+#'
+#' @seealso [ov_get_video_data()], [ov_set_video_meta()]
+#' @examples
+#' \dontrun{
+#'   if (interactive()) {
+#'     ## mark the geometry of the court in the video
+#'     ref <- ov_shiny_court_ref(video_file = ov_example_video(), t = 5)
+#'
+#'     ## store it
+#'     newfile <- ov_set_video_data(ov_example_video(), obj = ref)
+#'
+#'     ## retrieve it
+#'     ov_get_video_data(newfile)
+#'   }
+#' }
+#'
+#' @return The path to the video file
+#'
+#' @export
+ov_set_video_data <- function(video_file, obj, tag = "ov_court_info", b64 = TRUE, replace = FALSE, overwrite = FALSE) {
+    if (!isTRUE(replace)) {
+        ## check first if it's already set (don't bother unserializing, just checking for existence)
+        if (!is.null(ov_get_video_data(video_file, tag = tag, b64 = FALSE))) stop("video file already has metadata present in the ", tag, " field")
+    }
+    if (isTRUE(b64)) obj <- base64enc::base64encode(serialize(obj, NULL))
+    rgs <- list(video_file = video_file, movflags = TRUE, overwrite = overwrite)
+    rgs[[tag]] <- obj
+    do.call(ov_set_video_meta, rgs)
+}
