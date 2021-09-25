@@ -288,6 +288,51 @@ ov_video_timing_df <- function(x) {
     }
 }
 
+#' Merge two video timing dataframes
+#'
+#' @param x data.frame: video timings to use
+#' @param default data.frame: default timings to use, for anything not provided in `x`
+#'
+#' @return A data.frame
+#'
+#' @seealso [ov_video_timing_df()]
+#'
+#' @examples
+#'
+#' my_timings <- data.frame(skill = "Attack", phase = "Reception", start_offset = 0)
+#' ov_merge_video_timing_df(my_timings)
+#'
+#' @export
+ov_merge_video_timing_df <- function(x, default = ov_video_timing_df()) {
+    do_merge_timing_df(x, default = default, with_final_merge = TRUE)
+}
+
+do_merge_timing_df <- function(x, default, with_final_merge = FALSE) {
+    if (!(is.data.frame(x) && all(c("skill", "phase") %in% names(x)) && any(c("start_offset", "duration") %in% names(x)) && nrow(x) > 0)) {
+        stop("x should be a data.frame with the columns 'skill' and 'phase' and at least one of 'start_offset' or 'duration'")
+    }
+    if (!(is.data.frame(default) && all(c("skill", "phase", "start_offset", "duration") %in% names(default)) && nrow(default) > 0)) {
+        stop("default should be a data.frame with the columns 'skill', 'phase', 'start_offset', and 'duration'")
+    }
+    if (!"start_offset" %in% names(x)) x$start_offset <- NA
+    if (!"duration" %in% names(x)) x$duration <- NA
+    if (is.factor(x$skill)) x$skill <- as.character(x$skill)
+    if (is.factor(x$phase)) x$phase <- as.character(x$phase)
+    for (i in seq_len(nrow(x))) {
+        idx <- which(tolower(default$skill) == tolower(x$skill[i]) & tolower(default$phase) == tolower(x$phase[i]))
+        if (length(idx) == 1) {
+            if (!is.na(x$start_offset[i])) default$start_offset[idx] <- x$start_offset[i]
+            if (!is.na(x$duration[i])) default$duration[idx] <- x$duration[i]
+        } else if (length(idx) < 1) {
+            ## add new row
+            default <- bind_rows(default, x[i, ])
+        }
+    }
+    default$skill <- paste0(toupper(substr(default$skill, 1, 1)), tolower(substr(default$skill, 2, 9999L)))
+    default$phase <- paste0(toupper(substr(default$phase, 1, 1)), tolower(substr(default$phase, 2, 9999L)))
+    ## and finally merge this with the default defaults, which will ensure that (a) we have all required entries, and (b) no duplicates, which might not happen if the default passed above is not complete/correct
+    if (isTRUE(with_final_merge)) do_merge_timing_df(default, default = ov_video_timing_df(), with_final_merge = FALSE) else default
+}
 
 #' Convert playlist to 'onclick' string
 #'

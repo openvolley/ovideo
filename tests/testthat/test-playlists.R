@@ -9,6 +9,10 @@ test_that("ov_video_timing works as expected", {
     def_timing$Dig <- c(-2, 2)
     expect_identical(ov_video_timing(Serve = c(-2, 1), Dig = c(-2, 2)), def_timing)
     expect_warning(ov_video_timing(1), "must be named")
+
+    def_timing <- ov_video_timing_df()
+    def_timing$start_offset[def_timing$skill == "Serve"] <- 0
+    expect_identical(ov_merge_video_timing_df(data.frame(skill = "serve", phase = "serve", start_offset = 0)), def_timing)
 })
 
 test_that("ov_video_playlist works as expected", {
