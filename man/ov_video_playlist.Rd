@@ -18,9 +18,9 @@ ov_video_playlist(
 
 \item{meta}{list: either the \code{meta} component of a datavolley object, or a list of such objects, or a data.frame with the columns "match_id" and "video_src". Entries in \code{video_src} should be paths or URLs to the video file associated with the corresponding \code{match_id}}
 
-\item{type}{string: currently "youtube" or "local". If \code{type} is not specified as a parameter, and \code{meta} is a data.frame, then \code{type} can be provided as a column in \code{meta}. Alternatively, if \code{meta} is a \code{meta} component of a datavolley object, or a list of such objects, then \code{type} will be assumed to be "local". Note that a single playlist can't mix types, all entries must be of the same type}
+\item{type}{string: currently "youtube", "twitch", or "local". If \code{type} is not specified as a parameter, and \code{meta} is a data.frame, then \code{type} can be provided as a column in \code{meta}. Alternatively, if \code{meta} is a \code{meta} component of a datavolley object, or a list of such objects, then \code{type} will be assumed to be "local". Note that a single playlist can't mix types, all entries must be of the same type}
 
-\item{timing}{list: the relative timing for each skill type, either a named list as returned by \code{\link{ov_video_timing}} or a data.frame as returned by \code{\link{ov_video_timing_df}}. See \code{\link{ov_video_timing}} for further details}
+\item{timing}{list: the relative timing for each skill type, either a named list as returned by \code{\link[=ov_video_timing]{ov_video_timing()}} or a data.frame as returned by \code{\link[=ov_video_timing_df]{ov_video_timing_df()}}. See \code{\link[=ov_video_timing]{ov_video_timing()}} for further details}
 
 \item{extra_cols}{character: names of additional columns from \code{x} to include in the returned data frame}
 

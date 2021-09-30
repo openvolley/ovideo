@@ -1,19 +1,23 @@
 #' Inject javascript for an HTML video player
 #'
-#' @param youtube logical: set to \code{TRUE} to include the Youtube API javascript. This isn't necessary if you are only using local video files
+#' @param youtube logical: set to `TRUE` to include the Youtube API javascript. This isn't necessary if you are only using local video files
+#' @param twitch logical: set to `TRUE` to include the Twitch API javascript. Only with `version = 2`. Not necessary if you are only using local video files
 #' @param version numeric: code version. Default = 1, experimental = 2
 #'
-#' @return A \code{head} tag containing script tags
+#' @return A `head` tag containing script tags
 #'
-#' @seealso \code{\link{ov_video_playlist}}
+#' @seealso [ov_video_playlist()]
 #'
 #' @export
-ov_video_js <- function(youtube = FALSE, version = 1) {
+ov_video_js <- function(youtube = FALSE, twitch = FALSE, version = 1) {
     assert_that(is.flag(youtube), !is.na(youtube))
+    assert_that(is.flag(twitch), !is.na(twitch))
+    if (twitch && version < 2) warning("twitch support requires version > 1")
     assert_that(is.numeric(version), version >= 1, version <= 2)
     js <- readLines(system.file(if (version == 1) "extdata/js/vid.js" else "extdata/js/vid2.js", package = "ovideo"))
     js <- paste(js, collapse = "\n")
     out <- list(tags$script(HTML(js)), if (youtube) tags$script(src = "https://www.youtube.com/iframe_api"),
+                if (twitch && version > 1) tags$script(src = "https://player.twitch.tv/js/embed/v1.js"),
                 tags$script("Shiny.addCustomMessageHandler('evaljs', function(jsexpr) { eval(jsexpr) });")) ## handler for running js code directly
     tags$head(Filter(Negate(is.null), out))
 }
@@ -21,11 +25,12 @@ ov_video_js <- function(youtube = FALSE, version = 1) {
 #' Video player tag element
 #'
 #' @param id string: the id of the tag
-#' @param type string: either "youtube" or "local"
-#' @param controls logical: if `TRUE`, add "previous", "next", "pause", "stop", and "fullscreen" buttons. If `controls` is an object of class `shiny.tag` (created by `htmltools::tags`) or `shiny.tag.list` (`htmltools::tagList`) then those controls will added with this tag or tag list appended
-#' @param version numeric: code version. Default = 1, experimental = 2
+#' @param type string: either "youtube", "twitch" (only with `version = 2`), or "local"
+#' @param controls logical: if `TRUE`, add "previous", "next", "pause", "stop", and "fullscreen" buttons. If `controls` is an object of class `shiny.tag` (created by [htmltools::tags()]) or `shiny.tag.list` ([htmltools::tagList()]) then those controls will added with this tag or tag list appended
+#' @param version numeric: code version. Default = 1, sort-of-experimental = 2. Version 2 supports multiple players on a single page, as well as `type = "twitch"`
 #' @param controller_var string: (for version 2 only) the js variable name to use for the controller object that controls this video player
-#' @param ... : other attributes of the player element (passed to the player `tags$div` call for youtube or `tags$video` for local)
+#' @param with_js logical: if `TRUE`, also include the supporting javascript libraries. If `with_js = FALSE`, you must make a separate call to [ov_video_js()] (e.g. in your Shiny ui.R function)
+#' @param ... : other attributes of the player element (passed to the player `tags$div` call for youtube/twitch or `tags$video` for local)
 #'
 #' @return HTML tags. The outermost element is a div with id `paste0(id, "_container")`, with the player and optionally buttons nested within it.
 #'
@@ -41,20 +46,22 @@ ov_video_js <- function(youtube = FALSE, version = 1) {
 #'
 #'   shinyApp(
 #'       ui = fluidPage(
-#'           ov_video_js(youtube = TRUE),
+#'           ov_video_js(youtube = TRUE, version = 2),
 #'           ov_video_player(id = "yt_player", type = "youtube",
+#'                           version = 2, controller_var = "my_dv",
 #'                           style = "height: 480px; background-color: black;",
 #'                           controls = tags$button("Go",
-#'                                        onclick = ov_playlist_as_onclick(playlist, "yt_player")))
+#'                                      onclick = ov_playlist_as_onclick(playlist, "yt_player",
+#'                                                                       controller_var = "my_dv")))
 #'       ),
 #'       server = function(input, output) {},
 #'   )
 #' }
 #'
 #' @export
-ov_video_player <- function(id, type, controls = FALSE, version = 1, controller_var = paste0(id, "_controller"), ...) {
+ov_video_player <- function(id, type, controls = FALSE, version = 1, controller_var = paste0(id, "_controller"), with_js = FALSE, ...) {
     assert_that(is.string(type))
-    type <- match.arg(tolower(type), c("youtube", "local"))
+    type <- match.arg(tolower(type), c("youtube", "twitch", "local"))
     if (inherits(controls, c("shiny.tag", "shiny.tag.list"))) {
         extra_controls <- controls
         controls <- TRUE
@@ -64,9 +71,10 @@ ov_video_player <- function(id, type, controls = FALSE, version = 1, controller_
     }
     assert_that(is.flag(controls), !is.na(controls))
     assert_that(is.numeric(version), version >= 1, version <= 2)
+    assert_that(is.flag(with_js), !is.na(with_js))
     v2 <- version == 2
     if (v2) assert_that(is.string(controller_var), !is.na(controller_var))
-    if (type == "youtube") {
+    if (type %in% c("youtube", "twitch")) {
         plyr <- do.call(tags$div, c(list(id = id), list(...)))
     } else {
         plyr <- do.call(tags$video, c(list(id = id, autoplay = "false", preload = "metadata"), list(...)))
@@ -74,16 +82,17 @@ ov_video_player <- function(id, type, controls = FALSE, version = 1, controller_
     out <- if (controls) {
                cstr <- if (v2) paste0(controller_var, ".") else "dvjs_"
                list(tags$div(id = paste0(id, "_container"), plyr,
-                             tags$div(tags$button(tags$span(icon("step-backward")), onclick = paste0(cstr, "video_prev();"), title = "Previous"),
-                                      tags$button(tags$span(icon("step-forward")), onclick = paste0(cstr, "video_next();"), title = "Next"),
-                                      tags$button(tags$span(icon("pause-circle")), onclick = paste0(cstr, "video_pause();"), title = "Pause"),
-                                      tags$button(tags$span(icon("stop-circle")), onclick = paste0(cstr, "video_stop();"), title = "Stop"),
-                                      tags$button(tags$span(icon("expand")), onclick = paste0(cstr, "fullscreen();"), title = "Full screen"), extra_controls)
+                             tags$div(tags$button(tags$span(icon("step-backward", style = "vertical-align:middle;")), onclick = paste0(cstr, "video_prev();"), title = "Previous"),
+                                      tags$button(tags$span(icon("step-forward", style = "vertical-align:middle;")), onclick = paste0(cstr, "video_next();"), title = "Next"),
+                                      tags$button(tags$span(icon("pause-circle", style = "vertical-align:middle;")), onclick = paste0(cstr, "video_pause();"), title = "Pause"),
+                                      tags$button(tags$span(icon("stop-circle", style = "vertical-align:middle;")), onclick = paste0(cstr, "video_stop();"), title = "Stop"),
+                                      tags$button(tags$span(icon("expand", style = "vertical-align:middle;")), onclick = paste0(cstr, "fullscreen();"), title = "Full screen"), extra_controls)
                              ))
            } else {
                list(tags$div(id = paste0(id, "_container"), plyr))
            }
     if (v2) out <- c(out, list(tags$script(paste0(controller_var, " = new dvjs_controller('", id, "','", type, "',true);"))))
+    if (isTRUE(with_js)) out <- c(out, list(ov_video_js(youtube = type == "youtube", twitch = type == "twitch", version = version)))
     do.call(tagList, out)
 }
 
@@ -93,16 +102,14 @@ ov_video_player <- function(id, type, controls = FALSE, version = 1, controller_
 #' The video element and the controls provided by this function are javascript-based, and so are probably most useful in Shiny apps.
 #'
 #' @param what string: the command, currently one of:
-#' \itemize{
-#'   \item "play" (note that this requires that the playlist has already been loaded)
-#'   \item "stop"
-#'   \item "pause"
-#'   \item "prev"
-#'   \item "next"
-#'   \item "jog" - move the video forward or backwards by a given number of seconds (pass this value as the `...` argument)
-#'   \item "set_playback_rate" - set the playback rate: 1 = normal speed, 2 = double speed, etc
-#' }
-#' @param ... : parameters used by those commands. For version 2 of the video controller, \code{...} must include \code{controller_var = "my_controller_var"}
+#' * "play" (note that this requires that the playlist has already been loaded)
+#' * "stop"
+#' * "pause"
+#' * "prev"
+#' * "next"
+#' * "jog" - move the video forward or backwards by a given number of seconds (pass this value as the `...` argument)
+#' * "set_playback_rate" - set the playback rate: 1 = normal speed, 2 = double speed, etc
+#' @param ... : parameters used by those commands. For version 2 of the video controller, `...` must include `controller_var = "my_controller_var"`
 #'
 #' @examples
 #' \dontrun{

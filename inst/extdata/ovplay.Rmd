@@ -1,6 +1,10 @@
 ---
+params:
+  playlist: NULL
+  css: NULL
+  ui_header: NULL
 title: ""
-pagetitle: "`r vsx$playlist$name`"
+pagetitle: "`r params$playlist$name`"
 output:
   html_document:
     theme: spacelab
@@ -12,7 +16,6 @@ table {font-size: small;}
 #headerblock {border-radius:4px; padding:10px; margin-bottom:5px; min-height:120px; color:black;} h5 {font-weight: bold;}
 h2, h3, h4 {font-weight: bold;}
 .main-container { max-width: 95%; } #subtitle { border: 1px solid black; border-radius: 1px; padding: 5px; margin-left: 6px; background-color: lightblue; font-size: 14px;} #subtitleskill { border: 1px solid black; border-radius: 1px; padding: 5px; margin-left: 6px; background-color: coral; font-size: 14px;} h5 {font-weight: bold;}
-
 </style>
 
 ```{r setup, include=FALSE}
@@ -26,7 +29,7 @@ var2fc <- function(x) {
     vapply(x, function(z) gsub("_", " ", paste0(toupper(substr(z, 1, 1)), substr(z, 2, nchar(z)))), FUN.VALUE = "", USE.NAMES = FALSE)
 }
 
-if (!is.null(vsx$css)) tags$style(vsx$css)
+if (!is.null(params$css)) tags$style(params$css)
 
 ```
 
@@ -41,12 +44,12 @@ $(document).ready(function() {
     if (ths !== null) {
       selinit = true;
       clearInterval(selint);
-      var table = $('#DataTables_Table_0').DataTable();
-      $('#DataTables_Table_0 tbody').on( 'click', 'tr', function () {
-        var table = $('#DataTables_Table_0').DataTable();
-        dvpl.video_controller.current = table.row( this ).index();
-        dvpl.video_play();
-      });
+//      var table = $('#DataTables_Table_0').DataTable();
+//      $('#DataTables_Table_0 tbody').on( 'click', 'tr', function () {
+//        var table = $('#DataTables_Table_0').DataTable();
+//        dvpl.video_controller.current = table.row( this ).index();
+//        dvpl.video_play();
+//      });
       // autostart playing
       dvpl.video_controller.current = 0;
       scrolltbl();
@@ -58,14 +61,14 @@ $(document).ready(function() {
 </script>
 
 ```{r ovsetup, results = "asis"}
-jsstuff <- ovideo::ov_video_js(youtube = TRUE, version = 2)
+jsstuff <- ovideo::ov_video_js(youtube = params$playlist$playlist_type %in% "youtube", twitch = params$playlist$playlist_type %in% "twitch", version = 2)
 print(jsstuff$children[[1]][[1]])
 print(jsstuff$children[[1]][[2]])
 ```
 
 ```{r data-load}
-playlist <- vsx$playlist$playlist
-plays_cols_to_show <- if (length(vsx$playlist$table_cols) > 0) vsx$playlist$table_cols else c("video_time", "code", "set_number", "home_team_score", "visiting_team_score")
+playlist <- params$playlist$playlist
+plays_cols_to_show <- if (length(params$playlist$table_cols) > 0) params$playlist$table_cols else c("video_time", "code", "set_number", "home_team_score", "visiting_team_score")
 plays_cols_to_show <- intersect(names(playlist), plays_cols_to_show)
 if ("code" %in% plays_cols_to_show) playlist$code <- vapply(playlist$code, function(x) paste0("<strong style=\"background-color:white;border-radius: 5px;padding: 3px; border: 2px solid #73AD21;\">", x ,"</strong>"), FUN.VALUE = "", USE.NAMES = FALSE)
 if("home_team_score" %in% plays_cols_to_show)  playlist$home_team_score <- vapply(playlist$home_team_score, function(x) paste0("<strong style=\"background-color:grey;border-radius: 5px;padding: 3px;\">", x ,"</strong>"), FUN.VALUE = "", USE.NAMES = FALSE)
@@ -80,8 +83,8 @@ playstable <- DT::datatable(names_first_to_capital(playlist[, plays_cols_to_show
 ```
 
 ```{r hdr, results = "asis"}
-        if (!is.null(vsx$ui_header)) {
-            vsx$ui_header
+        if (!is.null(params$ui_header)) {
+            params$ui_header
         } else {
             fluidRow(id = "headerblock", column(6, tags$h2("Volleyball Video Player")),
                      column(3, offset = 3, tags$div(style = "text-align: center;", "Part of the", tags$br(), tags$img(src = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMTAiIGhlaWdodD0iMjEwIj48cGF0aCBkPSJNOTcuODMzIDE4Ny45OTdjLTQuNTUtLjM5Ni0xMi44MTItMS44ODYtMTMuNTgxLTIuNDQ5LS4yNDItLjE3Ny0xLjY5Mi0uNzUzLTMuMjIyLTEuMjgxLTI4LjY5Ni05Ljg5NS0zNS4xNy00NS45ODctMTMuODY4LTc3LjMyMyAyLjY3Mi0zLjkzIDIuNTc5LTQuMTktMS4zOTQtMy45MDYtMTIuNjQxLjktMjcuMiA2Ljk1Mi0zMy4wNjYgMTMuNzQ1LTUuOTg0IDYuOTI3LTcuMzI3IDE0LjUwNy00LjA1MiAyMi44NjIuNzE2IDEuODI2LS45MTgtLjE3LTEuODktMi4zMS03LjM1Mi0xNi4xNzQtOS4xODEtMzguNTYtNC4zMzctNTMuMDc0LjY5MS0yLjA3IDEuNDE1LTMuODY2IDEuNjEtMy45ODkuMTk0LS4xMjMuNzgyLTEuMDUzIDEuMzA3LTIuMDY2IDMuOTQ1LTcuNjE3IDkuNDU4LTEyLjg2MiAxNy44MzktMTYuOTcgMTIuMTcyLTUuOTY4IDI1LjU3NS01LjgyNCA0MS40My40NDUgNi4zMSAyLjQ5NSA4LjgwMiAzLjgwMSAxNi4wNDcgOC40MTMgNC4zNCAyLjc2MiA0LjIxMiAyLjg3NCAzLjU5NC0zLjE3My0yLjgyNi0yNy42ODEtMTYuOTA3LTQyLjE4NS0zNi4wNjgtMzcuMTUxLTQuMjU0IDEuMTE3IDUuMjQtMy4zMzggMTEuNjYtNS40NzMgMTMuMTgtNC4zOCAzOC45MzctNS43NzIgNDYuMDc0LTEuNDg4IDEuMjQ3LjU0NyAyLjIyOCAxLjA5NSAzLjI3NSAxLjYzIDQuMjkgMi4xMDcgMTEuNzMzIDcuNjk4IDE0LjI2NSAxMS40MjcuNDA3LjYgMS4yNyAxLjg2NiAxLjkxNyAyLjgxNCAxMS4zMDggMTYuNTY1IDguNjIzIDQxLjkxLTYuODM4IDY0LjU1Mi0zLjI0OSA0Ljc1OC0zLjI1OCA0Ljc0MiAyLjQ1IDQuMDE4IDMyLjQ4Mi00LjEyMiA0OC41MTUtMjEuOTM1IDM5LjU3OC00My45NzQtMS4xNC0yLjgwOSAxLjU2NiAxLjA2IDMuNTE4IDUuMDMyIDI5LjY5MyA2MC40MTctMjIuNTggMTA3Ljg1My03OS40OTggNzIuMTQzLTUuMDg0LTMuMTktNS4xMjMtMy4xNTItMy45MDIgMy44ODMgNC43MjEgMjcuMjIgMjUuNzgzIDQzLjU2MiA0NC4wODkgMzQuMjEgMS4zNjItLjY5NiAyLjIxLS43NSAyLjIxLS4xNDMtNi43NiAzLjg1Ny0xNi4wMTggNi41NTMtMjMuMTI2IDguMDkxLTcuNTU1IDEuNTQ3LTE4LjM2NiAyLjE3Mi0yNi4wMiAxLjUwNnoiIGZpbGw9IiMwMDA3NjYiLz48ZWxsaXBzZSBjeD0iMTA1Ljk3NSIgY3k9IjEwNC40NDEiIHJ4PSI5NC44NCIgcnk9IjkyLjU0MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwNzY2IiBzdHJva2Utd2lkdGg9IjEwLjc0Ii8+PC9zdmc+", style = "max-height:3em;"), tags$br(), tags$a(href = "https://github.com/openvolley", "openvolley", target = "_blank"), "project")))
@@ -92,11 +95,18 @@ playstable <- DT::datatable(names_first_to_capital(playlist[, plays_cols_to_show
 ----
 
 ```{r uistuff}
-vargs <- list(id = "dv_player", type = if (vsx$playlist$playlist_type == "youtube") "youtube" else "local", style = "border: 1px solid black; width: 90%; height: 480px; background-color: black;", controls = FALSE)
+vargs <- list(id = "dv_player", type = if (params$playlist$playlist_type %in% c("youtube", "twitch")) params$playlist$playlist_type else "local", style = "border: 1px solid black; width: 90%; height: 480px; background-color: black;", controls = FALSE)
 if (vargs$type == "local") {
     vargs$muted <- "muted"
     vargs$poster <- "data:image/gif,AAAA"
 }
+mutejs <- if (vargs$type == "youtube") {
+              "dvpl.yt_player.isMuted() ? dvpl.yt_player.unMute() : dvpl.yt_player.mute();"
+           } else if (vargs$type == "twitch") {
+               "dvpl.yt_player.setMuted(!dvpl.yt_player.getMuted());"
+           } else {
+               "$('#dv_player').prop('muted', !$('#dv_player').prop('muted'));"
+           }
 have_sub <- "subtitle" %in% names(playlist) && any(!is.na(playlist$subtitle) & nzchar(playlist$subtitle))
 have_subskill <- "subtitleskill" %in% names(playlist) && any(!is.na(playlist$subtitleskill) & nzchar(playlist$subtitleskill))
 fluidRow(column(8, do.call(ovideo::ov_video_player, vargs),
@@ -107,10 +117,10 @@ fluidRow(column(8, do.call(ovideo::ov_video_player, vargs),
                          tags$button("Pause", onclick = "dvpl.video_pause();"),
                          tags$button("Back 1s", onclick = "dvpl.jog(-1);"),
                          tags$button(id = "restart_button", "Restart", onclick = ov_playlist_as_onclick(playlist, "dv_player", controller_var = "dvpl")),
-                         tags$button("Toggle mute", onclick = "$('#dv_player').prop('muted', !$('#dv_player').prop('muted'));")),
+                         tags$button("Toggle mute", onclick = mutejs)),
                 tags$div(style = "margin-top:10px;", if (have_sub) tags$span(id = "subtitle", "Score"), if (have_subskill) tags$span(id = "subtitleskill", "Skill"))
                 ),
-         column(4, tags$h4(vsx$playlist$name),
+         column(4, tags$h4(params$playlist$name),
                 playstable))
 
 ```
@@ -118,6 +128,10 @@ fluidRow(column(8, do.call(ovideo::ov_video_player, vargs),
 <script>
 ```{r create_controller, results = "asis"}
 cat("dvpl = new dvjs_controller('dv_player','", vargs$type, "',true);\n")
+if (vargs$type != "twitch") cat("dvpl.yt_first_mute = true;\n") ## don't autoplay with twitch, so don't need yt_first_mute
+## load the playlist for twitch, otherwise for YT it happens when the restart button is auto-clicked
+if (vargs$type == "twitch") cat(ov_playlist_as_onclick(playlist, "dv_player", controller_var = "dvpl", dvjs_fun = "dvjs_set_playlist"), "\n")
+
 ```
 function scrolltbl() {
   var tblr=$('#DataTables_Table_0').DataTable();
@@ -141,8 +155,8 @@ dvpl.video_onstart = function() {
 ```{r runjs, results = "asis"}
 if (have_sub) cat("document.getElementById(\"subtitle\").textContent=\"Score\";\n")
 if (have_subskill) cat("document.getElementById(\"subtitleskill\").textContent=\"Skill\";\n")
-if (vsx$playlist$playlist_type == "youtube") {
-    cat("onYouTubeIframeAPIReady = function() { dvpl.yt_first_mute = true; $('#restart_button').click(); }\n")
+if (params$playlist$playlist_type == "youtube") {
+    cat("onYouTubeIframeAPIReady = function() { $('#restart_button').click(); }\n")
 }
 
 ```

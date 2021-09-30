@@ -4,10 +4,12 @@
 \alias{ov_video_js}
 \title{Inject javascript for an HTML video player}
 \usage{
-ov_video_js(youtube = FALSE, version = 1)
+ov_video_js(youtube = FALSE, twitch = FALSE, version = 1)
 }
 \arguments{
 \item{youtube}{logical: set to \code{TRUE} to include the Youtube API javascript. This isn't necessary if you are only using local video files}
+
+\item{twitch}{logical: set to \code{TRUE} to include the Twitch API javascript. Only with \code{version = 2}. Not necessary if you are only using local video files}
 
 \item{version}{numeric: code version. Default = 1, experimental = 2}
 }
@@ -18,5 +20,5 @@ A \code{head} tag containing script tags
 Inject javascript for an HTML video player
 }
 \seealso{
-\code{\link{ov_video_playlist}}
+\code{\link[=ov_video_playlist]{ov_video_playlist()}}
 }

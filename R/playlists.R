@@ -2,10 +2,10 @@
 #'
 #' @param x data.frame: a datavolleyplays object. Normally this will be a selected subset of the `plays` component of a datavolley object (i.e. a selected set of actions that you want the video playlist to contain)
 #' @param meta list: either the `meta` component of a datavolley object, or a list of such objects, or a data.frame with the columns "match_id" and "video_src". Entries in `video_src` should be paths or URLs to the video file associated with the corresponding `match_id`
-#' @param type string: currently "youtube" or "local". If `type` is not specified as a parameter, and `meta` is a data.frame, then `type` can be provided as a column in `meta`. Alternatively, if `meta` is a `meta` component of a datavolley object, or a list of such objects, then `type` will be assumed to be "local". Note that a single playlist can't mix types, all entries must be of the same type
-#' @param timing list: the relative timing for each skill type, either a named list as returned by \code{\link{ov_video_timing}} or a data.frame as returned by \code{\link{ov_video_timing_df}}. See \code{\link{ov_video_timing}} for further details
+#' @param type string: currently "youtube", "twitch", or "local". If `type` is not specified as a parameter, and `meta` is a data.frame, then `type` can be provided as a column in `meta`. Alternatively, if `meta` is a `meta` component of a datavolley object, or a list of such objects, then `type` will be assumed to be "local". Note that a single playlist can't mix types, all entries must be of the same type
+#' @param timing list: the relative timing for each skill type, either a named list as returned by [ov_video_timing()] or a data.frame as returned by [ov_video_timing_df()]. See [ov_video_timing()] for further details
 #' @param extra_cols character: names of additional columns from `x` to include in the returned data frame
-#' @param normalize_paths logical: if \code{TRUE}, apply \code{normalizePath} to local file paths. This will e.g. expand the tilde in paths like "~/path/to/video.mp4"
+#' @param normalize_paths logical: if `TRUE`, apply `normalizePath` to local file paths. This will e.g. expand the tilde in paths like "~/path/to/video.mp4"
 #'
 #' @return A data.frame with columns `src`, `start_time`, `duration`, plus any extras specified in `extra_cols`
 #'
@@ -52,6 +52,8 @@ ov_video_playlist <- function(x, meta, type = NULL, timing = ov_video_timing(), 
         if (is.null(type)) {
             if (all(is_youtube_id(meta$video_src) | grepl("https?://.*youtube", meta$video_src, ignore.case = TRUE) | grepl("https?://youtu\\.be", meta$video_src, ignore.case = TRUE))) {
                 type <- "youtube"
+            } else if (all(is_twitch_video(meta$video_src))) {
+                type <- "twitch"
             } else {
                 type <- "local"
             }
@@ -60,7 +62,7 @@ ov_video_playlist <- function(x, meta, type = NULL, timing = ov_video_timing(), 
         stop("meta is an unexpected format")
     }
     assert_that(is.string(type))
-    type <- match.arg(tolower(type), c("local", "youtube"))
+    type <- match.arg(tolower(type), c("local", "twitch", "youtube"))
     if (!all(x$match_id %in% meta$match_id)) stop("x contains match_ids that do not appear in meta")
     if (any(is.na(meta$video_src))) {
         missing_vid_matches <- meta$match_id[is.na(meta$video_src)]
@@ -96,6 +98,9 @@ ov_video_playlist <- function(x, meta, type = NULL, timing = ov_video_timing(), 
     if (type == "youtube") {
         ## ensure that we have youtube IDs, not e.g. full URLs
         x$video_src <- vapply(x$video_src, youtube_url_to_id, FUN.VALUE = "", USE.NAMES = FALSE)
+    } else if (type == "twitch") {
+        ## ditto for twitch
+        x$video_src <- vapply(x$video_src, twitch_url_to_id, FUN.VALUE = "", USE.NAMES = FALSE)
     }
     x$type <- type
     if (normalize_paths) {
@@ -111,9 +116,9 @@ ov_video_playlist <- function(x, meta, type = NULL, timing = ov_video_timing(), 
 #'
 #' @param x data.frame: a datavolleyplays object. Normally this will be a selected subset of the `plays` component of a datavolley object (i.e. a selected set of actions that you want the video playlist to contain)
 #' @param meta list: either the `meta` component of a datavolley object, or a list of such objects, or a data.frame with the columns "match_id" and "video_src". Entries in `video_src` should be paths or URLs to the video file associated with the corresponding `match_id`
-#' @param type string: currently "youtube" or "local". If `type` is not specified as a parameter, and `meta` is a data.frame, then `type` can be provided as a column in `meta`. Alternatively, if `meta` is a `meta` component of a datavolley object, or a list of such objects, then `type` will be assumed to be "local"
+#' @param type string: currently "youtube", "twitch", or "local". If `type` is not specified as a parameter, and `meta` is a data.frame, then `type` can be provided as a column in `meta`. Alternatively, if `meta` is a `meta` component of a datavolley object, or a list of such objects, then `type` will be assumed to be "local"
 #' @param extra_cols character: names of additional columns from `x` to include in the returned data frame
-#' @param normalize_paths logical: if \code{TRUE}, apply \code{normalizePath} to local file paths. This will e.g. expand the tilde in paths like "~/path/to/video.mp4"
+#' @param normalize_paths logical: if `TRUE, apply `normalizePath` to local file paths. This will e.g. expand the tilde in paths like "~/path/to/video.mp4"
 #'
 #' @return A data.frame with columns `src`, `start_time`, `duration`, plus any extras specified in `extra_cols`
 #'
@@ -138,6 +143,8 @@ ov_video_playlist_pid <- function(x, meta, type = NULL, extra_cols = NULL, norma
         if (is.null(type)) {
             if (all(is_youtube_id(meta$video_src) | grepl("https?://.*youtube", meta$video_src, ignore.case = TRUE) | grepl("https?://youtu\\.be", meta$video_src, ignore.case = TRUE))) {
                 type <- "youtube"
+            } else if (all(is_twitch_video(meta$video_src))) {
+                type <- "twitch"
             } else {
                 type <- "local"
             }
@@ -146,7 +153,7 @@ ov_video_playlist_pid <- function(x, meta, type = NULL, extra_cols = NULL, norma
         stop("meta is an unexpected format")
     }
     assert_that(is.string(type))
-    type <- match.arg(tolower(type), c("local", "youtube"))
+    type <- match.arg(tolower(type), c("local", "twitch", "youtube"))
     x <- x[!is.na(x$skill), ]
     if (!all(x$match_id %in% meta$match_id)) stop("x contains match_ids that do not appear in meta")
     if (any(is.na(meta$video_src))) {
@@ -164,6 +171,9 @@ ov_video_playlist_pid <- function(x, meta, type = NULL, extra_cols = NULL, norma
     if (type == "youtube") {
         ## ensure that we have youtube IDs, not e.g. full URLs
         x$video_src <- vapply(x$video_src, youtube_url_to_id, FUN.VALUE = "", USE.NAMES = FALSE)
+    } else if (type == "twitch") {
+        ## ditto for twitch
+        x$video_src <- vapply(x$video_src, twitch_url_to_id, FUN.VALUE = "", USE.NAMES = FALSE)
     }
     x$type <- type
     if (normalize_paths) {
@@ -220,14 +230,14 @@ add_seamless_timings <- function(x) {
 #'
 #' By default, all skills except reception have a timing of `c(-5, 3)`, meaning that the video clip will start 5 seconds before the recorded time of the event and end 3 seconds after its recorded time. Reception has a timing of `c(-2, 6)` (because reception usually has the same timestamp as the serve)
 #'
-#' \code{ov_video_timing_df} accepts and returns a data.frame rather than a named list. The data.frame format also allows timings to be differentiated by play phase ("Reception" vs "Transition").
+#' `ov_video_timing_df` accepts and returns a data.frame rather than a named list. The data.frame format also allows timings to be differentiated by play phase ("Reception" vs "Transition").
 #'
 #' @param ... : named parameters that will override the defaults. Each parameter should be a two-element numeric vector
-#' @param x data.frame: a data.frame of timings that will override the defaults, with columns \code{skill}, \code{phase}, \code{start_offset} (start offset in seconds, default = -5), and \code{duration} (duration in seconds, default = 8)
+#' @param x data.frame: a data.frame of timings that will override the defaults, with columns `skill`, `phase`, `start_offset` (start offset in seconds, default = -5), and `duration` (duration in seconds, default = 8)
 #'
-#' @return For \code{ov_video_timing} a named list, with names corresponding to skills ("Serve", "Reception", etc). For \code{ov_video_timing_df}, a data.frame with columns \code{skill}, \code{phase}, \code{start_offset}, and \code{duration}
+#' @return For `ov_video_timing` a named list, with names corresponding to skills ("Serve", "Reception", etc). For `ov_video_timing_df`, a data.frame with columns `skill`, `phase`, `start_offset`, and `duration`
 #'
-#' @seealso \code{\link{ov_video_playlist}}
+#' @seealso [ov_video_playlist()]
 #'
 #' @examples
 #'
@@ -338,7 +348,7 @@ do_merge_timing_df <- function(x, default, with_final_merge = FALSE) {
 #'
 #' @param playlist data.frame: a playlist as returned by `ov_video_playlist`
 #' @param video_id string: the id of the HTML video element to attach the playlist to
-#' @param normalize_paths logical: if \code{TRUE}, apply \code{normalizePath} to local file paths. This will e.g. expand the tilde in paths like "~/path/to/video.mp4"
+#' @param normalize_paths logical: if `TRUE`, apply `normalizePath` to local file paths. This will e.g. expand the tilde in paths like "~/path/to/video.mp4"
 #' @param dvjs_fun string: the javascript function to use
 #' @param seamless logical: if clips overlap, should we transition seamlessly from one to the next?
 #' @param controller_var string: (for version 2 only) the js variable name of the controller object to assign this playlist to
@@ -425,7 +435,7 @@ ov_playlist_as_onclick <- function(playlist, video_id, normalize_paths = TRUE, d
 #' @export
 ov_playlist_to_vlc <- function(playlist, outfile, no_paths = FALSE, seamless = TRUE) {
     if (missing(playlist) || is.null(playlist) || nrow(playlist) < 1) return(character())
-    if (any(playlist$type %in% "youtube") || any(grepl("^https?://", playlist$video_src, ignore.case = TRUE))) {
+    if (any(playlist$type %in% c("youtube", "twitch")) || any(grepl("^https?://", playlist$video_src, ignore.case = TRUE))) {
         warning("ov_playlist_to_vlc only works with local video files, not remote video URLs")
     }
     if (missing(outfile) || length(outfile) < 1) outfile <- tempfile(fileext = ".m3u")
@@ -499,7 +509,7 @@ ov_playlist_to_html <- function(playlist, playlist_name = "Playlist", outfile, n
     seamless <- FALSE ## otherwise the plays table gets reduced to a smaller number of items
     if (missing(playlist) || is.null(playlist) || nrow(playlist) < 1) return(character())
     pltype <- playlist$type
-    pltype[grepl("^https?://", playlist$video_src, ignore.case = TRUE) & !pltype %in% "youtube"] <- "remote"
+    pltype[grepl("^https?://", playlist$video_src, ignore.case = TRUE) & !pltype %in% c("youtube", "twitch")] <- "remote"
     pltype <- unique(pltype)
     if (length(pltype) != 1) stop("must have playlist of single 'type' (e.g. not a mixture of YouTube URLs and local files)")
     if (missing(outfile) || length(outfile) < 1) outfile <- tempfile(fileext = ".html")
@@ -524,7 +534,7 @@ if (FALSE) {
 
 render_pl <- function(pl, pl_name, bannerdir, outfile, table_cols, ...) {
     pltype <- pl$type
-    pltype[grepl("^https?://", pl$video_src, ignore.case = TRUE) & !pltype %in% "youtube"] <- "remote"
+    pltype[grepl("^https?://", pl$video_src, ignore.case = TRUE) & !pltype %in% c("youtube", "twitch")] <- "remote"
     pltype <- unique(pltype)
     if (length(pltype) != 1) stop("must have playlist of single 'type' (e.g. not a mixture of YouTube URLs and local files)")
     rmd_template_src <- system.file("extdata/ovplay.Rmd", package = "ovideo")
@@ -534,7 +544,7 @@ render_pl <- function(pl, pl_name, bannerdir, outfile, table_cols, ...) {
     if (!file.copy(from = rmd_template_src, to = rmd_template)) stop("cannot copy template file to temporary directory")
     vsx <- list(playlist = list(name = pl_name, playlist = pl, banner_directory = bannerdir, playlist_type = pltype, table_cols = table_cols), ...)
     blah <- knitr::knit_meta(class = NULL, clean = TRUE) ## may help stop memory allocation error
-    rmarkdown::render(rmd_template, output_file = outfile, output_options = NULL)
+    rmarkdown::render(rmd_template, output_file = outfile, output_options = NULL, params = vsx)
 }
 
 merge_seamless <- function(playlist) {

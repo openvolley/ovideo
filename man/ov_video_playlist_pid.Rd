@@ -17,11 +17,11 @@ ov_video_playlist_pid(
 
 \item{meta}{list: either the \code{meta} component of a datavolley object, or a list of such objects, or a data.frame with the columns "match_id" and "video_src". Entries in \code{video_src} should be paths or URLs to the video file associated with the corresponding \code{match_id}}
 
-\item{type}{string: currently "youtube" or "local". If \code{type} is not specified as a parameter, and \code{meta} is a data.frame, then \code{type} can be provided as a column in \code{meta}. Alternatively, if \code{meta} is a \code{meta} component of a datavolley object, or a list of such objects, then \code{type} will be assumed to be "local"}
+\item{type}{string: currently "youtube", "twitch", or "local". If \code{type} is not specified as a parameter, and \code{meta} is a data.frame, then \code{type} can be provided as a column in \code{meta}. Alternatively, if \code{meta} is a \code{meta} component of a datavolley object, or a list of such objects, then \code{type} will be assumed to be "local"}
 
 \item{extra_cols}{character: names of additional columns from \code{x} to include in the returned data frame}
 
-\item{normalize_paths}{logical: if \code{TRUE}, apply \code{normalizePath} to local file paths. This will e.g. expand the tilde in paths like "~/path/to/video.mp4"}
+\item{normalize_paths}{logical: if \verb{TRUE, apply }normalizePath` to local file paths. This will e.g. expand the tilde in paths like "~/path/to/video.mp4"}
 }
 \value{
 A data.frame with columns \code{src}, \code{start_time}, \code{duration}, plus any extras specified in \code{extra_cols}

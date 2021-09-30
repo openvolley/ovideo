@@ -10,21 +10,24 @@ ov_video_player(
   controls = FALSE,
   version = 1,
   controller_var = paste0(id, "_controller"),
+  with_js = FALSE,
   ...
 )
 }
 \arguments{
 \item{id}{string: the id of the tag}
 
-\item{type}{string: either "youtube" or "local"}
+\item{type}{string: either "youtube", "twitch" (only with \code{version = 2}), or "local"}
 
-\item{controls}{logical: if \code{TRUE}, add "previous", "next", "pause", "stop", and "fullscreen" buttons. If \code{controls} is an object of class \code{shiny.tag} (created by \code{htmltools::tags}) or \code{shiny.tag.list} (\code{htmltools::tagList}) then those controls will added with this tag or tag list appended}
+\item{controls}{logical: if \code{TRUE}, add "previous", "next", "pause", "stop", and "fullscreen" buttons. If \code{controls} is an object of class \code{shiny.tag} (created by \code{\link[htmltools:builder]{htmltools::tags()}}) or \code{shiny.tag.list} (\code{\link[htmltools:tagList]{htmltools::tagList()}}) then those controls will added with this tag or tag list appended}
 
-\item{version}{numeric: code version. Default = 1, experimental = 2}
+\item{version}{numeric: code version. Default = 1, sort-of-experimental = 2. Version 2 supports multiple players on a single page, as well as \code{type = "twitch"}}
 
 \item{controller_var}{string: (for version 2 only) the js variable name to use for the controller object that controls this video player}
 
-\item{...}{: other attributes of the player element (passed to the player \code{tags$div} call for youtube or \code{tags$video} for local)}
+\item{with_js}{logical: if \code{TRUE}, also include the supporting javascript libraries. If \code{with_js = FALSE}, you must make a separate call to \code{\link[=ov_video_js]{ov_video_js()}} (e.g. in your Shiny ui.R function)}
+
+\item{...}{: other attributes of the player element (passed to the player \code{tags$div} call for youtube/twitch or \code{tags$video} for local)}
 }
 \value{
 HTML tags. The outermost element is a div with id \code{paste0(id, "_container")}, with the player and optionally buttons nested within it.
@@ -44,11 +47,13 @@ Video player tag element
 
   shinyApp(
       ui = fluidPage(
-          ov_video_js(youtube = TRUE),
+          ov_video_js(youtube = TRUE, version = 2),
           ov_video_player(id = "yt_player", type = "youtube",
+                          version = 2, controller_var = "my_dv",
                           style = "height: 480px; background-color: black;",
                           controls = tags$button("Go",
-                                       onclick = ov_playlist_as_onclick(playlist, "yt_player")))
+                                     onclick = ov_playlist_as_onclick(playlist, "yt_player",
+                                                                      controller_var = "my_dv")))
       ),
       server = function(input, output) {},
   )

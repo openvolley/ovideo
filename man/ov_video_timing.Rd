@@ -37,5 +37,5 @@ ov_video_timing_df(data.frame(skill = "Set", phase = "Transition",
 
 }
 \seealso{
-\code{\link{ov_video_playlist}}
+\code{\link[=ov_video_playlist]{ov_video_playlist()}}
 }

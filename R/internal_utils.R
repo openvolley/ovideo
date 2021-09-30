@@ -35,6 +35,32 @@ youtube_url_to_id <- function(z) {
     }
 }
 
+is_twitch_video <- function(z) {
+    if (is.null(z)) {
+        FALSE
+    } else if (!is.character(z)) {
+        rep(FALSE, length(z))
+    } else {
+        grepl("twitch\\.tv", z)
+    }
+}
+
+twitch_url_to_id <- function(z) {
+    if (grepl("^https?://", z, ignore.case = TRUE) && grepl("twitch\\.tv", z, ignore.case = TRUE)) {
+            ## assume https://www.twitch.tv/CHANNEL/video/ID form
+            tryCatch({
+                temp <- httr::parse_url(z)
+                if (!is.null(temp$path) && length(temp$path) == 1) {
+                    tail(fs::path_split(temp$path)[[1]], 1)
+                } else {
+                    z
+                }
+            }, error = function(e) z)
+    } else {
+        z
+    }
+}
+
 str_first_upper <- function(x) {
     paste0(toupper(substr(x, 1, 1)), tolower(substr(x, 2, nchar(x))))
 }

@@ -1,12 +1,12 @@
 function dvjs_controller(id, type, seamless = true) {
     this.video_controller = {id: id, queue: [], current: -1, type: type, paused: false, seamless: seamless};
     // current is the pointer to the currently-being-played item in the queue
-    // type is "local" or "youtube"
+    // type is "local" or "youtube" or "twitch"
     // id is the id of the player HTML element
     this.video_timer = null;
     // we check the player at intervals to see if it's finished playing the current item
     this.video_timer_active = false;
-    this.yt_player = null;
+    this.yt_player = null; // yt_player is either a youtube or twitch player
     this.yt_first_mute = false; // override this to true to start the YT player muted on first play
     var that = this; // to use inside functions
 
@@ -58,7 +58,42 @@ function dvjs_controller(id, type, seamless = true) {
 		    }
 		});
 	    }
+	} else if (type == "twitch") {
+	    if (that.yt_player != null && old_id != null && old_id != video_id) {
+		that.yt_player.destroy();
+		that.yt_player = null;
+	    }
+	    if (that.yt_player == null) {
+		that.yt_player = new Twitch.Player(video_id, {
+		    width: "100%",
+		    height: "100%",
+		    controls: false,
+		    video: items[0].video_src,
+		    autoplay: false,
+		    muted: that.yt_first_mute
+		});
+		that.yt_player.addEventListener(Twitch.Player.PAUSE, that.twitch_pause_handler);
+		that.yt_player.addEventListener(Twitch.Player.ENDED, that.stop_video_interval);
+		that.yt_player.addEventListener(Twitch.Player.PLAY, that.twitch_play_handler);
+		that.yt_player.addEventListener(Twitch.Player.PLAYING, that.twitch_playing_handler);
+	    }
 	}
+    }
+
+    this.twitch_play_handler = function() {
+	//console.log("TWITCH PLAY");
+	that.start_video_interval();
+	that.video_controller.paused = false;
+    }
+    this.twitch_playing_handler = function() {
+	//console.log("TWITCH PLAYING");
+	that.start_video_interval();
+	that.video_controller.paused = false;
+    }
+    this.twitch_pause_handler = function() {
+	//console.log("TWITCH PAUSED");
+	that.stop_video_interval();
+	that.video_controller.paused = true;
     }
 
     this.set_playlist_and_play = function(items, video_id, type, seamless = true) {
@@ -87,6 +122,32 @@ function dvjs_controller(id, type, seamless = true) {
 		//console.log("set_playlist_and_play ... YT play");
 		that.video_play();
 	    }
+	} else if (type == "twitch") {
+	    if (that.yt_player != null && old_id != null && old_id != video_id) {
+		that.yt_player.destroy();
+		that.yt_player = null;
+	    }
+	    if (that.yt_player == null) {
+		//console.log("set_playlist_and_play ... new twitch player");
+		that.yt_player = new Twitch.Player(video_id, {
+		    width: "100%",
+		    height: "100%",
+		    controls: false,
+		    video: items[0].video_src,
+		    time: Math.floor(items[0].start_time/3600) + "h" + Math.floor(items[0].start_time/60) + "m" + (items[0].start_time - Math.floor(items[0].start_time/60) * 60) + "s",
+		    autoplay: true,
+		    muted: that.yt_first_mute
+		});
+		that.yt_player.addEventListener(Twitch.Player.PAUSE, that.twitch_pause_handler);
+		that.yt_player.addEventListener(Twitch.Player.ENDED, that.stop_video_interval);
+		that.yt_player.addEventListener(Twitch.Player.PLAY, that.twitch_play_handler);
+		that.yt_player.addEventListener(Twitch.Player.PLAYING, that.twitch_playing_handler);
+		// play when ready ^^^ not needed if autoplay is true?
+		// that.yt_player.addEventListener(Twitch.Player.READY, that.video_play);
+	    } else {
+		//console.log("set_playlist_and_play ... twitch player");
+		that.video_play();
+	    }
 	} else {
 	    // local media
 	    //console.log("set_playlist_and_play ... play");
@@ -100,7 +161,9 @@ function dvjs_controller(id, type, seamless = true) {
 	    if (document.getElementById(that.video_controller.id)) { document.getElementById(that.video_controller.id).removeAttribute("src"); }
 	}
 	if (that.yt_player != null) {
-	    that.yt_player.destroy();
+	    if (that.video_controller.type == "youtube" || that.video_controller.type == "twitch") {
+		that.yt_player.destroy();
+            }
 	    that.yt_player = null;
 	}
 	that.video_controller = {id: null, queue: [], current: -1, type: "local", paused: false, seamless: true};
@@ -118,7 +181,11 @@ function dvjs_controller(id, type, seamless = true) {
     }
 
     this.video_play = function() {
-	//console.log("dvjs_video_play");
+	//console.log("video_play");
+	if (that.video_controller.paused) {
+	    //console.log("in video_play, but controller was paused, so calling video_pause");
+	    return that.video_pause();
+	}
 	that.video_onstart();
 	if (that.video_controller.current >= 0 && that.video_controller.current <= (that.video_controller.queue.length - 1)) {
 	    var item = that.video_controller.queue[that.video_controller.current];
@@ -142,6 +209,21 @@ function dvjs_controller(id, type, seamless = true) {
 		    }
 		} else {
 		    that.yt_player.loadPlaylist(item.video_src, 0, item.start_time);
+		}
+	    } else if (that.video_controller.type == "twitch") {
+		if (that.yt_first_mute) {
+		    if (that.yt_player) { that.yt_player.setMuted(true); }
+		    that.yt_first_mute = false;
+		}
+		if (that.yt_player && that.yt_player.getVideo) {
+		    var current_src = that.yt_player.getVideo()
+		    if (current_src == item.video_src) {
+			that.yt_player.seek(item.start_time);
+		    } else {
+			that.yt_player.setVideo(item.video_src, item.start_time);
+		    }
+		} else {
+		    that.yt_player.setVideo(item.video_src, item.start_time);
 		}
 	    } else {
 		el = document.getElementById(that.video_controller.id);
@@ -167,6 +249,8 @@ function dvjs_controller(id, type, seamless = true) {
 	if (that.video_controller.type != null) {
 	    if (that.video_controller.type == "youtube") {
 		that.yt_player.stopVideo();
+	    } else if (that.video_controller.type == "twitch") {
+		that.yt_player.pause();
 	    } else {
 		if (document.getElementById(that.video_controller.id)) { document.getElementById(that.video_controller.id).pause(); }
 	    }
@@ -175,11 +259,13 @@ function dvjs_controller(id, type, seamless = true) {
     }
 
     this.video_pause = function() {
+	//console.log("video_pause");
 	if (that.video_controller.type != null) {
 	    if (!that.video_timer_active) {
 		// paused or stopped
 		if (that.video_controller.paused) {
 		    // restart
+		    that.video_controller.paused = false;
 		    // check that we are still within the current item
 		    var item = that.video_controller.queue[that.video_controller.current];
 		    var current_time;
@@ -191,6 +277,9 @@ function dvjs_controller(id, type, seamless = true) {
 		    if (that.video_controller.type == "youtube") {
 			current_time = that.yt_player.getCurrentTime();
 			current_src = that.yt_player.getPlaylist()[0];
+		    } else if (that.video_controller.type == "twitch") {
+			current_time = that.yt_player.getCurrentTime();
+			current_src = that.yt_player.getVideo();
 		    } else {
 			var el = document.getElementById(that.video_controller.id);
 			if (el) {
@@ -200,18 +289,21 @@ function dvjs_controller(id, type, seamless = true) {
 		    }
 		    if (current_src != item.video_src) {
 			// we are out of whack somehow
-			console.log("src mismatch");
+			//console.log("src mismatch, current is: " + current_src + ", item is: " + item.video_src);
 			that.video_stop();
-		    } else if (current_time > this_end_time) {
+		    } else if ((that.video_controller.type != "twitch") && (current_time > this_end_time)) {
+			// current time seems a bit flaky with the twitch player
 			// not on current item any more
+			//console.log("current time is: " + current_time + ", this_end_time is: " + this_end_time);
 			that.video_play();
 		    } else {
 			if (that.video_controller.type == "youtube") {
 			    that.yt_player.playVideo();
+			} else if (that.video_controller.type == "twitch") {
+			    that.yt_player.play();
 			} else {
 			    if (document.getElementById(that.video_controller.id)) { document.getElementById(that.video_controller.id).play(); }
 			}
-			that.video_controller.paused = false;
 			that.start_video_interval();
 		    }
 		} else {
@@ -224,6 +316,8 @@ function dvjs_controller(id, type, seamless = true) {
 		that.video_controller.paused = true;
 		if (that.video_controller.type == "youtube") {
 		    that.yt_player.pauseVideo();
+		} else if (that.video_controller.type == "twitch") {
+		    that.yt_player.pause();
 		} else {
 		    if (document.getElementById(that.video_controller.id)) { document.getElementById(that.video_controller.id).pause(); }
 		}
@@ -238,7 +332,7 @@ function dvjs_controller(id, type, seamless = true) {
     this.video_afterpause = function() { }
 
     this.video_next = function(seamless = false) {
-	//console.log("dvjs_video_next");
+	//console.log("video_next");
 	// seamless should be true if we want to transition seamlessly to the next clip (i.e. no stop and seek)
 	if (that.video_controller.current < (that.video_controller.queue.length - 1)) {
 	    that.video_controller.current++;
@@ -276,6 +370,8 @@ function dvjs_controller(id, type, seamless = true) {
     this.set_playback_rate = function(rate) {
 	if (that.video_controller.type == "youtube") {
             if (that.yt_player) { that.yt_player.setPlaybackRate(rate); }
+	} else if (that.video_controller.type == "twitch") {
+            // not supported on twitch if (that.yt_player) { that.yt_player.setPlaybackRate(rate); }
 	} else {
             if (document.getElementById(that.video_controller.id)) { document.getElementById(that.video_controller.id).playbackRate=rate; }
 	}
@@ -284,6 +380,8 @@ function dvjs_controller(id, type, seamless = true) {
     this.jog = function(howmuch) {
 	if (that.video_controller.type == "youtube") {
 	    that.yt_player.seekTo(that.yt_player.getCurrentTime() + howmuch, true);
+	} else if (that.video_controller.type == "twitch") {
+	    that.yt_player.seek(that.yt_player.getCurrentTime() + howmuch);
 	} else {
             if (document.getElementById(that.video_controller.id)) { document.getElementById(that.video_controller.id).currentTime = (el.currentTime + howmuch); }
 	}
@@ -291,6 +389,7 @@ function dvjs_controller(id, type, seamless = true) {
 
     this.video_manage = function() {
 	if (that.video_controller.queue.length > 0 && that.video_controller.current >= 0 && (that.video_controller.current <= (that.video_controller.queue.length - 1))) {
+	    //console.log("video_manage")
 	    var item = that.video_controller.queue[that.video_controller.current];
 	    var current_time;
 	    var current_src;
@@ -305,6 +404,9 @@ function dvjs_controller(id, type, seamless = true) {
 		    // YT sometimes resets the video to the start of the video AFTER seeking to the startSeconds time. Whaaat?
 		    that.yt_player.seekTo(item.start_time, true);
 		}
+	    } else if (that.video_controller.type == "twitch") {
+		current_time = that.yt_player.getCurrentTime();
+		current_src = that.yt_player.getVideo();
 	    } else {
 		var el = document.getElementById(that.video_controller.id);
 		if (el) {
@@ -314,7 +416,7 @@ function dvjs_controller(id, type, seamless = true) {
 	    }
 	    if (current_src != item.video_src) {
 		// we are out of whack somehow
-		console.log("src mismatch");
+		//console.log("src mismatch (2), current is: " + current_src + ", item is: " + item.video_src);
 		that.video_stop();
             } else if (current_time > this_end_time) {
 		// should we transition seamlessly to the next clip? (no stop and seek)
