@@ -10,16 +10,28 @@ function dvjs_controller(id, type, seamless = true) {
     this.yt_first_mute = false; // override this to true to start the YT player muted on first play
     var that = this; // to use inside functions
 
-    this.fullscreen = function() {
-	var elem = document.getElementById(that.video_controller.id);
+    var dofullscr = function(elem) {
 	if (elem) {
-	    if (elem.requestFullscreen) {
-		elem.requestFullscreen();
-	    } else if (elem.webkitRequestFullscreen) {
-		elem.webkitRequestFullscreen();
-	    } else if (elem.msRequestFullscreen) {
-		elem.msRequestFullscreen();
+	    try {
+		if (elem.requestFullscreen) {
+		    elem.requestFullscreen();
+		} else if (elem.webkitRequestFullscreen) {
+		    elem.webkitRequestFullscreen();
+		} else if (elem.msRequestFullscreen) {
+		    elem.msRequestFullscreen();
+		}
+		return true;
+	    } catch (error) {
+		return false;
 	    }
+	}
+	return false;
+    }
+
+    this.fullscreen = function() {
+	var done = dofullscr(document.getElementById("video_holder"));
+	if (!done) { // fallback
+	    dofullscr(document.getElementById(that.video_controller.id));
 	}
     }
 
