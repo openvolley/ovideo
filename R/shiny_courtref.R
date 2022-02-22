@@ -123,7 +123,7 @@ s_courtref_server <- function(app_data) {
                 ## plot in 0,1 norm coords
                 p <- ggplot2::ggplot(mapping = aes_string(x = "image_x", y = "image_y")) +
                     ggplot2::annotation_custom(grid::rasterGrob(crimg()$image), xmin = 0, xmax = 1, ymin = 0, ymax = 1) +
-                    ggplot2::coord_fixed(ratio = crimg()$height/crimg()$width) + ggplot2::xlim(c(0, 1)) + ggplot2::ylim(c(0, 1))
+                    ggplot2::coord_fixed(ratio = crimg()$height/crimg()$width, xlim = c(0, 1), ylim = c(0, 1))
                 if (!is.null(crox())) {
                     p <- p + geom_segment(data = crox()$courtxy, aes_string(xend = "xend", yend = "yend"), color = court_colour) + theme_bw()
                 }
