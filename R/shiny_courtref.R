@@ -17,8 +17,8 @@ s_courtref_ui <- function(app_data) {
 }
 
 s_courtref_ui_main <- function(app_data) {
-    tagList(fluidRow(column(8, plotOutput("srplot", height = "600px", click = "sr_plot_click", hover = hoverOpts("sr_plot_hover", delay = 50, delayType = "throttle"))), ##height = paste0(ph, "px"))
-                     column(4, uiOutput("srui_table"),
+    tagList(fluidRow(column(9, plotOutput("srplot", height = "80vh", click = "sr_plot_click", hover = hoverOpts("sr_plot_hover", delay = 50, delayType = "throttle"))), ##height = paste0(ph, "px"))
+                     column(3, uiOutput("srui_table"),
                             tags$hr(),
                             shiny::fixedRow(if (isTRUE(app_data$include_net)) column(6, textInput("net_height", label = "Net height (m):", value = if (!is.null(app_data$ref) && !is.null(app_data$ref$net_height) && !is.na(app_data$ref$net_height)) app_data$ref$net_height else "", width = "10ex")),
                                             column(6, textInput("video_framerate", label = "Video frame rate:", value = if (!is.null(app_data$ref) && !is.null(app_data$ref$video_framerate) && !is.na(app_data$ref$video_framerate)) app_data$ref$video_framerate else "", width = "10ex"))),
@@ -129,7 +129,7 @@ s_courtref_server <- function(app_data) {
                 }
                 if (!is.null(crvt$court)) {
                     p <- p + geom_label(data = mutate(crvt$court, point_num = paste0("  ", row_number(), "  ")), ## double check that point_num always matches the UI inputs ordering
-                                        aes_string(label = "point_num"), color = "white", fill = court_colour, hjust = "outward")
+                                        aes_string(label = "point_num"), color = "white", fill = court_colour, hjust = "outward", vjust = "outward")
                 }
                 if (isTRUE(app_data$include_net) && !is.null(crvt$antenna)) {
                     plotx <- mutate(crvt$antenna, n = case_when(.data$antenna == "left" & .data$where == "floor" ~ 5L,
@@ -139,7 +139,7 @@ s_courtref_server <- function(app_data) {
                     p <- p + geom_path(data = plotx, aes_string(group = "antenna"), color = antenna_colour) +
                         geom_path(data = plotx[plotx$where == "net_top", ], color = antenna_colour) +
                         geom_path(data = plotx[plotx$where == "floor", ], color = antenna_colour) +
-                        geom_label(data = plotx, aes_string(label = "n"), color = "white", fill = antenna_colour)
+                        geom_label(data = plotx, aes_string(label = "n"), color = "white", fill = antenna_colour, hjust = "outward", vjust = "outward")
                 }
                 p + ggplot2::theme_void()
             } else {
@@ -189,8 +189,10 @@ s_courtref_server <- function(app_data) {
         })
 
         was_drag <- function(start, end) {
-            cat("start: ", start, "\n")
-            cat("end: ", end, "\n")
+            if (DEBUG > 1L) {
+                cat("start: ", start, "\n")
+                cat("end: ", end, "\n")
+            }
             if (is.null(start) || is.null(end)) {
                 FALSE
             } else {
