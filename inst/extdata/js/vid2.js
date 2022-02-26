@@ -195,8 +195,8 @@ function dvjs_controller(id, type, seamless = true) {
 
     this.video_play = function() {
 	//console.log("video_play");
-	if (that.video_controller.paused) {
-	    //console.log("in video_play, but controller was paused, so calling video_pause");
+	if (that.video_controller.paused || (that.video_controller.suspended > 0)) {
+	    //console.log("in video_play, but controller was paused or suspended, so calling video_pause");
 	    return that.video_pause();
 	}
 	that.video_onstart();
@@ -314,7 +314,6 @@ function dvjs_controller(id, type, seamless = true) {
 		// paused or stopped
 		if (that.video_controller.paused) {
 		    // paused, restart
-		    that.video_controller.paused = false;
 		    // check that we are still within the current item
 		    var item = that.video_controller.queue[that.video_controller.current];
 		    if (typeof item !== "undefined" && typeof item !== "undefined") {
@@ -338,6 +337,7 @@ function dvjs_controller(id, type, seamless = true) {
 			    }
 			}
 			if (that.video_controller.suspended < 1) {
+			    that.video_controller.paused = false;
 			    if (current_src != item.video_src) {
 				// we are out of whack somehow
 				//console.log("src mismatch, current is: " + current_src + ", item is: " + item.video_src);
