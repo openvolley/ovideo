@@ -275,6 +275,9 @@ function dvjs_controller(id, type, seamless = true) {
     this.suspend = function() {
 	if (that.video_controller.type != "twitch") {
 	    // not supported for twitch, because the native controls can't be disabled and it doesn't have full functionality compared to the other two
+	    // don't attempt to suspend if we aren't actually playing yet
+	    if (that.video_controller.type == "youtube" && (!that.yt_player || typeof(that.yt_player.getPlayerState) != "function" || that.yt_player.getPlayerState() <= 0)) { return false; }
+	    if (that.video_controller.type == "local" && that.video_controller.current < 0) { return false; }
 	    if (that.video_controller.paused) {
 		// suspend, but we won't allow auto restart on unsuspend, user will have to unpause
 		that.video_controller.suspended = 2;
@@ -293,10 +296,15 @@ function dvjs_controller(id, type, seamless = true) {
 		if (document.getElementById(that.video_controller.id)) { document.getElementById(that.video_controller.id).pause(); }
 	    }
 	    that.video_afterpause();
+	    that.video_onsuspend();
+	    return true;
+	} else {
+	    return false;
 	}
     }
 
     this.unsuspend = function() {
+	if (that.video_controller.suspended < 1) { return; }
 	if (that.video_controller.type != "twitch") { // not supported for twitch
 	    var restart_playing = that.video_controller.suspended < 2;
 	    that.video_controller.suspended = 0;
@@ -304,6 +312,7 @@ function dvjs_controller(id, type, seamless = true) {
 		// restart via (un)pause
 		that.video_pause();
 	    }
+	    that.video_onunsuspend();
 	}
     }
 
@@ -387,6 +396,8 @@ function dvjs_controller(id, type, seamless = true) {
     this.video_onstop = function() { }
     this.video_onfinished = function() { }
     this.video_afterpause = function() { } // is run after video paused OR resumed from pause. May be fired when pausing from already-paused state
+    this.video_onsuspend = function() { }
+    this.video_onunsuspend = function() { }
 
     this.video_next = function(seamless = false) {
 	//console.log("video_next");
