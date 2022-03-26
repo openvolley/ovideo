@@ -63,6 +63,7 @@ ov_video_playlist <- function(x, meta, type = NULL, timing = ov_video_timing(), 
     }
     assert_that(is.string(type))
     type <- match.arg(tolower(type), c("local", "twitch", "youtube"))
+    meta <- dplyr::filter(meta, .data$match_id %in% na.omit(unique(x$match_id))) ## ignore meta about matches that don't appear in our data
     if (!all(x$match_id %in% meta$match_id)) stop("x contains match_ids that do not appear in meta")
     if (any(is.na(meta$video_src))) {
         missing_vid_matches <- meta$match_id[is.na(meta$video_src)]
