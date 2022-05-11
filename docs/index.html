@@ -5,13 +5,13 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Volleyball video utilities • ovideo</title>
+<title>Volleyball Video Utilities • ovideo</title>
 <!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="bootstrap-toc.css">
 <script src="bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="pkgdown.css" rel="stylesheet">
-<script src="pkgdown.js"></script><meta property="og:title" content="Volleyball video utilities">
+<script src="pkgdown.js"></script><meta property="og:title" content="Volleyball Video Utilities">
 <meta property="og:description" content="Playlists and other video support functions from volleyball match files.">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
@@ -19,6 +19,8 @@
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
+    
+
     <div class="container template-home">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -31,26 +33,20 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">ovideo</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.7.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.17.0</span>
       </span>
     </div>
 
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
 <li>
-  <a href="index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
-     
-  </a>
-</li>
-<li>
   <a href="reference/index.html">Reference</a>
 </li>
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://github.com/openvolley/ovideo/">
-    <span class="fab fa fab fa-github fa-lg"></span>
+  <a href="https://github.com/openvolley/ovideo/" class="external-link">
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -66,66 +62,121 @@
 
       </header><div class="row">
   <div class="contents col-md-9">
-<div id="ovideo" class="section level1">
-<div class="page-header"><h1 class="hasAnchor">
-<a href="#ovideo" class="anchor"></a>ovideo</h1></div>
+<div class="section level1">
+<div class="page-header"><h1 id="ovideo">ovideo<a class="anchor" aria-label="anchor" href="#ovideo"></a>
+</h1></div>
 <!-- badges: start -->
 
-<div id="installation" class="section level2">
-<h2 class="hasAnchor">
-<a href="#installation" class="anchor"></a>Installation</h2>
-<p>You can install from <a href="https://github.com/openvolley/ovideo">GitHub</a> with:</p>
+<div class="section level2">
+<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
+</h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co">## install.packages("remotes") ## if needed</span>
-<span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html">install_github</a></span><span class="op">(</span><span class="st">"openvolley/ovideo"</span><span class="op">)</span></code></pre></div>
-<p>Experimental. Beware!</p>
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"ovideo"</span>, repos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"https://openvolley.r-universe.dev"</span>,
+                                    <span class="st">"https://cloud.r-project.org"</span><span class="op">)</span><span class="op">)</span>
+
+<span class="co">## or</span>
+
+<span class="co">## install.packages("remotes") ## if needed</span>
+<span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"openvolley/ovideo"</span><span class="op">)</span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="example-usage">Example usage<a class="anchor" aria-label="anchor" href="#example-usage"></a>
+</h2>
+<p>Create a standalone HTML file that plays a video playlist.</p>
+<p>Start by loading our scout file, which is bundled with the <code>ovdata</code> package.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">ovdata</span><span class="op">)</span> <span class="co">## install via install.packages("ovdata", repos = c("https://openvolley.r-universe.dev", "https://cloud.r-project.org"))</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/openvolley/ovideo" class="external-link">ovideo</a></span><span class="op">)</span>
+<span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/ovdata/man/ovdata_example.html" class="external-link">ovdata_example</a></span><span class="op">(</span><span class="st">"190301_kats_beds-clip"</span>, as <span class="op">=</span> <span class="st">"parsed"</span><span class="op">)</span></code></pre></div>
+<p>We need to make sure that the video metadata element points somewhere meaningful. We can either use a local video file as the source:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="reference/dv_meta_video.html">dv_meta_video</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/ovdata/man/ovdata_example_video.html" class="external-link">ovdata_example_video</a></span><span class="op">(</span><span class="st">"190301_kats_beds"</span><span class="op">)</span></code></pre></div>
+<p>But if we use a local video file, we can’t share the resulting HTML file with anyone else. Instead we can use an online video URL, in this case on YouTube:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="reference/dv_meta_video.html">dv_meta_video</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"https://youtu.be/4YH89aSlc6M"</span></code></pre></div>
+<p>And now on with the rest of the process:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co">## extract the plays</span>
+<span class="va">px</span> <span class="op">&lt;-</span> <span class="fu">datavolley</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/datavolley/man/plays.html" class="external-link">plays</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>
+<span class="co">## it's a single rally, so we'll use all rows (just exclude NA skill rows)</span>
+<span class="va">px</span> <span class="op">&lt;-</span> <span class="va">px</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">px</span><span class="op">$</span><span class="va">skill</span><span class="op">)</span>, <span class="op">]</span>
+
+<span class="co">## define columns to show in the table</span>
+<span class="va">extra_cols</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"home_team"</span>, <span class="st">"visiting_team"</span>, <span class="st">"video_time"</span>, <span class="st">"code"</span>, <span class="st">"set_number"</span>,
+                <span class="st">"home_team_score"</span>, <span class="st">"visiting_team_score"</span><span class="op">)</span>
+
+<span class="co">## make the playlist with extra columns included</span>
+<span class="va">ply</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ov_video_playlist.html">ov_video_playlist</a></span><span class="op">(</span><span class="va">px</span>, <span class="va">x</span><span class="op">$</span><span class="va">meta</span>, extra_cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">extra_cols</span>, <span class="st">"player_name"</span><span class="op">)</span><span class="op">)</span>
+
+<span class="co">## use player name as the subtitle</span>
+<span class="va">ply</span><span class="op">$</span><span class="va">subtitle</span> <span class="op">&lt;-</span> <span class="va">ply</span><span class="op">$</span><span class="va">player_name</span>
+
+<span class="co">## convert to HTML</span>
+<span class="va">f</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ov_playlist_to_html.html">ov_playlist_to_html</a></span><span class="op">(</span><span class="va">ply</span>, table_cols <span class="op">=</span> <span class="va">extra_cols</span><span class="op">)</span>
+
+<span class="co">## and finally open it!</span>
+<span class="fu"><a href="https://rdrr.io/r/utils/browseURL.html" class="external-link">browseURL</a></span><span class="op">(</span><span class="va">f</span><span class="op">)</span></code></pre></div>
+<p>And you should see something like:</p>
+<p><img src="https://raw.githubusercontent.com/openvolley/ovideo/master/man/figure/ovideo_html_player.png" style="border:1px solid black;"></p>
 </div>
 </div>
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <div class="links">
-<h2>Links</h2>
+<h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
-<li>Browse source code at <br><a href="https://github.com/openvolley/ovideo/">https://​github.com/​openvolley/​ovideo/​</a>
-</li>
-<li>Report a bug at <br><a href="https://github.com/openvolley/ovideo/issues">https://​github.com/​openvolley/​ovideo/​issues</a>
-</li>
-</ul>
-</div>
-<div class="license">
-<h2>License</h2>
-<ul class="list-unstyled">
-<li>
-<a href="https://opensource.org/licenses/mit-license.php">MIT</a> + file <a href="LICENSE-text.html">LICENSE</a>
-</li>
-</ul>
-</div>
-<div class="developers">
-<h2>Developers</h2>
-<ul class="list-unstyled">
-<li>Ben Raymond <br><small class="roles"> Author, maintainer </small>  </li>
-<li>Adrien Ickowicz <br><small class="roles"> Author </small>  </li>
+<li><a href="https://github.com/openvolley/ovideo/" class="external-link">Browse source code</a></li>
+<li><a href="https://github.com/openvolley/ovideo/issues" class="external-link">Report a bug</a></li>
 </ul>
 </div>
 
-  <div class="dev-status">
-<h2>Dev status</h2>
+<div class="license">
+<h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
-<li><a href="https://www.tidyverse.org/lifecycle/#maturing"><img src="https://img.shields.io/badge/lifecycle-maturing-blue.svg" alt="Lifecycle: maturing"></a></li>
-<li><a href="https://travis-ci.org/openvolley/ovideo"><img src="https://travis-ci.org/openvolley/ovideo.svg?branch=master" alt="Travis build status"></a></li>
+<li>
+<a href="https://opensource.org/licenses/mit-license.php" class="external-link">MIT</a> + file <a href="LICENSE-text.html">LICENSE</a>
+</li>
 </ul>
 </div>
+
+
+<div class="citation">
+<h2 data-toc-skip>Citation</h2>
+<ul class="list-unstyled">
+<li><a href="authors.html#citation">Citing ovideo</a></li>
+</ul>
 </div>
+
+<div class="developers">
+<h2 data-toc-skip>Developers</h2>
+<ul class="list-unstyled">
+<li>Ben Raymond <br><small class="roles"> Author, maintainer </small>  </li>
+<li>Adrien Ickowicz <br><small class="roles"> Author </small>  </li>
+<li><a href="authors.html">More about authors...</a></li>
+</ul>
+</div>
+
+<div class="dev-status">
+<h2 data-toc-skip>Dev status</h2>
+<ul class="list-unstyled">
+<li><a href="https://www.tidyverse.org/lifecycle/#maturing" class="external-link"><img src="https://img.shields.io/badge/lifecycle-maturing-blue.svg" alt="Lifecycle: maturing"></a></li>
+<li><a href="https://github.com/openvolley/ovideo/actions" class="external-link"><img src="https://github.com/openvolley/ovideo/workflows/R-CMD-check/badge.svg" alt="R build status"></a></li>
+</ul>
+</div>
+
+  </div>
 </div>
 
 
       <footer><div class="copyright">
-  <p>Developed by Ben Raymond, Adrien Ickowicz.</p>
+  <p></p>
+<p>Developed by Ben Raymond, Adrien Ickowicz.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
+  <p></p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
 </div>
 
       </footer>
@@ -133,6 +184,8 @@
 
   
 
+
+  
 
   </body>
 </html>

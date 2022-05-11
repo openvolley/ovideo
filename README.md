@@ -79,4 +79,4 @@ browseURL(f)
 
 And you should see something like:
 
-<img src="./man/figure/ovideo_html_player.png" style="border:1px solid black;" />
+<img src="https://raw.githubusercontent.com/openvolley/ovideo/master/man/figure/ovideo_html_player.png" style="border:1px solid black;" />
