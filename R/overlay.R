@@ -7,7 +7,7 @@
 #' @param labels logical: if \code{TRUE}, label the zones
 #' @param space string: if "court", the data will be in court coordinates. If "image", the data will be transformed to image coordinates via \code{\link{ov_transform_points}}
 #' @param court_ref data.frame: as returned by \code{\link{ov_get_court_ref}}. Only required if \code{space} is "image"
-#' @param crop logical: if \code{space} is "image", and \code{crop} is TRUE, the data will be cropped to the c(0, 1, 0, 1) bounding box (i.e. the limits of the image, in normalized coordinates). Requires that the \code{sf} package be installed
+#' @param crop logical: if \code{space} is "image", and \code{crop} is TRUE, the data will be cropped to the c(0, 1, 0, 1) bounding box (i.e. the limits of the image, in normalized coordinates)
 #'
 #' @return A list of data.frames
 #'
@@ -22,10 +22,6 @@ ov_overlay_data <- function(zones = TRUE, serve_zones = TRUE, labels = FALSE, sp
     assert_that(is.string(space))
     space <- match.arg(tolower(space), c("court", "image"))
     assert_that(is.flag(crop), !is.na(crop))
-    if (crop && !requireNamespace("sf", quietly = TRUE)) {
-        warning("ignoring crop = TRUE (this requires the `sf` package to be installed, but it does not appear to be available)")
-        crop <- FALSE
-    }
     ##subzones = FALSE,
     labxy <- NULL
     polyxy <- NULL
@@ -81,12 +77,11 @@ ov_overlay_data <- function(zones = TRUE, serve_zones = TRUE, labels = FALSE, sp
             polyxy[, c("x", "y")] <- ovideo::ov_transform_points(polyxy[, c("x", "y")], ref = court_ref, direction = "to_image")
         }
         if (crop) {
-            bbox <- sf::st_polygon(list(matrix(c(0, 0, 0, 1, 1, 1, 1, 0, 0, 0), ncol = 2, byrow = TRUE)))
             crop_seg <- function(z) {
-                crpd <- as.numeric(sf::st_intersection(sf::st_linestring(matrix(c(z$x, z$y, z$xend, z$yend), ncol = 2, byrow = TRUE)), bbox))
+                crpd <- clip_segment(z$x, z$y, z$xend, z$yend)
                 z$x <- crpd[1]
-                z$xend <- crpd[2]
-                z$y <- crpd[3]
+                z$xend <- crpd[3]
+                z$y <- crpd[2]
                 z$yend <- crpd[4]
                 z
             }
@@ -125,4 +120,71 @@ ov_overlay_image <- function(court_ref, height, width, filename, ...) {
     print(p)
     dev.off()
     filename
+}
+
+## cohen-sutherland algorithm to clip a line segment to a bounding box
+## line goes from (x0, y0) to (x1, y1)
+## bbox is [xmin, xmax, ymin, ymax]
+## https://en.wikipedia.org/wiki/Cohen%E2%80%93Sutherland_algorithm
+clip_segment <- function(x0, y0, x1, y1, bbox = c(0, 1, 0, 1)) {
+    bit <- list(inside = 0, left = 1, right = 2, bottom = 4, top = 8)
+    outcode0 <- compute_out_code(x0, y0, bbox)
+    outcode1 <- compute_out_code(x1, y1, bbox)
+    accept <- FALSE
+    while (TRUE) {
+        if (!bitwOr(outcode0, outcode1)) {
+            ## bitwise OR is 0: both points inside window; trivially accept and exit loop
+            accept <- TRUE
+            break
+        } else if (bitwAnd(outcode0, outcode1)) {
+            ## bitwise AND is not 0: both points share an outside zone (LEFT, RIGHT, TOP, or BOTTOM), so both must be outside window; exit loop (accept is false)
+            break
+        } else {
+            ## failed both tests, so calculate the line segment to clip from an outside point to an intersection with clip edge
+            ## At least one endpoint is outside the clip rectangle; pick it
+            outcode_out <- if (outcode1 > outcode0) outcode1 else outcode0
+
+            ## Now find the intersection point;
+            ## use formulas:
+            ##   slope = (y1 - y0) / (x1 - x0)
+            ##   x = x0 + (1 / slope) * (ym - y0), where ym is ymin or ymax
+            ##   y = y0 + slope * (xm - x0), where xm is xmin or xmax
+            ## No need to worry about divide-by-zero because, in each case, the
+            ## outcode bit being tested guarantees the denominator is non-zero
+            if (bitwAnd(outcode_out, bit$top)) {  ## point is above the clip window
+                x <- x0 + (x1 - x0) * (bbox[4] - y0) / (y1 - y0)
+                y <- bbox[4]
+            } else if (bitwAnd(outcode_out, bit$bottom)) { ## point is below the clip window
+                x <- x0 + (x1 - x0) * (bbox[3] - y0) / (y1 - y0)
+                y <- bbox[3]
+            } else if (bitwAnd(outcode_out, bit$right)) {  ## point is to the right of clip window
+                y <- y0 + (y1 - y0) * (bbox[2] - x0) / (x1 - x0)
+                x <- bbox[2]
+            } else if (bitwAnd(outcode_out, bit$left)) {   ## point is to the left of clip window
+                y <- y0 + (y1 - y0) * (bbox[1] - x0) / (x1 - x0)
+                x <- bbox[1]
+            }
+            ## Now we move outside point to intersection point to clip and get ready for next pass.
+            if (outcode_out == outcode0) {
+                x0 <- x
+                y0 <- y
+                outcode0 <- compute_out_code(x0, y0, bbox)
+            } else {
+                x1 <- x
+                y1 <- y
+                outcode1 = compute_out_code(x1, y1, bbox)
+            }
+        }
+    }
+    if (accept) c(x0, y0, x1, y1) else rep(NA_real_, 4)
+}
+
+compute_out_code <- function(x, y, bbox) {
+    bit <- list(inside = 0, left = 1, right = 2, bottom = 4, top = 8)
+    code <- bit$inside
+    if (x < bbox[1]) code <- bitwOr(code, bit$left) ## to the left of clip window
+    else if (x > bbox[2]) code <- bitwOr(code, bit$right) ## to the right of clip window
+    if (y < bbox[3]) code <- bitwOr(code, bit$bottom) ## below the clip window
+    else if (y > bbox[4]) code <- bitwOr(code, bit$top) ## above the clip window
+    code
 }

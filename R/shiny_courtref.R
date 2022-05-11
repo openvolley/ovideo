@@ -108,9 +108,9 @@ s_courtref_server <- function(app_data) {
                 ## account for changes in dropdowns, i.e. the image location might now be assigned to a different court ref location
                 if (!is.null(cr)) cr <- left_join(dplyr::select(cr, -"court_x", -"court_y"), court_refs_data[, c("court_x", "court_y", "pos")], by = "pos")
                 if (!is.null(app_data$overlay_data_function)) {
-                    out <- app_data$overlay_data_function(court_ref = cr, space = "image", crop = requireNamespace("sf", quietly = TRUE))
+                    out <- app_data$overlay_data_function(court_ref = cr, space = "image", crop = TRUE)
                 } else {
-                    out <- ovideo::ov_overlay_data(zones = FALSE, serve_zones = FALSE, space = "image", court_ref = cr, crop = requireNamespace("sf", quietly = TRUE))
+                    out <- ovideo::ov_overlay_data(zones = FALSE, serve_zones = FALSE, space = "image", court_ref = cr, crop = TRUE)
                 }
                 out$courtxy <- dplyr::rename(out$courtxy, image_x = "x", image_y = "y")
                 out
