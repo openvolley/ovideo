@@ -10,6 +10,7 @@ ov_playlist_to_html(
   outfile,
   no_paths = FALSE,
   table_cols = c(),
+  loop = FALSE,
   ...
 )
 }
@@ -23,6 +24,8 @@ ov_playlist_to_html(
 \item{no_paths}{logical: if \code{TRUE}, remove the paths from video files (only applicable to local files, not YouTube or other external URLs). If \code{no_paths} is \code{TRUE}, The HTML file must be saved into the same directory as the video source file(s)}
 
 \item{table_cols}{character: the names of columns in \code{playlist} to show in the plays table in the HTML file. If \code{table_cols} is empty, or contains no column names that are present in \code{playlist}, then no table will be shown}
+
+\item{loop}{logical: should we loop endlessly over the playlist?}
 
 \item{...}{: additional arguments passed to the Rmd file used to generate the HTML. Currently these are:
 \itemize{

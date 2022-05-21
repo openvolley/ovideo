@@ -10,6 +10,7 @@ ov_playlist_as_onclick(
   normalize_paths = TRUE,
   dvjs_fun = "dvjs_set_playlist_and_play",
   seamless = TRUE,
+  loop = FALSE,
   controller_var
 )
 }
@@ -23,6 +24,8 @@ ov_playlist_as_onclick(
 \item{dvjs_fun}{string: the javascript function to use}
 
 \item{seamless}{logical: if clips overlap, should we transition seamlessly from one to the next?}
+
+\item{loop}{logical: should we loop endlessly over the playlist?}
 
 \item{controller_var}{string: (for version 2 only) the js variable name of the controller object to assign this playlist to}
 }

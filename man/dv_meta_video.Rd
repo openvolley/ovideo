@@ -10,7 +10,7 @@ dv_meta_video(x)
 dv_meta_video(x) <- value
 }
 \arguments{
-\item{x}{datavolley: a datavolley object as returned by \code{\link[datavolley:dv_read]{datavolley::dv_read()}}}
+\item{x}{datavolley: a datavolley object as returned by \code{\link[datavolley:read_dv]{datavolley::dv_read()}}}
 
 \item{value}{string or data.frame: a string containing the path to the video file, or a data.frame with columns "camera" and "file"}
 }

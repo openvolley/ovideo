@@ -3,6 +3,7 @@ params:
   playlist: NULL
   css: NULL
   ui_header: NULL
+  loop: FALSE
 title: ""
 pagetitle: "`r params$playlist$name`"
 output:

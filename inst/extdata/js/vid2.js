@@ -1,5 +1,5 @@
 function dvjs_controller(id, type, seamless = true) {
-    this.video_controller = {id: id, queue: [], current: -1, type: type, paused: false, seamless: seamless, suspended: 0};
+    this.video_controller = {id: id, queue: [], current: -1, type: type, paused: false, seamless: seamless, loop: false, suspended: 0};
     // current is the pointer to the currently-being-played item in the queue
     // type is "local" or "youtube" or "twitch"
     // id is the id of the player HTML element
@@ -50,10 +50,10 @@ function dvjs_controller(id, type, seamless = true) {
 	}
     }
 
-    this.set_playlist = function(items, video_id, type, seamless = true) {
+    this.set_playlist = function(items, video_id, type, seamless = true, loop = false) {
 	// set the player's playlist, but don't start playing
 	var old_id = that.video_controller.id; // HTML element with player attached, if any
-	that.video_controller = {id: video_id, queue: items, current: 0, type: type, paused: false, seamless: seamless, suspended: 0};
+	that.video_controller = {id: video_id, queue: items, current: 0, type: type, paused: false, seamless: seamless, loop: loop, suspended: 0};
 	if (type == "youtube") {
 	    if (that.yt_player != null && old_id != null && old_id != video_id) {
 		that.yt_player.destroy();
@@ -109,11 +109,11 @@ function dvjs_controller(id, type, seamless = true) {
 	that.video_controller.paused = true;
     }
 
-    this.set_playlist_and_play = function(items, video_id, type, seamless = true) {
+    this.set_playlist_and_play = function(items, video_id, type, seamless = true, loop = false) {
 	// set the player's playlist, and start playing it
 	that.stop_video_interval();
 	var old_id = that.video_controller.id; // HTML element with player attached, if any
-	that.video_controller = {id: video_id, queue: items, current: 0, type: type, paused: false, seamless: seamless, suspended: 0};
+	that.video_controller = {id: video_id, queue: items, current: 0, type: type, paused: false, seamless: seamless, loop: false, suspended: 0};
 	if (type == "youtube") {
 	    if (that.yt_player != null && old_id != null && old_id != video_id) {
 		that.yt_player.destroy();
@@ -179,7 +179,7 @@ function dvjs_controller(id, type, seamless = true) {
             }
 	    that.yt_player = null;
 	}
-	that.video_controller = {id: null, queue: [], current: -1, type: "local", paused: false, seamless: true, suspended: 0};
+	that.video_controller = {id: null, queue: [], current: -1, type: "local", paused: false, seamless: true, loop: false, suspended: 0};
     }
 
     // this function does nothing by default but can be redefined by the user
@@ -394,7 +394,7 @@ function dvjs_controller(id, type, seamless = true) {
 
     // these functions do nothing by default but can be redefined by the user
     this.video_onstop = function() { }
-    this.video_onfinished = function() { }
+    this.video_onfinished = function() { } // is run after the playlist completes, even if loop is true and it is going to start playing again
     this.video_afterpause = function() { } // is run after video paused OR resumed from pause. May be fired when pausing from already-paused state
     this.video_onsuspend = function() { }
     this.video_onunsuspend = function() { }
@@ -425,8 +425,14 @@ function dvjs_controller(id, type, seamless = true) {
 	    }
 	} else {
 	    // end of playlist, nothing to play
-	    that.video_stop();
-	    that.video_onfinished();
+	    if (that.video_controller.loop) {
+		that.video_onfinished();
+		that.video_controller.current=0;
+		that.video_play();
+	    } else {
+		that.video_stop();
+		that.video_onfinished();
+	    }
 	}
     }
 
@@ -500,8 +506,14 @@ function dvjs_controller(id, type, seamless = true) {
             }
 	} else {
 	    // no items
-            that.video_stop();
-	    that.video_onfinished();
+	    if (that.video_controller.loop) {
+		that.video_onfinished();
+		that.video_controller.current=0;
+		that.video_play();
+	    } else {
+		that.video_stop();
+		that.video_onfinished();
+	    }
 	}
     }
 }

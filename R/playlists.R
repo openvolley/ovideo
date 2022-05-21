@@ -352,6 +352,7 @@ do_merge_timing_df <- function(x, default, with_final_merge = FALSE) {
 #' @param normalize_paths logical: if `TRUE`, apply `normalizePath` to local file paths. This will e.g. expand the tilde in paths like "~/path/to/video.mp4"
 #' @param dvjs_fun string: the javascript function to use
 #' @param seamless logical: if clips overlap, should we transition seamlessly from one to the next?
+#' @param loop logical: should we loop endlessly over the playlist?
 #' @param controller_var string: (for version 2 only) the js variable name of the controller object to assign this playlist to
 #'
 #' @return A string suitable for inclusion as an 'onclick' tag attribute
@@ -398,7 +399,7 @@ do_merge_timing_df <- function(x, default, with_final_merge = FALSE) {
 #' }
 #'
 #' @export
-ov_playlist_as_onclick <- function(playlist, video_id, normalize_paths = TRUE, dvjs_fun = "dvjs_set_playlist_and_play", seamless = TRUE, controller_var) {
+ov_playlist_as_onclick <- function(playlist, video_id, normalize_paths = TRUE, dvjs_fun = "dvjs_set_playlist_and_play", seamless = TRUE, loop = FALSE, controller_var) {
     q2s <- function(z) gsub("\"", "'", gsub("'", "\\\\'", z))
     type <- unique(na.omit(playlist$type))
     if (is.factor(type)) type <- as.character(type)
@@ -415,7 +416,7 @@ ov_playlist_as_onclick <- function(playlist, video_id, normalize_paths = TRUE, d
             playlist$video_src[local_srcs] <- normalizePath(playlist$video_src[local_srcs], mustWork = FALSE)
         }
     }
-    paste0(dvjs_fun, "(", q2s(jsonlite::toJSON(playlist)), ", '", video_id, "', '", type, "', ", ifelse(seamless, "true", "false"), ");")
+    paste0(dvjs_fun, "(", q2s(jsonlite::toJSON(playlist)), ", '", video_id, "', '", type, "', ", ifelse(seamless, "true", "false"), ", ", ifelse(loop, "true", "false"), ");")
 }
 
 
@@ -466,6 +467,7 @@ item2m3u <- function(item, seamless = TRUE) {
 #' @param no_paths logical: if `TRUE`, remove the paths from video files (only applicable to local files, not YouTube or other external URLs). If `no_paths` is `TRUE`, The HTML file must be saved into the same directory as the video source file(s)
 # @param seamless logical: if `TRUE`, merge adjacent items into a single clip
 #' @param table_cols character: the names of columns in `playlist` to show in the plays table in the HTML file. If `table_cols` is empty, or contains no column names that are present in `playlist`, then no table will be shown
+#' @param loop logical: should we loop endlessly over the playlist?
 #' @param ... : additional arguments passed to the Rmd file used to generate the HTML. Currently these are:
 #' * css : a string with additional css to apply to the file
 #' * ui_header : a tag element to replace the default page header
@@ -506,7 +508,7 @@ item2m3u <- function(item, seamless = TRUE) {
 #' }
 #'
 #' @export
-ov_playlist_to_html <- function(playlist, playlist_name = "Playlist", outfile, no_paths = FALSE, table_cols = c(), ...) {
+ov_playlist_to_html <- function(playlist, playlist_name = "Playlist", outfile, no_paths = FALSE, table_cols = c(), loop = FALSE, ...) {
     seamless <- FALSE ## otherwise the plays table gets reduced to a smaller number of items
     if (missing(playlist) || is.null(playlist) || nrow(playlist) < 1) return(character())
     pltype <- playlist$type
@@ -523,7 +525,7 @@ ov_playlist_to_html <- function(playlist, playlist_name = "Playlist", outfile, n
         fileidx <- playlist$type %in% "local" & !grepl("^https?://", playlist$video_src, ignore.case = TRUE)
         playlist$video_src[fileidx] <- basename(playlist$video_src[fileidx])
     }
-    render_pl(playlist, pl_name = playlist_name, bannerdir = NULL, outfile = outfile, table_cols, ...)
+    render_pl(playlist, pl_name = playlist_name, bannerdir = NULL, outfile = outfile, table_cols, loop = loop, ...)
 }
 
 if (FALSE) {

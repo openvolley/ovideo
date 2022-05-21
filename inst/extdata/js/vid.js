@@ -1,4 +1,4 @@
-var dvjs_video_controller = {id: null, queue: [], current: -1, type: "local", paused: false, seamless: true};
+var dvjs_video_controller = {id: null, queue: [], current: -1, type: "local", paused: false, seamless: true, loop: false};
 // current is the pointer to the currently-being-played item in the queue
 // type is "local" or "youtube"
 // id is the id of the player HTML element
@@ -48,10 +48,10 @@ function dvjs_stop_video_interval() {
     }
 }
 
-function dvjs_set_playlist(items, video_id, type, seamless = true) {
+function dvjs_set_playlist(items, video_id, type, seamless = true, loop = false) {
     // set the player's playlist, but don't start playing
     var old_id = dvjs_video_controller.id; // HTML element with player attached, if any
-    dvjs_video_controller = {id: video_id, queue: items, current: 0, type: type, paused: false, seamless: seamless};
+    dvjs_video_controller = {id: video_id, queue: items, current: 0, type: type, paused: false, seamless: seamless, loop: loop};
     if (type == "youtube") {
 	if (old_id != null && old_id != video_id) {
 	    dvjs_yt_player.destroy();
@@ -71,11 +71,11 @@ function dvjs_set_playlist(items, video_id, type, seamless = true) {
     }
 }
 
-function dvjs_set_playlist_and_play(items, video_id, type, seamless = true) {
+function dvjs_set_playlist_and_play(items, video_id, type, seamless = true, loop = false) {
     // set the player's playlist, and start playing it
     dvjs_stop_video_interval();
     var old_id = dvjs_video_controller.id; // HTML element with player attached, if any
-    dvjs_video_controller = {id: video_id, queue: items, current: 0, type: type, paused: false, seamless: seamless};
+    dvjs_video_controller = {id: video_id, queue: items, current: 0, type: type, paused: false, seamless: seamless, loop: loop};
     if (type == "youtube") {
 	if (old_id != null && old_id != video_id) {
 	    dvjs_yt_player.destroy();
@@ -113,7 +113,7 @@ function dvjs_clear_playlist() {
 	dvjs_yt_player.destroy();
 	dvjs_yt_player = null;
     }
-    dvjs_video_controller = {id: null, queue: [], current: -1, type: "local", paused: false, seamless: true};
+    dvjs_video_controller = {id: null, queue: [], current: -1, type: "local", paused: false, seamless: true, loop: false};
 }
 
 // this function does nothing by default but can be redefined by the user
@@ -254,7 +254,7 @@ function dvjs_video_pause() {
 
 // these functions do nothing by default but can be redefined by the user
 function dvjs_video_onstop() { }
-function dvjs_video_onfinished() { }
+function dvjs_video_onfinished() { } // is run after the playlist completes, even if loop is true and it is going to start playing again
 function dvjs_video_afterpause() { }
 
 function dvjs_video_next(seamless = false) {
@@ -282,8 +282,14 @@ function dvjs_video_next(seamless = false) {
 	}
     } else {
 	// end of playlist, nothing to play
-	dvjs_video_stop();
-	dvjs_video_onfinished();
+	if (dvjs_video_controller.loop) {
+	    dvjs_video_onfinished();
+	    dvjs_video_controller.current=0;
+	    dvjs_video_play();
+	} else {
+	    dvjs_video_stop();
+	    dvjs_video_onfinished();
+	}
     }
 }
 
@@ -349,7 +355,13 @@ function dvjs_video_manage() {
         }
     } else {
 	// no items
-        dvjs_video_stop();
-	dvjs_video_onfinished();
+	if (dvjs_video_controller.loop) {
+	    dvjs_video_onfinished();
+	    dvjs_video_controller.current=0;
+	    dvjs_video_play();
+	} else {
+	    dvjs_video_stop();
+	    dvjs_video_onfinished();
+	}
     }
 }
