@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">ovideo</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.17.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.17.2</span>
       </span>
     </div>
 
@@ -56,6 +56,7 @@
   <span class="va">outfile</span>,
   no_paths <span class="op">=</span> <span class="cn">FALSE</span>,
   table_cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">)</span>,
+  loop <span class="op">=</span> <span class="cn">FALSE</span>,
   <span class="va">...</span>
 <span class="op">)</span></code></pre></div>
     </div>
@@ -72,6 +73,8 @@
 <dd><p>logical: if <code>TRUE</code>, remove the paths from video files (only applicable to local files, not YouTube or other external URLs). If <code>no_paths</code> is <code>TRUE</code>, The HTML file must be saved into the same directory as the video source file(s)</p></dd>
 <dt>table_cols</dt>
 <dd><p>character: the names of columns in <code>playlist</code> to show in the plays table in the HTML file. If <code>table_cols</code> is empty, or contains no column names that are present in <code>playlist</code>, then no table will be shown</p></dd>
+<dt>loop</dt>
+<dd><p>logical: should we loop endlessly over the playlist?</p></dd>
 <dt>...</dt>
 <dd><p>: additional arguments passed to the Rmd file used to generate the HTML. Currently these are:</p><ul><li><p>css : a string with additional css to apply to the file</p></li>
 <li><p>ui_header : a tag element to replace the default page header</p></li>
