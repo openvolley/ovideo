@@ -303,6 +303,19 @@ ov_playlist_to_video <- function(playlist, filename, subtitle_column = NULL, deb
     list(video = filename, subtitles = srtfile)
 }
 
+#' ffmpeg executable functions
+#'
+#' Helper functions to find the ffmpeg executable. If ffmpeg is not installed on the system, it can be installed (for some platforms) with [ov_install_ffmpeg()].
+#'
+#' @param do_error logical: if `TRUE`, throw an error if the ffmpeg executable cannot be found
+#' @return For `ov_ffmpeg_exe`, the path to the executable, or `NULL` if not found. For `ov_ffmpeg_ok`, a logical indicating whether the executable could be found or not
+#'
+#' @seealso [ov_install_ffmpeg()]
+#'
+#' @examples
+#' ov_ffmpeg_ok()
+#'
+#' @export
 ov_ffmpeg_exe <- function() {
     exe_name <- paste0("ffmpeg", if (get_os() == "windows") ".exe")
     chk <- Sys.which(exe_name)
@@ -315,6 +328,8 @@ ov_ffmpeg_exe <- function() {
     if (length(chk) == 1 && file.exists(chk)) chk else NULL
 }
 
+#' @rdname ov_ffmpeg_exe
+#' @export
 ov_ffmpeg_ok <- function(do_error = FALSE) {
     exe <- ov_ffmpeg_exe()
     ok <- !is.null(exe) && tryCatch(sys::exec_internal(exe, "-version")$status == 0, error = function(e) FALSE)
