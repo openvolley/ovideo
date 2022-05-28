@@ -334,7 +334,7 @@ ov_ffmpeg_ok <- function(do_error = FALSE) {
     exe <- ov_ffmpeg_exe()
     ok <- !is.null(exe) && tryCatch(sys::exec_internal(exe, "-version")$status == 0, error = function(e) FALSE)
     if (!ok && do_error) stop("could not find the ffmpeg executable")
-    invisible(ok)
+    if (do_error) invisible(ok) else ok
 }
 
 
