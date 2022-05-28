@@ -26,6 +26,39 @@ var dofullscr = function(elem) {
     return false;
 }
 
+function dvjs_mute() {
+    if (dvjs_video_controller.type == "youtube") {
+	if (dvjs_yt_player) { dvjs_yt_player.mute(); }
+    } else if (dvjs_video_controller.type == "twitch") {
+	if (dvjs_yt_player) { dvjs_yt_player.setMuted(true); }
+    } else {
+	el = document.getElementById(dvjs_video_controller.id);
+	if (el) { el.muted = true; }
+    }
+}
+
+function dvjs_unmute() {
+    if (dvjs_video_controller.type == "youtube") {
+	if (dvjs_yt_player) { dvjs_yt_player.unMute(); }
+    } else if (dvjs_video_controller.type == "twitch") {
+	if (dvjs_yt_player) { dvjs_yt_player.setMuted(false); }
+    } else {
+	el = document.getElementById(dvjs_video_controller.id);
+	if (el) { el.muted = false; }
+    }
+}
+
+function dvjs_toggle_mute() {
+    if (dvjs_video_controller.type == "youtube") {
+	if (dvjs_yt_player) { if (dvjs_yt_player.isMuted()) { dvjs_yt_player.unMute(); } else { dvjs_yt_player.mute(); } }
+    } else if (dvjs_video_controller.type == "twitch") {
+	if (dvjs_yt_player) { dvjs_yt_player.setMuted(!dvjs_yt_player.getMuted()); }
+    } else {
+	el = document.getElementById(dvjs_video_controller.id);
+	if (el) { el.muted = !el.muted; }
+    }
+}
+
 function dvjs_fullscreen() {
     var done = dofullscr(document.getElementById("video_holder"));
     if (!done) { // fallback

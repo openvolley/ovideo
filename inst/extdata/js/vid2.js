@@ -28,6 +28,39 @@ function dvjs_controller(id, type, seamless = true) {
 	return false;
     }
 
+    this.mute = function() {
+	if (that.video_controller.type == "youtube") {
+	    if (that.yt_player) { that.yt_player.mute(); }
+	} else if (that.video_controller.type == "twitch") {
+	    if (that.yt_player) { that.yt_player.setMuted(true); }
+	} else {
+	    el = document.getElementById(that.video_controller.id);
+	    if (el) { el.muted = true; }
+	}
+    }
+
+    this.unmute = function() {
+	if (that.video_controller.type == "youtube") {
+	    if (that.yt_player) { that.yt_player.unMute(); }
+	} else if (that.video_controller.type == "twitch") {
+	    if (that.yt_player) { that.yt_player.setMuted(false); }
+	} else {
+	    el = document.getElementById(that.video_controller.id);
+	    if (el) { el.muted = false; }
+	}
+    }
+
+    this.toggle_mute = function() {
+	if (that.video_controller.type == "youtube") {
+	    if (that.yt_player) { if (that.yt_player.isMuted()) { that.yt_player.unMute(); } else { that.yt_player.mute(); } }
+	} else if (that.video_controller.type == "twitch") {
+	    if (that.yt_player) { that.yt_player.setMuted(!that.yt_player.getMuted()); }
+	} else {
+	    el = document.getElementById(that.video_controller.id);
+	    if (el) { el.muted = !el.muted; }
+	}
+    }
+
     this.fullscreen = function() {
 	var done = dofullscr(document.getElementById("video_holder"));
 	if (!done) { // fallback

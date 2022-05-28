@@ -86,7 +86,8 @@ ov_video_player <- function(id, type, controls = FALSE, version = 1, controller_
                                       tags$button(tags$span(icon("step-forward", style = "vertical-align:middle;")), onclick = paste0(cstr, "video_next();"), title = "Next"),
                                       tags$button(tags$span(icon("pause-circle", style = "vertical-align:middle;")), onclick = paste0(cstr, "video_pause();"), title = "Pause"),
                                       tags$button(tags$span(icon("stop-circle", style = "vertical-align:middle;")), onclick = paste0(cstr, "video_stop();"), title = "Stop"),
-                                      tags$button(tags$span(icon("expand", style = "vertical-align:middle;")), onclick = paste0(cstr, "fullscreen();"), title = "Full screen"), extra_controls)
+                                      tags$button(tags$span(icon("expand", style = "vertical-align:middle;")), onclick = paste0(cstr, "fullscreen();"), title = "Full screen"),
+                                      tags$button(tags$span(icon("volume-mute", style = "vertical-align:middle;")), onclick = paste0(cstr, "toggle_mute()"), title = "Toggle mute"), extra_controls)
                              ))
            } else {
                list(tags$div(id = paste0(id, "_container"), plyr))
@@ -142,6 +143,12 @@ ov_video_control <- function(what, ...) {
         evaljs(paste0(cstr, "jog(", myargs[[1]], ");"))
     } else if (what == "fullscreen") {
         evaljs(paste0(cstr, "fullscreen();"))
+    } else if (what == "mute") {
+        evaljs(paste0(cstr, "mute();"))
+    } else if (what == "unmute") {
+        evaljs(paste0(cstr, "unmute();"))
+    } else if (what == "toggle_mute") {
+        evaljs(paste0(cstr, "toggle_mute();"))
     }
 }
 
