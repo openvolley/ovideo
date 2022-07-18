@@ -116,7 +116,7 @@ ov_video_frame <- function(video_file, t, n, format = "jpg", debug = FALSE, fram
 #' @param duration numeric: duration in seconds. If missing, will be calculated from start_time and end_time
 #' @param end_time numeric: end time in seconds. If missing, will be calculated from start_time and duration
 #' @param extra : additional parameters passed to ffmpeg, in the form c("param", "value", "param2", "value2")
-#' @param debug logical: if \code{TRUE}, echo the ffmpeg output to the console
+#' @param debug logical: if `TRUE`, echo the ffmpeg output to the console
 # @param method string: the method to use, either "ffmpeg", "av", or "auto". "ffmpeg" is faster than "av" but requires that ffmpeg is available on your system path. If `method` is "auto", "ffmpeg" will be used if available and "av" if not
 #'
 #' @return The path to the video clip file
@@ -143,17 +143,18 @@ ov_video_extract_clip <- function(video_file, outfile, start_time, duration, end
 #' @param outdir string: path to the output directory, which must exist. If missing, a temporary directory will be used
 #' @param fps numeric: frames per second, default is to extract all frames
 #' @param format string: "jpg" or "png"
-#' @param jpg_quality numeric: jpg quality from 1-31, lower is better (this is passed to ffmpeg as the \code{-qscale:v} parameter)
+#' @param jpg_quality numeric: jpg quality from 1-31, lower is better (this is passed to ffmpeg as the `-qscale:v` parameter)
 #' @param extra : additional parameters passed to ffmpeg, in the form c("param", "value", "param2", "value2")
-#' @param debug logical: if \code{TRUE}, echo the ffmpeg output to the console
+#' @param debug logical: if `TRUE`, echo the ffmpeg output to the console
+#' @param exec_fun string or function: the function (or function name as a string) to use to execute the ffmpeg command. Defaults to [sys::exec_internal()], or [sys::exec_wait()] if debug is `TRUE`
 # @param method string: the method to use, either "ffmpeg", "av", or "auto". "ffmpeg" is faster than "av" but requires that ffmpeg is available on your system path. If `method` is "auto", "ffmpeg" will be used if available and "av" if not
 #'
-#' @return A character vector of file names, one per frame
+#' @return If `exec_fun` has not been specified, the function will wait for the ffmpeg call to complete and then return a character vector of file names, one per frame. If `exec_fun` has been specified, the result of that function call will be returned immediately (because it might be a call to a background process)
 #'
-#' @seealso \code{\link{ov_video_frame}}
+#' @seealso [ovideo::ov_video_frame()]
 #'
 #' @export
-ov_video_frames <- function(video_file, start_time, duration, end_time, outdir, fps, format = "jpg", jpg_quality = 1, extra = NULL, debug = FALSE) { ## method = "auto"
+ov_video_frames <- function(video_file, start_time, duration, end_time, outdir, fps, format = "jpg", jpg_quality = 1, extra = NULL, debug = FALSE, exec_fun) { ## method = "auto"
     create_clip <- TRUE ## internal method choice
     ov_ffmpeg_ok(do_error = TRUE)
     if (missing(outdir) || is.null(outdir)) {
@@ -184,8 +185,19 @@ ov_video_frames <- function(video_file, start_time, duration, end_time, outdir, 
     }
     ##av::av_video_images(vidclip, format = format)
     cargs <- c("-i", fs::path_real(video_file), vf, "-vsync", "0", "-qscale:v", jpg_quality, extra, file.path(outdir, paste0("image_%06d.", format)))
-    execfun <- if (isTRUE(debug)) sys::exec_wait else sys::exec_internal
-    res <- execfun(ov_ffmpeg_exe(), cargs)
+    return_after_exec <- TRUE
+    if (!missing(exec_fun)) {
+        exec_fun <- tryCatch(match.fun(exec_fun), error = function(e) {
+            warning("the supplied exec_fun could not be found, ignoring")
+            NULL
+        })
+    }
+    if (missing(exec_fun) || is.null(exec_fun)) {
+        return_after_exec <- FALSE
+        exec_fun <- if (isTRUE(debug)) sys::exec_wait else sys::exec_internal
+    }
+    res <- exec_fun(ov_ffmpeg_exe(), cargs)
+    if (return_after_exec) return(res)
     dir(outdir, pattern = paste0("\\.", format, "$"), full.names = TRUE)
 }
 
@@ -195,11 +207,11 @@ ov_video_frames <- function(video_file, start_time, duration, end_time, outdir, 
 #'
 #' @param input_dir string: path to the input directory
 #' @param image_file_mask string: the mask that specifies the image files, e.g. "image_%06d.jpg" for images named "image_000001.jpg", "image_000002.jpg" etc
-#' @param image_files character: vector of input image files, in order that they should appear in the video. Used if \code{input_dir} is missing
+#' @param image_files character: vector of input image files, in order that they should appear in the video. Used if `input_dir` is missing
 #' @param outfile string: the output file. If missing, a temporary file (with extension .mp4) will be used
 #' @param fps numeric: frames per second
-#' @param extra : additional parameters passed to ffmpeg, in the form c("param", "value", "param2", "value2"). For example, \code{c("-vb", "4096k")} could be used to control the output video bitrate
-#' @param debug logical: if \code{TRUE}, echo the ffmpeg output to the console
+#' @param extra : additional parameters passed to ffmpeg, in the form c("param", "value", "param2", "value2"). For example, `c("-vb", "4096k")` could be used to control the output video bitrate
+#' @param debug logical: if `TRUE`, echo the ffmpeg output to the console
 #'
 #' @return The path to the video file
 #' @seealso [av::av_encode_video()] as an alternative

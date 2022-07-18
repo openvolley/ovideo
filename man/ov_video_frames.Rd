@@ -14,7 +14,8 @@ ov_video_frames(
   format = "jpg",
   jpg_quality = 1,
   extra = NULL,
-  debug = FALSE
+  debug = FALSE,
+  exec_fun
 )
 }
 \arguments{
@@ -37,13 +38,15 @@ ov_video_frames(
 \item{extra}{: additional parameters passed to ffmpeg, in the form c("param", "value", "param2", "value2")}
 
 \item{debug}{logical: if \code{TRUE}, echo the ffmpeg output to the console}
+
+\item{exec_fun}{string or function: the function (or function name as a string) to use to execute the ffmpeg command. Defaults to \code{\link[sys:exec]{sys::exec_internal()}}, or \code{\link[sys:exec]{sys::exec_wait()}} if debug is \code{TRUE}}
 }
 \value{
-A character vector of file names, one per frame
+If \code{exec_fun} has not been specified, the function will wait for the ffmpeg call to complete and then return a character vector of file names, one per frame. If \code{exec_fun} has been specified, the result of that function call will be returned immediately (because it might be a call to a background process)
 }
 \description{
 Requires that ffmpeg is available on your system path.
 }
 \seealso{
-\code{\link{ov_video_frame}}
+\code{\link[=ov_video_frame]{ov_video_frame()}}
 }
