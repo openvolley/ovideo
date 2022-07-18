@@ -236,3 +236,57 @@ ov_cmat_apply <- function(C, X) {
           (X[, 1] * C[5] + X[, 2] * C[6] + X[, 3] * C[7] + C[8])/(X[, 1] * C[9] + X[, 2] * C[10] + X[, 3] * C[11] + 1))
 }
 
+#' 3D position estimate from multiple 2D views
+#'
+#' @param uv matrix or data.frame: u, v positions in 2D images, one row per image (u and v are the image x- and y-coordinates, normalized to the range 0-1)
+#' @param C list: a list of the same length as the number of rows in `uv`. The ith entry of `C` is the camera matrix (as returned by [ov_cmat_estimate()]) associated with the image coordinates in row i of `uv`. NOTE that the camera matrices in C must all return positions with the same orientation (i.e. all on the same court coordinates, oriented the same way)
+#'
+#' @return A named list with components `xyz` (the estimated 3D position) and `err` (the uncertainty in that position estimate - not yet populated)
+#'
+#' @seealso [ov_shiny_court_ref()] can also be used to generate camera matrices
+#'
+#' @examples
+#' uv1 <- c(0.369, 0.775) ## object position in image 1
+#' uv2 <- c(0.732, 0.688) ## object position in image 2
+#'
+#' ## the camera matrices for the two images
+#'  refpts1 <- dplyr::tribble(~image_x, ~image_y, ~court_x, ~court_y, ~z,
+#'                              0.0533,   0.0326,      3.5,      6.5,  0,
+#'                               0.974,   0.0572,      0.5,      6.5,  0,
+#'                               0.683,    0.566,      0.5,      0.5,  0,
+#'                               0.283,    0.560,      3.5,      0.5,  0,
+#'                               0.214,    0.401,      3.5,      3.5,  0,
+#'                               0.776,    0.412,      0.5,      3.5,  0,
+#'                               0.780,    0.680,      0.5,      3.5,  2.43,
+#'                               0.206,    0.670,      3.5,      3.5,  2.43)
+#'
+#'  C1 <- ov_cmat_estimate(x = refpts1[, c("image_x", "image_y")],
+#'                         X = refpts1[, c("court_x", "court_y", "z")])
+#'
+#'  refpts2 <- dplyr::tribble(~image_x, ~image_y, ~court_x, ~court_y, ~z,
+#'                               0.045,   0.0978,      0.5,      0.5,  0,
+#'                               0.963,   0.0920,      3.5,      0.5,  0,
+#'                               0.753,    0.617,      3.5,      6.5,  0,
+#'                               0.352,    0.609,      0.5,      6.5,  0,
+#'                               0.255,    0.450,      0.5,      3.5,  0,
+#'                               0.817,    0.456,      3.5,      3.5,  0,
+#'                               0.821,    0.731,      3.5,      3.5,  2.43,
+#'                               0.246,    0.720,      0.5,      3.5,  2.43)
+#'  C2 <- ov_cmat_estimate(x = refpts2[, c("image_x", "image_y")],
+#'                         X = refpts2[, c("court_x", "court_y", "z")])
+#'
+#' ov_3dpos_multicamera(rbind(uv1, uv2), list(C1, C2))
+#'
+#' @export
+ov_3dpos_multicamera <- function(uv, C) {
+    if (!is.list(C) || nrow(uv) != length(C)) stop("number of rows of uv should match length of C")
+    A <- do.call(rbind, lapply(seq_len(nrow(uv)), function(i) {
+        Ca <- C[[i]]$coef[1:4]
+        Cb <- C[[i]]$coef[5:8]
+        Cc <- c(C[[i]]$coef[9:11], 1)
+        matrix(c(as.numeric(uv[i, 2]) * Cc - Cb, Ca - as.numeric(uv[i, 1]) * Cc), ncol = 4, byrow = TRUE)
+    }))
+    Asvd <- svd(A)
+    xyz <- Asvd$v[1:3, ncol(Asvd$v)] / Asvd$v[4, ncol(Asvd$v)] ## to homogeneous coords
+    list(xyz = xyz, err = NA_real_)
+}
