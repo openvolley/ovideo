@@ -22,7 +22,7 @@ A list with the filenames of the created video and subtitle files.
 Make a self-contained video file from a playlist.
 }
 \details{
-Requires that ffmpeg be available on the system path. Note that the processing of each clip is done inside of a \code{future_lapply} call, and so you can have this part of the processing done in parallel by setting an appropriate futures plan before calling this function.
+Requires that ffmpeg be available on the system path. Note that the processing of each clip is done inside of a \code{future_lapply} call (if the \code{future.apply} package is installed), and so you can have this part of the processing done in parallel by setting an appropriate futures plan before calling this function.
 This function is experimental. In particular it is unlikely to work well with all video formats, and especially if the playlist comprises clips from different videos with different resolution/encoding/etc.
 }
 \examples{
@@ -50,5 +50,5 @@ This function is experimental. In particular it is unlikely to work well with al
 
 }
 \seealso{
-\code{\link{ov_video_playlist}}
+\code{\link[=ov_video_playlist]{ov_video_playlist()}}
 }

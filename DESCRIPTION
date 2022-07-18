@@ -20,9 +20,6 @@ Imports:
     digest,
     dplyr,
     DT,
-    editry,
-    future,
-    future.apply,
     fs,
     ggplot2,
     htmltools,
@@ -36,6 +33,9 @@ Imports:
     shiny,
     sys
 Suggests:
+    editry,
+    future,
+    future.apply,
     ovdata,
     remotes,
     testthat

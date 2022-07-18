@@ -228,18 +228,18 @@ ov_images_to_video <- function(input_dir, image_file_mask = "image_%06d.jpg", im
 #' Playlist to video file
 #'
 #' Make a self-contained video file from a playlist.
-#' 
-#' Requires that ffmpeg be available on the system path. Note that the processing of each clip is done inside of a `future_lapply` call, and so you can have this part of the processing done in parallel by setting an appropriate futures plan before calling this function.
+#'
+#' Requires that ffmpeg be available on the system path. Note that the processing of each clip is done inside of a `future_lapply` call (if the `future.apply` package is installed), and so you can have this part of the processing done in parallel by setting an appropriate futures plan before calling this function.
 #' This function is experimental. In particular it is unlikely to work well with all video formats, and especially if the playlist comprises clips from different videos with different resolution/encoding/etc.
 #'
 #' @param playlist data.frame: a playlist as returned by `ov_video_playlist`. Note that only local video sources are supported
 #' @param filename string: file to write to. If not specified (or `NULL`), a file in the temporary directory will be created. If `filename` exists, it will be overwritten. The extension of `filename` will determine the output format
 #' @param subtitle_column string: if not `NULL`, a subtitle file will be produced using the contents of this column (in the playlist) as the subtitle for each clip. The subtitle file will have the same name as `filename` but with extension ".srt"
-#' @param debug logical: if \code{TRUE}, echo the ffmpeg output to the console
+#' @param debug logical: if `TRUE`, echo the ffmpeg output to the console
 #'
 #' @return A list with the filenames of the created video and subtitle files.
 #'
-#' @seealso \code{\link{ov_video_playlist}}
+#' @seealso [ov_video_playlist()]
 #' @examples
 #' \dontrun{
 #'   my_playlist <- ov_video_playlist(..., type = "local")
@@ -268,7 +268,7 @@ ov_playlist_to_video <- function(playlist, filename, subtitle_column = NULL, deb
     ov_ffmpeg_ok(do_error = TRUE)
     if (missing(filename) || is.null(filename)) filename <- tempfile(fileext = ".mp4")
     execfun <- if (isTRUE(debug)) sys::exec_wait else sys::exec_internal
-    lapplyfun <- if (inherits(future::plan(), "sequential")) lapply else future.apply::future_lapply
+    lapplyfun <- if (!requireNamespace("future.apply", quietly = TRUE) || inherits(future::plan(), "sequential")) lapply else future.apply::future_lapply
     tempfiles <- lapplyfun(seq_len(nrow(playlist)), function(ri) {
         outfile <- tempfile(fileext = paste0(".", fs::path_ext(playlist$video_src[ri])))
         if (file.exists(outfile)) unlink(outfile)
