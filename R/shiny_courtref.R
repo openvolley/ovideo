@@ -191,21 +191,13 @@ s_courtref_server <- function(app_data) {
             sr_clickdrag$closest_down <- closest
         })
 
-        was_drag <- function(start, end) {
+        was_drag <- function(start) {
         ## start should be the sr_clickdrag object
-            if (DEBUG > 1L) {
-                cat("start: ", start$mousedown, "\n")
-                cat("end: ", end, "\n")
-            }
-            if (is.null(start) || is.null(start$mousedown) || is.null(end)) {
+            if (is.null(start) || is.null(start$mousedown_time)) {
                 FALSE
             } else {
-                ## use movement to detect drag
-                ##mmt <- sqrt(sum(start - end)^2)
-                ##if (DEBUG > 0L) cat("movement: ", mmt, "\n")
-                ##mmt > 0.0001
                 ## use time since start-click
-                (R.utils::System$currentTimeMillis() - start$mousedown_time) > 500 ## more than half a second
+                isTRUE((R.utils::System$currentTimeMillis() - start$mousedown_time) > 500) ## more than half a second
             }
         }
 
@@ -213,7 +205,7 @@ s_courtref_server <- function(app_data) {
             ## was it a click and not a drag?
             if (!is.null(sr_clickdrag$mousedown)) {
                 isolate(px <- last_mouse_pos())
-                if (is.null(px) || !was_drag(sr_clickdrag, px)) {
+                if (!is.null(px) && !was_drag(sr_clickdrag)) {
                     if (DEBUG > 1L) cat("click\n")
                     ## enter new point if there is an empty slot, or ignore
                     if (is.null(crvt$court) || nrow(crvt$court) < 4) {
@@ -256,7 +248,7 @@ s_courtref_server <- function(app_data) {
         last_refresh_time <- NA_real_
         observe({
             px <- last_mouse_pos() ##c(input$sr_plot_hover$x, input$sr_plot_hover$y) 
-            if (!is.null(px) && !is.null(sr_clickdrag$mousedown) && was_drag(sr_clickdrag, px)) {
+            if (!is.null(px) && !is.null(sr_clickdrag$mousedown) && was_drag(sr_clickdrag)) {
                 ## did previously click, so now dragging a point
                 now_time <- R.utils::System$currentTimeMillis()
                 if (is.na(last_refresh_time) || (now_time - last_refresh_time) > 300) {
