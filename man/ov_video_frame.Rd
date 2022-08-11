@@ -19,7 +19,7 @@ ov_video_frame(
 
 \item{t}{numeric: the times of the frames to extract (in seconds)}
 
-\item{n}{integer: the frame numbers of the frames to extract. Ignored if \code{t} is provided}
+\item{n}{integer: the frame numbers of the frames to extract. Ignored if \code{t} is provided. Frame numbering is 1-based (first frame at t = 0 is frame n = 1)}
 
 \item{format}{string: "jpg" or "png"}
 

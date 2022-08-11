@@ -47,7 +47,7 @@ ov_find_video_file <- function(dvw_filename, video_filename = NULL) {
 #'
 #' @param video_file string: path to the video file
 #' @param t numeric: the times of the frames to extract (in seconds)
-#' @param n integer: the frame numbers of the frames to extract. Ignored if `t` is provided
+#' @param n integer: the frame numbers of the frames to extract. Ignored if `t` is provided. Frame numbering is 1-based (first frame at t = 0 is frame n = 1)
 #' @param format string: "jpg" or "png"
 #' @param debug logical: if `TRUE`, echo the ffmpeg output to the console
 #' @param framerate numeric: the framerate of the video. If not supplied, it will be found using [[av::av_video_info]]
@@ -89,17 +89,15 @@ ov_video_frame <- function(video_file, t, n, format = "jpg", debug = FALSE, fram
     if (method == "ffmpeg") {
         if (debug) message("ov_video_frame using method 'ffmpeg'")
         execfun <- if (isTRUE(debug)) sys::exec_wait else sys::exec_internal
-        if (!missing(t)) {
-            res <- execfun(ov_ffmpeg_exe(), c("-y", "-ss", t, "-i", fs::path_real(video_file), "-vframes", 1, imfs))
-        } else {
-            ##res <- execfun(ov_ffmpeg_exe(), c("-y", "-r", "1", "-i", fs::path_real(video_file), "-vf", paste0("select='between(n\\,", n, "\\,", n, ")'"), "-vframes", 1, imfs))
-            ## that is excruciatingly slow
-            t <- n / framerate
-            res <- execfun(ov_ffmpeg_exe(), c("-y", "-ss", t, "-i", fs::path_real(video_file), "-vframes", 1, imfs))
-        }
+        if (missing(t)) t <- (n - 1L) / framerate ## n is 1-based. ffmpeg docs suggest that ss seeks to the closest position BEFORE specified position (https://ffmpeg.org/ffmpeg.html#Main-options), which suggests we should do n/framerate here, not (n - 1) / framerate. But n-1 gives results that match frame-based version below, so use this
+        res <- execfun(ov_ffmpeg_exe(), c("-y", "-ss", t, "-i", fs::path_real(video_file), "-vframes", 1, imfs))
+        ## note for frame numbers can do 
+        ##res <- execfun(ov_ffmpeg_exe(), c("-y", "-r", "1", "-i", fs::path_real(video_file), "-vf", paste0("select='eq(n\\,", n - 1, ")'"), "-vsync", "vfr", "-vframes", 1, imfs))
+        ## n is zero-based there
+        ## but it is excruciatingly slow
     } else {
         if (debug) message("ov_video_frame using method 'av'")
-        frame_n <- if (!missing(t)) round(t*framerate) else n
+        frame_n <- if (!missing(t)) round(t*framerate) else (n - 1L) ## note that frame count is zero-based here
         codec <- if (format == "png") "png" else "mjpeg"
         res <- av::av_encode_video(video_file, output = imfs, codec = codec, framerate = 1, vfilter = paste0("select='between(n,", frame_n, ",", frame_n, ")'"), verbose = debug)
     }
