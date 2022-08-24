@@ -64,9 +64,9 @@ ov_find_video_file <- function(dvw_filename, video_filename = NULL) {
 #' @export
 ov_video_frame <- function(video_file, t, n, format = "jpg", debug = FALSE, framerate, method = "auto") {
     assert_that(is.string(video_file), fs::file_exists(video_file))
-    if ((missing(t) || is.na(t) || is.null(t)) && (missing(n) || is.na(n) || is.null(n))) stop("either t or n must be specified")
-    if (!missing(t)) assert_that(is.numeric(t))
-    if (!missing(n)) assert_that(is.numeric(n))
+    if ((missing(t) || length(t) < 1) && (missing(n) || length(n) < 1)) stop("either t or n must be specified")
+    if (!missing(t)) assert_that(is.numeric(t), !any(is.na(t)))
+    if (!missing(n)) assert_that(is.numeric(n), !any(is.na(n)))
     format <- tolower(format)
     format <- match.arg(format, c("jpg", "png"))
     method <- resolve_ffmpeg_method(method)
