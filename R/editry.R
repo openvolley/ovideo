@@ -1,6 +1,6 @@
 #' Convert playlist to editry clips
 #'
-#' Note that in order to use `ov_editry_clips`, the `editry` package must be installed. Install it with: `remotes::install_github('scienceuntangled/editry')` or `install.packages('ovideo', repos = c('https://openvolley.r-universe.dev', 'https://cloud.r-project.org'))`. The `editry` package also requires `editly` (the underlying node JS package: see [editry::er_install_editly()]). [editry::er_install_editly()] will also attempt to install the system binaries for `node` and `ffmpeg` if needed.
+#' Note that in order to use `ov_editry_clips`, the `editry` package must be installed. Install it with: `remotes::install_github('scienceuntangled/editry')` or `install.packages('editry', repos = c('https://openvolley.r-universe.dev', 'https://cloud.r-project.org'))`. The `editry` package also requires `editly` (the underlying node JS package: see [editry::er_install_editly()]). [editry::er_install_editly()] will also attempt to install the system binaries for `node` and `ffmpeg` if needed.
 #'
 #' @param playlist data.frame: a playlist as returned by `ov_video_playlist`. Note that only local video sources are supported
 #' @param title string: the title text (first slide). Use `NULL` to skip this slide
