@@ -11,9 +11,7 @@ ov_detect_court(
   method = "LSD",
   score_distance = "colour-based",
   line_colour = "white",
-  court_colour = "#c17257",
-  image_width = 1280,
-  image_height = 720
+  court_colour = "#c17257"
 )
 }
 \arguments{
@@ -30,10 +28,6 @@ ov_detect_court(
 \item{line_colour}{string: colour of the lines for the courts. Default to "white"}
 
 \item{court_colour}{string: colour of the court. Default to "#c17257" (the orange-ish colour typical of synthetic-floor indoor courts)}
-
-\item{image_width}{numeric: width of the image in pixels. Default to 1280}
-
-\item{image_height}{numeric: height of the image in pixels. Default to 720}
 }
 \value{
 A list of all possible homographies, with a score

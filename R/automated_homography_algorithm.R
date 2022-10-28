@@ -10,8 +10,6 @@
 #' @param score_distance string: Default to "colour-based". Calculate the likelihood of a homography based on the colour of the estimated lines locations
 #' @param line_colour string: colour of the lines for the courts. Default to "white"
 #' @param court_colour string: colour of the court. Default to "#c17257" (the orange-ish colour typical of synthetic-floor indoor courts)
-#' @param image_width numeric: width of the image in pixels. Default to 1280
-#' @param image_height numeric: height of the image in pixels. Default to 720
 #'
 #' @return A list of all possible homographies, with a score
 #'
@@ -41,14 +39,16 @@
 #' @export
 ov_detect_court <- function(image_file, video_file, t = 60,
                             method = "LSD", score_distance = "colour-based",
-                            line_colour = "white", court_colour = "#c17257",
-                            image_width = 1280, image_height = 720){
+                            line_colour = "white", court_colour = "#c17257") {
     if (missing(image_file) || is.null(image_file)) {
         image_file <- ov_video_frame(video_file, t)
     }
 
     x <- magick::image_read(image_file)
     ## reduce detection to where the court is
+
+    image_height <- magick::image_info(x)$height
+    image_width <- magick::image_info(x)$width
 
     if(method == "LSD"){
 
