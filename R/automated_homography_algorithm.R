@@ -145,8 +145,8 @@ ov_detect_court <- function(image_file, video_file, t = 60,
     alpha = seq(0,1,0.1)
 
     court_df = list()
-    for(i in 1:(nrow(LS)-1)){
-        for(j in i:nrow(LS)){
+    for(i in seq_len(nrow(LS) - 1)){
+        for(j in seq(i, nrow(LS))){
             if(j == i) next
             if(abs(LS$ys[i] - LS$ys[j]) < 150) next
 
@@ -170,18 +170,18 @@ ov_detect_court <- function(image_file, video_file, t = 60,
             H <- matrix(Hres, ncol = 3, byrow = TRUE)
             tmp <- apply(cbind(crt_ref$court_x, crt_ref$court_y, 1), 1, function(xx) H %*% matrix(xx, ncol = 1))
             crt_ref_e<- cbind(crt_ref, data.frame(x = tmp[1, ] / tmp[3, ] * image_width, y = tmp[2, ] / tmp[3, ] * image_height))
-            estimated_lines <- crt_ref_e %>% tidyr::pivot_wider(names_from = 'side', values_from = c("x", "y", "court_x", "court_y"))
-            
+            estimated_lines <- crt_ref_e %>% tidyr::pivot_wider(names_from = "side", values_from = c("x", "y", "court_x", "court_y"))
+
             # plot(x)
             # polygon(crt_ref_e$x[c(1,2,10,9)], crt_ref_e$y[c(1,2,10,9)], density = 25)
             # polygon(crt_ref_e$x[c(3,4,8,7)], crt_ref_e$y[c(3,4,8,7)], density = 50)
             # segments(x0 = estimated_lines$x_left[3], y0 = estimated_lines$y_left[3], x1 = estimated_lines$x_right[3], y1 = estimated_lines$y_right[3], col = "white")
-            
-            if(score_distance == 'color-based'){
-                px = do.call(c,lapply(1:nrow(estimated_lines), function(jjj) floor(estimated_lines$x_left[jjj]*alpha + estimated_lines$x_right[jjj] * (1-alpha))))
-                py = do.call(c,lapply(1:nrow(estimated_lines), function(jjj) floor(estimated_lines$y_left[jjj]*alpha + estimated_lines$y_right[jjj] * (1-alpha))))
-                
-                dd = cbind(px,py)[which(px %in% 1:image_width & py %in% 1:image_height),]
+
+            if(score_distance %in% c("colour-based", "color-based")) {
+                px = do.call(c,lapply(seq_len(nrow(estimated_lines)), function(jjj) floor(estimated_lines$x_left[jjj]*alpha + estimated_lines$x_right[jjj] * (1-alpha))))
+                py = do.call(c,lapply(seq_len(nrow(estimated_lines)), function(jjj) floor(estimated_lines$y_left[jjj]*alpha + estimated_lines$y_right[jjj] * (1-alpha))))
+
+                dd = cbind(px,py)[which(px %in% seq_len(image_width) & py %in% seq_len(image_height)), ]
 
                 pc = apply(dd, 1,function(x) xr$col[which(xr$x == x[1] & xr$y == x[2])])
 
@@ -196,16 +196,16 @@ ov_detect_court <- function(image_file, video_file, t = 60,
 
                 score = sum(farver::compare_colour(rc, hc, "rgb", method = "cie2000"))
             } else {
-            score = 0
-            idxLS = 1:nrow(LS)
-            LSt = LS
-            for(k in 1:nrow(estimated_lines)){
-                score_tmp_all = (estimated_lines$x_left[k] - LSt$xs)^2 + (estimated_lines$y_left[k] - LSt$ys)^2 +
-                    (estimated_lines$x_right[k] - LSt$xe)^2 + (estimated_lines$y_right[k] - LSt$ye)^2
-                idxM = which.min(score_tmp_all)
-                score = score + score_tmp_all[idxM]
-               LSt = LSt[-idxM,]
-            }
+                score = 0
+                idxLS = seq_len(nrow(LS))
+                LSt = LS
+                for(k in seq_len(nrow(estimated_lines))){
+                    score_tmp_all = (estimated_lines$x_left[k] - LSt$xs)^2 + (estimated_lines$y_left[k] - LSt$ys)^2 +
+                        (estimated_lines$x_right[k] - LSt$xe)^2 + (estimated_lines$y_right[k] - LSt$ye)^2
+                    idxM = which.min(score_tmp_all)
+                    score = score + score_tmp_all[idxM]
+                    LSt = LSt[-idxM,]
+                }
             }
 
             tmp = list(score = score, H = H, ref = ref, court_ref = crt_ref_e)
@@ -220,7 +220,7 @@ ov_detect_court <- function(image_file, video_file, t = 60,
 ov_cluster <- function(lines, d_a = 5, d_b = 50){
     C = 1
     L = list()
-    for(i in 1:nrow(lines)){
+    for(i in seq_len(nrow(lines))){
         if(i == 1){
             L[1] <- i
             data_cl = data.frame(cluster = 1, a = lines$a[i], 
@@ -229,7 +229,7 @@ ov_cluster <- function(lines, d_a = 5, d_b = 50){
             next
         }
         clustered  =FALSE
-        for(j in 1:C){
+        for(j in seq_len(C)){
             da = abs(data_cl$theta[j] - lines$theta[i])
             db = abs(data_cl$rho[j] - lines$rho[i])
             if(da < d_a & db < d_b){
