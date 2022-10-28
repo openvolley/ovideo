@@ -138,10 +138,10 @@ ov_detect_court <- function(image_file, video_file, t = 60,
         matrix(c(-x[1], -x[2], -1, 0, 0, 0, x[1]*X[1], x[2]*X[1], X[1], 0, 0, 0, -x[1], -x[2], -1, x[1]*X[2], x[2]*X[2], X[2]), nrow = 2, byrow = TRUE)
     }
 
-    # xr = image_raster(x, frame = 1, tidy = TRUE) %>% dplyr::filter(x %in% seq.int(1,1280,1), 
-    #                                                                y %in% seq.int(1,720,1))
-    # ggplot(xr, aes(x=x, y=rev(y), fill = col)) + 
-    #     geom_tile(width = 1, height =1) + theme(legend.position = "none") + 
+    # xr <- magick::image_raster(x, frame = 1, tidy = TRUE) %>% dplyr::filter(x %in% seq.int(1,1280,1),
+    #                                                                         y %in% seq.int(1,720,1))
+    # ggplot(xr, aes(x=x, y=rev(y), fill = col)) +
+    #     geom_tile(width = 1, height =1) + theme(legend.position = "none") +
     #     scale_fill_identity()
 
     alpha <- seq(0, 1, by = 0.1)
@@ -180,12 +180,12 @@ ov_detect_court <- function(image_file, video_file, t = 60,
             # segments(x0 = estimated_lines$x_left[3], y0 = estimated_lines$y_left[3], x1 = estimated_lines$x_right[3], y1 = estimated_lines$y_right[3], col = "white")
 
             if(score_distance %in% c("colour-based", "color-based")) {
-                px = do.call(c,lapply(seq_len(nrow(estimated_lines)), function(jjj) floor(estimated_lines$x_left[jjj]*alpha + estimated_lines$x_right[jjj] * (1-alpha))))
-                py = do.call(c,lapply(seq_len(nrow(estimated_lines)), function(jjj) floor(estimated_lines$y_left[jjj]*alpha + estimated_lines$y_right[jjj] * (1-alpha))))
+                px <- do.call(c,lapply(seq_len(nrow(estimated_lines)), function(jjj) floor(estimated_lines$x_left[jjj]*alpha + estimated_lines$x_right[jjj] * (1-alpha))))
+                py <- do.call(c,lapply(seq_len(nrow(estimated_lines)), function(jjj) floor(estimated_lines$y_left[jjj]*alpha + estimated_lines$y_right[jjj] * (1-alpha))))
 
-                dd = cbind(px,py)[which(px %in% seq_len(image_width) & py %in% seq_len(image_height)), ]
+                dd <- cbind(px,py)[which(px %in% seq_len(image_width) & py %in% seq_len(image_height)), ]
 
-                pc = apply(dd, 1, function(x) xr$col[which(xr$x == x[1] & xr$y == x[2])])
+                pc <- apply(dd, 1, function(x) xr$col[which(xr$x == x[1] & xr$y == x[2])])
 
                 #dd = data.frame(x=px, y=py, col = pc)
 
