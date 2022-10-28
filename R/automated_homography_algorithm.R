@@ -19,21 +19,23 @@
 #'
 #' @examples
 #' if (interactive()) {
-#' library(magick)
-#' image_file = system.file("extdata/2019_03_01-KATS-BEDS-court.jpg", package = "ovideo")
-#' court_df = ov_detect_court(image_file = image_file)
+#'   library(magick)
+#'   image_file = system.file("extdata/2019_03_01-KATS-BEDS-court.jpg", package = "ovideo")
+#'   court_df = ov_detect_court(image_file = image_file)
 #'
 #'
-#' image_file <- ov_video_frame("~/Documents/Donnees/VolleyBall/Dropbox/server_videos/AVL/Men/2022/20221022M_CH_vs_TE.m4v", t=800) 
-#' plot(image_read(image_file))
-#' court_df = ov_detect_court(image_file = image_file)
-#' idxBS = which.min(do.call(c,lapply(court_df, function(x) x$score)))
-#' crt_ref_e = court_df[[idxBS]]$court_ref
-#' estimated_lines <- crt_ref_e %>% tidyr::pivot_wider(names_from = 'side', values_from = c("x", "y", "court_x", "court_y"))
-#' plot(image_read(image_file))
-#' polygon(crt_ref_e$x[c(1,2,10,9)], crt_ref_e$y[c(1,2,10,9)], density = 25, col = "blue")
-#' polygon(crt_ref_e$x[c(3,4,8,7)], crt_ref_e$y[c(3,4,8,7)], density = 50, col = "cyan")
-#' segments(x0 = estimated_lines$x_left[3], y0 = estimated_lines$y_left[3], x1 = estimated_lines$x_right[3], y1 = estimated_lines$y_right[3], col = "white")
+#'   image_file <- ov_video_frame("~/Documents/Donnees/VolleyBall/Dropbox/server_videos/AVL/Men/2022/20221022M_CH_vs_TE.m4v", t=800)
+#'   plot(image_read(image_file))
+#'   court_df = ov_detect_court(image_file = image_file)
+#'   idxBS = which.min(do.call(c,lapply(court_df, function(x) x$score)))
+#'   crt_ref_e = court_df[[idxBS]]$court_ref
+#'   estimated_lines <- crt_ref_e %>%
+#'     tidyr::pivot_wider(names_from = "side", values_from = c("x", "y", "court_x", "court_y"))
+#'   plot(image_read(image_file))
+#'   polygon(crt_ref_e$x[c(1,2,10,9)], crt_ref_e$y[c(1,2,10,9)], density = 25, col = "blue")
+#'   polygon(crt_ref_e$x[c(3,4,8,7)], crt_ref_e$y[c(3,4,8,7)], density = 50, col = "cyan")
+#'   segments(x0 = estimated_lines$x_left[3], y0 = estimated_lines$y_left[3],
+#'            x1 = estimated_lines$x_right[3], y1 = estimated_lines$y_right[3], col = "white")
 #'}
 #'
 #' @export
