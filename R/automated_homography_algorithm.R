@@ -61,17 +61,17 @@ ov_detect_court <- function(image_file, video_file, t = 60,
         # plot(linesegments, add =TRUE, col ="red")
 
         LS <- as.data.frame(linesegments$lines)
-        LS <- LS %>% mutate(Length = sqrt((x1 - x2)^2 + (y1-y2)^2)) %>%
-            dplyr::filter(abs(y1 - y2) < 150, width < 25) %>%
-            mutate(xs = case_when(x1 > x2 ~ x2,
-                                                TRUE ~ x1),
-                          ys = case_when(x1 > x2 ~ y2,
-                                                TRUE ~ y1),
-                          xe = case_when(x1 > x2 ~ x1,
-                                                TRUE ~ x2),
-                          ye = case_when(x1 > x2 ~ y1,
-                                                TRUE ~ y2),
-                          a = abs((ye - ys) / (xe - xs))) %>% dplyr::filter(a < 0.1) %>%
+        LS <- LS %>% mutate(Length = sqrt((.data$x1 - .data$x2)^2 + (.data$y1 - .data$y2)^2)) %>%
+            dplyr::filter(abs(.data$y1 - .data$y2) < 150, .data$width < 25) %>%
+            mutate(xs = case_when(.data$x1 > .data$x2 ~ .data$x2,
+                                  TRUE ~ .data$x1),
+                   ys = case_when(.data$x1 > .data$x2 ~ .data$y2,
+                                  TRUE ~ .data$y1),
+                   xe = case_when(.data$x1 > .data$x2 ~ .data$x1,
+                                  TRUE ~ .data$x2),
+                   ye = case_when(.data$x1 > .data$x2 ~ .data$y1,
+                                  TRUE ~ .data$y2),
+                   a = abs((.data$ye - .data$ys) / (.data$xe - .data$xs))) %>% dplyr::filter(.data$a < 0.1) %>%
             dplyr::top_n(n = 4, wt = .data$Length)
     }
 
@@ -79,23 +79,23 @@ ov_detect_court <- function(image_file, video_file, t = 60,
 
         img <- imager::magick2cimg(x)
 
-        ht = imager::hough_line(img, data.frame = TRUE, ntheta = 1000)
+        ht <- imager::hough_line(img, data.frame = TRUE, ntheta = 1000)
         plot(img)
-        temp <- subset(ht, score > quantile(score, .99995))
+        temp <- dplyr::filter(ht, .data$score > quantile(.data$score, .99995))
         imager::nfline(temp$theta, temp$rho, col = "red")
 
-        ht_h <- ht %>% mutate(a = -cos(theta) / sin(theta)) %>%
-            dplyr::filter(dplyr::between(a, -0.5,0.5))%>%
-            dplyr::filter(score > quantile(score, .9995))  %>% dplyr::arrange(-.data$score)
+        ht_h <- ht %>% mutate(a = -cos(.data$theta) / sin(.data$theta)) %>%
+            dplyr::filter(dplyr::between(.data$a, -0.5,0.5)) %>%
+            dplyr::filter(.data$score > quantile(.data$score, .9995)) %>% dplyr::arrange(-.data$score)
 
-        ht_v <- ht %>% mutate(a = -cos(theta) / sin(theta)) %>%
-            dplyr::filter(dplyr::between(theta, -0.75, 0.75) | dplyr::between(theta,pi -0.75,pi+ 0.75)) %>%
-            dplyr::filter(score > quantile(score, .9995)) %>% dplyr::arrange(-.data$score)
+        ht_v <- ht %>% mutate(a = -cos(.data$theta) / sin(.data$theta)) %>%
+            dplyr::filter(dplyr::between(.data$theta, -0.75, 0.75) | dplyr::between(.data$theta, pi - 0.75, pi + 0.75)) %>%
+            dplyr::filter(.data$score > quantile(.data$score, .9995)) %>% dplyr::arrange(-.data$score)
 
         imager::nfline(ht_h$theta, ht_h$rho, col = "blue")
         imager::nfline(ht_v$theta, ht_v$rho, col = "green")
 
-        htc_v <- ov_cluster(ht_v)%>% dplyr::top_n(n = 3, wt = .data$score)
+        htc_v <- ov_cluster(ht_v) %>% dplyr::top_n(n = 3, wt = .data$score)
         htc_h <- ov_cluster(ht_h) %>% dplyr::top_n(n = 3, wt = .data$score)
         # plot(x)
         # plot(linesegments, add =TRUE, col ="red")
@@ -104,39 +104,38 @@ ov_detect_court <- function(image_file, video_file, t = 60,
 
         # NOW NEED TO CALCULATE CROSSLINE PT and get LS out of that. TODO
 
-        LS = NULL # PLACEHOLDER
-
-        LS <- LS %>% mutate(Length = sqrt((x1 - x2)^2 + (y1-y2)^2)) %>%
-            dplyr::filter(abs(y1 - y2) < 150, width < 25) %>%
-            mutate(xs = case_when(x1 > x2 ~ x2,
-                                                TRUE ~ x1),
-                          ys = case_when(x1 > x2 ~ y2,
-                                                TRUE ~ y1),
-                          xe = case_when(x1 > x2 ~ x1,
-                                                TRUE ~ x2),
-                          ye = case_when(x1 > x2 ~ y1,
-                                                TRUE ~ y2),
-                          a = abs((ye - ys) / (xe - xs))) %>% dplyr::filter(a < 0.1) %>%
-            dplyr::top_n(n = 4, wt = .data$Length)
+        LS <- NULL # PLACEHOLDER
+        ##LS <- LS %>% mutate(Length = sqrt((.data$x1 - .data$x2)^2 + (.data$y1 - .data$y2)^2)) %>%
+        ##    dplyr::filter(abs(.data$y1 - .data$y2) < 150, .data$width < 25) %>%
+        ##    mutate(xs = case_when(.data$x1 > .data$x2 ~ .data$x2,
+        ##                          TRUE ~ .data$x1),
+        ##           ys = case_when(.data$x1 > .data$x2 ~ .data$y2,
+        ##                          TRUE ~ .data$y1),
+        ##           xe = case_when(.data$x1 > .data$x2 ~ .data$x1,
+        ##                          TRUE ~ .data$x2),
+        ##           ye = case_when(.data$x1 > .data$x2 ~ .data$y1,
+        ##                          TRUE ~ .data$y2),
+        ##           a = abs((.data$ye - .data$ys) / (.data$xe - .data$xs))) %>% dplyr::filter(.data$a < 0.1) %>%
+        ##    dplyr::top_n(n = 4, wt = .data$Length)
     }
     #segments(x0 = LS$xs, y0 = LS$ys, x1 = LS$xe, y1 =LS$ye, col = "blue")
 
-    crt_ref <- data.frame(court_x = c(0.5, 3.5, 0.5, 3.5, 
-                                      0.5, 3.5, 
+    crt_ref <- data.frame(court_x = c(0.5, 3.5, 0.5, 3.5,
+                                      0.5, 3.5,
                                       0.5, 3.5, 0.5, 3.5),
-                       court_y = c(0.5, 0.5, 2.5, 2.5, 
+                       court_y = c(0.5, 0.5, 2.5, 2.5,
                                    3.5,3.5,
-                                   4.5, 4.5, 6.5, 6.5), 
-                       side = c("left", "right", "left", "right","left", "right", "left", "right", "left", "right"), 
+                                   4.5, 4.5, 6.5, 6.5),
+                       side = c("left", "right", "left", "right","left", "right", "left", "right", "left", "right"),
                        depth = c("close", "close", "close", "close", "mid", "mid", "far", "far", "far", "far"),
-                       linetype = c("serve-line", "serve-line", 
-                                 "3m-line", "3m-line", 
-                                 "center-line", "center-line", 
-                                 "3m-line", "3m-line", 
+                       linetype = c("serve-line", "serve-line",
+                                 "3m-line", "3m-line",
+                                 "center-line", "center-line",
+                                 "3m-line", "3m-line",
                                  "serve-line", "serve-line"))
 
     homography_transform = function(x, X) {
-        matrix(c(-x[1],-x[2], -1, 0, 0, 0, x[1]*X[1], x[2]*X[1], X[1],0,0, 0, -x[1],-x[2], -1, x[1]*X[2], x[2]*X[2], X[2]), nrow = 2, byrow = TRUE)
+        matrix(c(-x[1], -x[2], -1, 0, 0, 0, x[1]*X[1], x[2]*X[1], X[1], 0, 0, 0, -x[1], -x[2], -1, x[1]*X[2], x[2]*X[2], X[2]), nrow = 2, byrow = TRUE)
     }
 
     # xr = image_raster(x, frame = 1, tidy = TRUE) %>% dplyr::filter(x %in% seq.int(1,1280,1), 
@@ -145,9 +144,9 @@ ov_detect_court <- function(image_file, video_file, t = 60,
     #     geom_tile(width = 1, height =1) + theme(legend.position = "none") + 
     #     scale_fill_identity()
 
-    alpha = seq(0,1,0.1)
+    alpha <- seq(0, 1, by = 0.1)
 
-    court_df = list()
+    court_df <- list()
     for(i in seq_len(nrow(LS) - 1)){
         for(j in seq(i, nrow(LS))){
             if(j == i) next
@@ -186,7 +185,7 @@ ov_detect_court <- function(image_file, video_file, t = 60,
 
                 dd = cbind(px,py)[which(px %in% seq_len(image_width) & py %in% seq_len(image_height)), ]
 
-                pc = apply(dd, 1,function(x) xr$col[which(xr$x == x[1] & xr$y == x[2])])
+                pc = apply(dd, 1, function(x) xr$col[which(xr$x == x[1] & xr$y == x[2])])
 
                 #dd = data.frame(x=px, y=py, col = pc)
 
