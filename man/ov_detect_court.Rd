@@ -44,15 +44,15 @@ Detect court on an image
 \examples{
 if (interactive()) {
   library(magick)
-  image_file = system.file("extdata/2019_03_01-KATS-BEDS-court.jpg", package = "ovideo")
-  court_df = ov_detect_court(image_file = image_file)
+  image_file <- system.file("extdata/2019_03_01-KATS-BEDS-court.jpg", package = "ovideo")
+  court_df <- ov_detect_court(image_file = image_file)
 
 
   image_file <- ov_video_frame("~/Documents/Donnees/VolleyBall/Dropbox/server_videos/AVL/Men/2022/20221022M_CH_vs_TE.m4v", t=800)
   plot(image_read(image_file))
-  court_df = ov_detect_court(image_file = image_file)
-  idxBS = which.min(do.call(c,lapply(court_df, function(x) x$score)))
-  crt_ref_e = court_df[[idxBS]]$court_ref
+  court_df <- ov_detect_court(image_file = image_file)
+  idxBS <- which.min(do.call(c,lapply(court_df, function(x) x$score)))
+  crt_ref_e <- court_df[[idxBS]]$court_ref
   estimated_lines <- crt_ref_e \%>\%
     tidyr::pivot_wider(names_from = "side", values_from = c("x", "y", "court_x", "court_y"))
   plot(image_read(image_file))
