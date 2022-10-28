@@ -46,24 +46,20 @@ ov_detect_court <- function(image_file, video_file, t = 60,
         image_file <- ov_video_frame(video_file, t)
     }
 
-    require(image.LineSegmentDetector)
-    require(magick)
-    require(imager)
-    
-    x   <- image_read(image_file)
-    # reduce detection to where the court is
-    
-    if(method == 'LSD'){
-        
+    x <- image_read(image_file)
+    ## reduce detection to where the court is
+
+    if(method == "LSD"){
+
         mat <- image_data(x, channels = "gray")
         mat <- as.integer(mat, transpose = TRUE)
         mat <- drop(mat)
         linesegments <- image_line_segment_detector(mat, union = TRUE)
-        
+
         # plot(x)
         # plot(linesegments, add =TRUE, col ="red")
-        
-        LS = as.data.frame(linesegments$lines) 
+
+        LS <- as.data.frame(linesegments$lines) 
         LS <- LS %>% dplyr::mutate(Length = sqrt((x1 - x2)^2 + (y1-y2)^2)) %>% 
             dplyr::filter(abs(y1 - y2) < 150, width < 25) %>%
             dplyr::mutate(xs = dplyr::case_when(x1 > x2 ~ x2,
@@ -122,7 +118,7 @@ ov_detect_court <- function(image_file, video_file, t = 60,
             dplyr::top_n(n = 4, wt = .data$Length)
     }
     #segments(x0 = LS$xs, y0 = LS$ys, x1 = LS$xe, y1 =LS$ye, col = "blue")
-    
+
     crt_ref <- data.frame(court_x = c(0.5, 3.5, 0.5, 3.5, 
                                       0.5, 3.5, 
                                       0.5, 3.5, 0.5, 3.5),
@@ -136,36 +132,35 @@ ov_detect_court <- function(image_file, video_file, t = 60,
                                  "center-line", "center-line", 
                                  "3m-line", "3m-line", 
                                  "serve-line", "serve-line"))
-    
+
     homography_transform = function(x, X) {
         matrix(c(-x[1],-x[2], -1, 0, 0, 0, x[1]*X[1], x[2]*X[1], X[1],0,0, 0, -x[1],-x[2], -1, x[1]*X[2], x[2]*X[2], X[2]), nrow = 2, byrow = TRUE)
     }
-    
+
     # xr = image_raster(x, frame = 1, tidy = TRUE) %>% dplyr::filter(x %in% seq.int(1,1280,1), 
     #                                                                y %in% seq.int(1,720,1))
     # ggplot(xr, aes(x=x, y=rev(y), fill = col)) + 
-    #     geom_tile(width = 1, height =1) + theme(legend.position = 'none') + 
+    #     geom_tile(width = 1, height =1) + theme(legend.position = "none") + 
     #     scale_fill_identity()
-    
+
     alpha = seq(0,1,0.1)
-    
+
     court_df = list()
     for(i in 1:(nrow(LS)-1)){
         for(j in i:nrow(LS)){
             if(j == i) next
             if(abs(LS$ys[i] - LS$ys[j]) < 150) next
-            
-            
+
             # FULL COURT
             for(cc in c("full court", "full 3m", "full half", "full 3m c")){
                 if(cc == "full court") ref = crt_ref[c(1,2,10,9),]
                 if(cc == "full 3m") ref = crt_ref[c(1,2,8,7),]
                 if(cc == "full half") ref = crt_ref[c(1,2,6,5),]
                 if(cc == "full 3m c") ref = crt_ref[c(1,2,4,3),]
-                
+
             ref$image_x = c(LS$xs[i], LS$xe[i], LS$xe[j], LS$xs[j])/image_width
             ref$image_y = c(LS$ys[i], LS$ye[i], LS$ye[j], LS$ys[j])/image_height
-            
+
             # plot(x)
             # polygon(x = ref$image_x*1280, y = ref$image_y*720)
 
@@ -188,19 +183,19 @@ ov_detect_court <- function(image_file, video_file, t = 60,
                 py = do.call(c,lapply(1:nrow(estimated_lines), function(jjj) floor(estimated_lines$y_left[jjj]*alpha + estimated_lines$y_right[jjj] * (1-alpha))))
                 
                 dd = cbind(px,py)[which(px %in% 1:image_width & py %in% 1:image_height),]
-                
+
                 pc = apply(dd, 1,function(x) xr$col[which(xr$x == x[1] & xr$y == x[2])])
-                
+
                 #dd = data.frame(x=px, y=py, col = pc)
-                
+
                 #ggplot(dd, aes(x=x, y=rev(y), fill = col)) + 
-                #    geom_tile(width = 10, height =10) + theme(legend.position = 'none') + 
+                #    geom_tile(width = 10, height =10) + theme(legend.position = "none") + 
                 #    scale_fill_identity() + coord_fixed() + theme_void()
-                
+
                 rc <- farver::decode_colour(pc)
                 hc <- farver::decode_colour(line_colour)
-                
-                score = sum(farver::compare_colour(rc, hc, 'rgb', method = 'cie2000'))
+
+                score = sum(farver::compare_colour(rc, hc, "rgb", method = "cie2000"))
             } else {
             score = 0
             idxLS = 1:nrow(LS)
@@ -213,13 +208,13 @@ ov_detect_court <- function(image_file, video_file, t = 60,
                LSt = LSt[-idxM,]
             }
             }
-            
+
             tmp = list(score = score, H = H, ref = ref, court_ref = crt_ref_e)
             court_df = append(court_df, list(tmp))
             }
         }
     }
-    
+
     return(court_df)
 }
 
@@ -254,8 +249,6 @@ ov_cluster <- function(lines, d_a = 5, d_b = 50){
                                                   score = lines$score[i]))
             L[C] <- i
         }
-        
     }
-    
     return(data_cl)
 }
