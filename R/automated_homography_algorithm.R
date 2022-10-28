@@ -19,6 +19,7 @@
 #'
 #' @examples
 #' if (interactive()) {
+#' library(magick)
 #' image_file = system.file("extdata/2019_03_01-KATS-BEDS-court.jpg", package = "ovideo")
 #' court_df = ov_detect_court(image_file = image_file)
 #'
@@ -44,12 +45,12 @@ ov_detect_court <- function(image_file, video_file, t = 60,
         image_file <- ov_video_frame(video_file, t)
     }
 
-    x <- image_read(image_file)
+    x <- magick::image_read(image_file)
     ## reduce detection to where the court is
 
     if(method == "LSD"){
 
-        mat <- image_data(x, channels = "gray")
+        mat <- magick::image_data(x, channels = "gray")
         mat <- as.integer(mat, transpose = TRUE)
         mat <- drop(mat)
         linesegments <- image_line_segment_detector(mat, union = TRUE)
@@ -58,15 +59,15 @@ ov_detect_court <- function(image_file, video_file, t = 60,
         # plot(linesegments, add =TRUE, col ="red")
 
         LS <- as.data.frame(linesegments$lines)
-        LS <- LS %>% dplyr::mutate(Length = sqrt((x1 - x2)^2 + (y1-y2)^2)) %>%
+        LS <- LS %>% mutate(Length = sqrt((x1 - x2)^2 + (y1-y2)^2)) %>%
             dplyr::filter(abs(y1 - y2) < 150, width < 25) %>%
-            dplyr::mutate(xs = dplyr::case_when(x1 > x2 ~ x2,
+            mutate(xs = case_when(x1 > x2 ~ x2,
                                                 TRUE ~ x1),
-                          ys = dplyr::case_when(x1 > x2 ~ y2,
+                          ys = case_when(x1 > x2 ~ y2,
                                                 TRUE ~ y1),
-                          xe = dplyr::case_when(x1 > x2 ~ x1,
+                          xe = case_when(x1 > x2 ~ x1,
                                                 TRUE ~ x2),
-                          ye = dplyr::case_when(x1 > x2 ~ y1,
+                          ye = case_when(x1 > x2 ~ y1,
                                                 TRUE ~ y2),
                           a = abs((ye - ys) / (xe - xs))) %>% dplyr::filter(a < 0.1) %>%
             dplyr::top_n(n = 4, wt = .data$Length)
@@ -74,45 +75,45 @@ ov_detect_court <- function(image_file, video_file, t = 60,
 
     if(method == "Hough"){
 
-        img <- magick2cimg(x)
+        img <- imager::magick2cimg(x)
 
         ht = imager::hough_line(img, data.frame = TRUE, ntheta = 1000)
         plot(img)
         temp <- subset(ht, score > quantile(score, .99995))
-        nfline(temp$theta, temp$rho, col = "red")
+        imager::nfline(temp$theta, temp$rho, col = "red")
 
-        ht_h <- ht %>% dplyr::mutate(a = -cos(theta) / sin(theta)) %>%
-            dplyr::filter(between(a, -0.5,0.5))%>%
-            dplyr::filter(score > quantile(score, .9995))  %>% arrange(-.data$score)
+        ht_h <- ht %>% mutate(a = -cos(theta) / sin(theta)) %>%
+            dplyr::filter(dplyr::between(a, -0.5,0.5))%>%
+            dplyr::filter(score > quantile(score, .9995))  %>% dplyr::arrange(-.data$score)
 
-        ht_v <- ht %>% dplyr::mutate(a = -cos(theta) / sin(theta)) %>%
-            dplyr::filter(between(theta, -0.75, 0.75) | between(theta,pi -0.75,pi+ 0.75)) %>%
-            dplyr::filter(score > quantile(score, .9995)) %>% arrange(-.data$score)
+        ht_v <- ht %>% mutate(a = -cos(theta) / sin(theta)) %>%
+            dplyr::filter(dplyr::between(theta, -0.75, 0.75) | dplyr::between(theta,pi -0.75,pi+ 0.75)) %>%
+            dplyr::filter(score > quantile(score, .9995)) %>% dplyr::arrange(-.data$score)
 
-        nfline(ht_h$theta, ht_h$rho, col = "blue")
-        nfline(ht_v$theta, ht_v$rho, col = "green")
+        imager::nfline(ht_h$theta, ht_h$rho, col = "blue")
+        imager::nfline(ht_v$theta, ht_v$rho, col = "green")
 
-        htc_v <- ov_cluster(ht_v)%>% top_n(n = 3, wt = .data$score)
-        htc_h <- ov_cluster(ht_h) %>% top_n(n = 3, wt = .data$score)
+        htc_v <- ov_cluster(ht_v)%>% dplyr::top_n(n = 3, wt = .data$score)
+        htc_h <- ov_cluster(ht_h) %>% dplyr::top_n(n = 3, wt = .data$score)
         # plot(x)
         # plot(linesegments, add =TRUE, col ="red")
-        nfline(htc_h$theta, htc_h$rho, col = "cyan")
-        nfline(htc_v$theta, htc_v$rho, col = "darkgreen")
+        imager::nfline(htc_h$theta, htc_h$rho, col = "cyan")
+        imager::nfline(htc_v$theta, htc_v$rho, col = "darkgreen")
 
         # NOW NEED TO CALCULATE CROSSLINE PT and get LS out of that. TODO
 
         LS = NULL # PLACEHOLDER
 
-        LS <- LS %>% dplyr::mutate(Length = sqrt((x1 - x2)^2 + (y1-y2)^2)) %>% 
+        LS <- LS %>% mutate(Length = sqrt((x1 - x2)^2 + (y1-y2)^2)) %>%
             dplyr::filter(abs(y1 - y2) < 150, width < 25) %>%
-            dplyr::mutate(xs = dplyr::case_when(x1 > x2 ~ x2,
-                                                TRUE ~ x1), 
-                          ys = dplyr::case_when(x1 > x2 ~ y2,
-                                                TRUE ~ y1), 
-                          xe = dplyr::case_when(x1 > x2 ~ x1,
-                                                TRUE ~ x2), 
-                          ye = dplyr::case_when(x1 > x2 ~ y1,
-                                                TRUE ~ y2), 
+            mutate(xs = case_when(x1 > x2 ~ x2,
+                                                TRUE ~ x1),
+                          ys = case_when(x1 > x2 ~ y2,
+                                                TRUE ~ y1),
+                          xe = case_when(x1 > x2 ~ x1,
+                                                TRUE ~ x2),
+                          ye = case_when(x1 > x2 ~ y1,
+                                                TRUE ~ y2),
                           a = abs((ye - ys) / (xe - xs))) %>% dplyr::filter(a < 0.1) %>%
             dplyr::top_n(n = 4, wt = .data$Length)
     }

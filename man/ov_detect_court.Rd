@@ -43,6 +43,7 @@ Detect court on an image
 }
 \examples{
 if (interactive()) {
+library(magick)
 image_file = system.file("extdata/2019_03_01-KATS-BEDS-court.jpg", package = "ovideo")
 court_df = ov_detect_court(image_file = image_file)
 
