@@ -2,26 +2,27 @@
 
 
 #' Detect court on an image
-#' 
+#'
 #' @param image_file string: path to an image file (jpg) containing the court image (not required if `video_file` is supplied)
 #' @param video_file string: path to a video file from which to extract the court image (not required if `image_file` is supplied)
 #' @param t numeric: the time of the video frame to use as the court image (not required if `image_file` is supplied)
-#' @param method string: either 'LSD' or 'Hough'. See Details.
-#' @param score_distance string: Default to 'color-based'. Calculate the likelihood of a homography based on the color of the estimated lines locations.
-#' @param line_colour string: Color of the lines for the courts. Default to 'white'.
-#' @param image_width numeric: Width of the image. Default to 1280.
-#' @param image_height numeric: Height of the image. Default to 720.
-#' 
-#' @return A list of all possible homographies, with a score. 
+#' @param method string: either "LSD" or "Hough". See Details
+#' @param score_distance string: Default to "colour-based". Calculate the likelihood of a homography based on the colour of the estimated lines locations
+#' @param line_colour string: colour of the lines for the courts. Default to "white"
+#' @param court_colour string: colour of the court. Default to "#c17257" (the orange-ish colour typical of synthetic-floor indoor courts)
+#' @param image_width numeric: width of the image in pixels. Default to 1280
+#' @param image_height numeric: height of the image in pixels. Default to 720
+#'
+#' @return A list of all possible homographies, with a score
 #'
 #' @seealso [ov_transform_points()], [datavolley::dv_court()],  [datavolley::ggcourt()]
-#' 
+#'
 #' @examples
 #' if (interactive()) {
 #' image_file = system.file("extdata/2019_03_01-KATS-BEDS-court.jpg", package = "ovideo")
 #' court_df = ov_detect_court(image_file = image_file)
-#' 
-#' 
+#'
+#'
 #' image_file <- ov_video_frame("~/Documents/Donnees/VolleyBall/Dropbox/server_videos/AVL/Men/2022/20221022M_CH_vs_TE.m4v", t=800) 
 #' plot(image_read(image_file))
 #' court_df = ov_detect_court(image_file = image_file)
@@ -35,13 +36,10 @@
 #'}
 #'
 #' @export
-ov_detect_court <- function(image_file, video_file, t = 60, 
-                            method = 'LSD', 
-                            score_distance = 'color-based', 
-                            line_colour = "white", 
-                            court_colour = '#c17257',
-                            image_width = 1280, 
-                            image_height = 720){
+ov_detect_court <- function(image_file, video_file, t = 60,
+                            method = "LSD", score_distance = "colour-based",
+                            line_colour = "white", court_colour = "#c17257",
+                            image_width = 1280, image_height = 720){
     if (missing(image_file) || is.null(image_file)) {
         image_file <- ov_video_frame(video_file, t)
     }

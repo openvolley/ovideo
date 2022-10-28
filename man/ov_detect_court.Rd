@@ -9,7 +9,7 @@ ov_detect_court(
   video_file,
   t = 60,
   method = "LSD",
-  score_distance = "color-based",
+  score_distance = "colour-based",
   line_colour = "white",
   court_colour = "#c17257",
   image_width = 1280,
@@ -23,18 +23,20 @@ ov_detect_court(
 
 \item{t}{numeric: the time of the video frame to use as the court image (not required if \code{image_file} is supplied)}
 
-\item{method}{string: either 'LSD' or 'Hough'. See Details.}
+\item{method}{string: either "LSD" or "Hough". See Details}
 
-\item{score_distance}{string: Default to 'color-based'. Calculate the likelihood of a homography based on the color of the estimated lines locations.}
+\item{score_distance}{string: Default to "colour-based". Calculate the likelihood of a homography based on the colour of the estimated lines locations}
 
-\item{line_colour}{string: Color of the lines for the courts. Default to 'white'.}
+\item{line_colour}{string: colour of the lines for the courts. Default to "white"}
 
-\item{image_width}{numeric: Width of the image. Default to 1280.}
+\item{court_colour}{string: colour of the court. Default to "#c17257" (the orange-ish colour typical of synthetic-floor indoor courts)}
 
-\item{image_height}{numeric: Height of the image. Default to 720.}
+\item{image_width}{numeric: width of the image in pixels. Default to 1280}
+
+\item{image_height}{numeric: height of the image in pixels. Default to 720}
 }
 \value{
-A list of all possible homographies, with a score.
+A list of all possible homographies, with a score
 }
 \description{
 Detect court on an image
