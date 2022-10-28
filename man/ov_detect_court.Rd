@@ -38,17 +38,23 @@ Detect court on an image
 \examples{
 if (interactive()) {
   library(magick)
+
+  ## Example 1
   image_file <- system.file("extdata/2019_03_01-KATS-BEDS-court.jpg", package = "ovideo")
-  court_df <- ov_detect_court(image_file = image_file)
 
 
+  ## Example 2
   image_file <- ov_video_frame("~/Documents/Donnees/VolleyBall/Dropbox/server_videos/AVL/Men/2022/20221022M_CH_vs_TE.m4v", t=800)
-  plot(image_read(image_file))
+  ## detect court
   court_df <- ov_detect_court(image_file = image_file)
-  idxBS <- which.min(do.call(c,lapply(court_df, function(x) x$score)))
+
+  ## best estimate according to score
+  idxBS <- which.min(sapply(court_df, function(x) x$score))
   crt_ref_e <- court_df[[idxBS]]$court_ref
   estimated_lines <- crt_ref_e \%>\%
     tidyr::pivot_wider(names_from = "side", values_from = c("x", "y", "court_x", "court_y"))
+
+  ## plot it
   plot(image_read(image_file))
   polygon(crt_ref_e$x[c(1,2,10,9)], crt_ref_e$y[c(1,2,10,9)], density = 25, col = "blue")
   polygon(crt_ref_e$x[c(3,4,8,7)], crt_ref_e$y[c(3,4,8,7)], density = 50, col = "cyan")
