@@ -17,6 +17,7 @@ Imports:
     assertthat,
     av,
     base64enc,
+    cowplot,
     digest,
     dplyr,
     DT,
@@ -33,10 +34,12 @@ Imports:
     magick,
     R.utils,
     rappdirs,
+    rlist,
     rmarkdown,
     shiny,
     sys,
-    tidyr
+    tidyr,
+    T4transport
 Suggests:
     editry,
     future,

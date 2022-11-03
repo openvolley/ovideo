@@ -8,10 +8,14 @@ ov_detect_court(
   image_file,
   video_file,
   t = 60,
-  method = "LSD",
+  view.list = NULL,
+  method = "Hough",
   score_distance = "colour-based",
   line_colour = "white",
-  court_colour = "#c17257"
+  court_colour = "#c17257",
+  colour.distance = "cie2000",
+  n.alpha = 50,
+  lambda = 100
 )
 }
 \arguments{
@@ -21,6 +25,8 @@ ov_detect_court(
 
 \item{t}{numeric: the time of the video frame to use as the court image (not required if \code{image_file} is supplied)}
 
+\item{view.list}{vector: vector of court view}
+
 \item{method}{string: either "LSD" or "Hough". See Details}
 
 \item{score_distance}{string: Default to "colour-based". Calculate the likelihood of a homography based on the colour of the estimated lines locations}
@@ -28,6 +34,12 @@ ov_detect_court(
 \item{line_colour}{string: colour of the lines for the courts. Default to "white"}
 
 \item{court_colour}{string: colour of the court. Default to "#c17257" (the orange-ish colour typical of synthetic-floor indoor courts)}
+
+\item{colour.distance}{string:}
+
+\item{n.alpha}{numeric:}
+
+\item{lambda}{numeric:}
 }
 \value{
 A list of all possible homographies, with a score
@@ -41,25 +53,27 @@ if (interactive()) {
 
   ## Example 1
   image_file <- system.file("extdata/2019_03_01-KATS-BEDS-court.jpg", package = "ovideo")
-
-
-  ## Example 2
-  image_file <- ov_video_frame("~/Documents/Donnees/VolleyBall/Dropbox/server_videos/AVL/Men/2022/20221022M_CH_vs_TE.m4v", t=800)
-  ## detect court
-  court_df <- ov_detect_court(image_file = image_file)
-
-  ## best estimate according to score
-  idxBS <- which.min(sapply(court_df, function(x) x$score))
-  crt_ref_e <- court_df[[idxBS]]$court_ref
-  estimated_lines <- crt_ref_e \%>\%
-    tidyr::pivot_wider(names_from = "side", values_from = c("x", "y", "court_x", "court_y"))
-
-  ## plot it
-  plot(image_read(image_file))
-  polygon(crt_ref_e$x[c(1,2,10,9)], crt_ref_e$y[c(1,2,10,9)], density = 25, col = "blue")
-  polygon(crt_ref_e$x[c(3,4,8,7)], crt_ref_e$y[c(3,4,8,7)], density = 50, col = "cyan")
-  segments(x0 = estimated_lines$x_left[3], y0 = estimated_lines$y_left[3],
-           x1 = estimated_lines$x_right[3], y1 = estimated_lines$y_right[3], col = "white")
+  court_df <- ov_detect_court(image_file = image_file, score_distance = "pattern-based", lambda = 1e3)
+  ov_detect_court_plot(court_df, index = 1:4)
+  ov_plot_patterns(court_df, index = 1)
+  
+  ## Example 2 - with players
+  image_file <- system.file("extdata/2019_03_01-KATS-BEDS-frame.png", package = "ovideo")
+  court_df <- ov_detect_court(image_file = image_file, score_distance = "pattern-based", lambda = 1e3)
+  ov_detect_court_plot(court_df, index = 1:4, plot.all.endpoints = TRUE)
+  ov_plot_patterns(court_df, index = 1)
+  
+  ## Example 3 - Net issue
+  image_file <- system.file("extdata/2022_10_22M_CH_TE.png", package = "ovideo")
+  court_df <- ov_detect_court(image_file = image_file, score_distance = "pattern-based", lambda = 1e3)
+  ov_detect_court_plot(court_df, index = 1:9, plot.all.endpoints = TRUE)
+ ov_plot_patterns(court_df, index = 1)
+ 
+  ## Example 4 - Partial view and different court colour
+  image_file <- system.file("extdata/2022_10_30M_TE_MV.png", package = "ovideo")
+  court_df <- ov_detect_court(image_file = image_file, line_colour = "black", 
+  court_colour = "#858582", score_distance = "pattern-based", lambda = 1e5)
+  ov_detect_court_plot(court_df, index = 1:4, plot.all.endpoints = TRUE)
 }
 
 }
