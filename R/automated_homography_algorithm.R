@@ -548,6 +548,7 @@ ov_cluster <- function(lines, d_a = 5, d_b = 0.05){
     return(data_cl)
 }
 
+#' @export
 ov_detect_court_plot <- function(obj, index = 1, model.filter = NULL, plot.segments = FALSE, plot.all.segments = FALSE, 
                                  plot.endpoints = FALSE, plot.all.endpoints = FALSE){
     
@@ -600,7 +601,7 @@ ov_detect_court_plot <- function(obj, index = 1, model.filter = NULL, plot.segme
     cowplot::plot_grid(plotlist = plot_list)
 }
 
-
+#' @export
 ov_plot_patterns <- function(obj, index = 1){
     
     xi <- magick::image_read(obj$image_file)
