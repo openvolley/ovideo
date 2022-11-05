@@ -1,6 +1,6 @@
 Package: ovideo
 Title: Volleyball Video Utilities
-Version: 0.18.99.9999
+Version: 0.19.0
 Authors@R: c(person(given = "Ben", family = "Raymond", role = c("aut", "cre"), email = "ben@untan.gl"),
              person(given = "Adrien", family = "Ickowicz", role = "aut"),
              person("openvolley.org", role = "org"))
@@ -27,13 +27,11 @@ Imports:
     knitr,
     jpeg,
     jsonlite,
-    magick,
     R.utils,
     rappdirs,
     rmarkdown,
     shiny,
-    sys,
-    tidyr
+    sys
 Suggests:
     editry,
     future,
