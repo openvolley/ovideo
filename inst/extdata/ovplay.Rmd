@@ -17,6 +17,7 @@ table {font-size: small;}
 #headerblock {border-radius:4px; padding:10px; margin-bottom:5px; min-height:120px; color:black;} h5 {font-weight: bold;}
 h2, h3, h4 {font-weight: bold;}
 .main-container { max-width: 95%; } #subtitle { border: 1px solid black; border-radius: 1px; padding: 5px; margin-left: 6px; background-color: lightblue; font-size: 14px;} #subtitleskill { border: 1px solid black; border-radius: 1px; padding: 5px; margin-left: 6px; background-color: coral; font-size: 14px;} h5 {font-weight: bold;}
+table.dataTable tbody tr.selected > * { color: black; }
 </style>
 
 ```{r setup, include=FALSE}
