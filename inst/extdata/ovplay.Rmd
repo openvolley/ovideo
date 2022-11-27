@@ -17,7 +17,6 @@ table {font-size: small;}
 #headerblock {border-radius:4px; padding:10px; margin-bottom:5px; min-height:120px; color:black;} h5 {font-weight: bold;}
 h2, h3, h4 {font-weight: bold;}
 .main-container { max-width: 95%; } #subtitle { border: 1px solid black; border-radius: 1px; padding: 5px; margin-left: 6px; background-color: lightblue; font-size: 14px;} #subtitleskill { border: 1px solid black; border-radius: 1px; padding: 5px; margin-left: 6px; background-color: coral; font-size: 14px;} h5 {font-weight: bold;}
-table.dataTable tbody tr.selected > * { color: black; }
 </style>
 
 ```{r setup, include=FALSE}
@@ -72,9 +71,9 @@ print(jsstuff$children[[1]][[2]])
 playlist <- params$playlist$playlist
 plays_cols_to_show <- if (length(params$playlist$table_cols) > 0) params$playlist$table_cols else c("video_time", "code", "set_number", "home_team_score", "visiting_team_score")
 plays_cols_to_show <- intersect(names(playlist), plays_cols_to_show)
-if ("code" %in% plays_cols_to_show) playlist$code <- vapply(playlist$code, function(x) paste0("<strong style=\"background-color:white;border-radius: 5px;padding: 3px; border: 2px solid #73AD21;\">", x ,"</strong>"), FUN.VALUE = "", USE.NAMES = FALSE)
-if("home_team_score" %in% plays_cols_to_show)  playlist$home_team_score <- vapply(playlist$home_team_score, function(x) paste0("<strong style=\"background-color:grey;border-radius: 5px;padding: 3px;\">", x ,"</strong>"), FUN.VALUE = "", USE.NAMES = FALSE)
-if("visiting_team_score" %in% plays_cols_to_show)  playlist$visiting_team_score <- vapply(playlist$visiting_team_score, function(x) paste0("<strong style=\"background-color:grey;border-radius: 5px;padding: 3px;\">", x ,"</strong>"), FUN.VALUE = "", USE.NAMES = FALSE)
+if ("code" %in% plays_cols_to_show) playlist$code <- vapply(playlist$code, function(x) paste0("<strong style=\"background-color:#73AD21; border-radius:5px; padding:3px; border:2px solid #73AD21;\">", x ,"</strong>"), FUN.VALUE = "", USE.NAMES = FALSE)
+if("home_team_score" %in% plays_cols_to_show)  playlist$home_team_score <- vapply(playlist$home_team_score, function(x) paste0("<strong style=\"background-color:grey; border-radius:5px; padding:3px;\">", x ,"</strong>"), FUN.VALUE = "", USE.NAMES = FALSE)
+if("visiting_team_score" %in% plays_cols_to_show)  playlist$visiting_team_score <- vapply(playlist$visiting_team_score, function(x) paste0("<strong style=\"background-color:grey; border-radius:5px; padding:3px;\">", x ,"</strong>"), FUN.VALUE = "", USE.NAMES = FALSE)
 
 
 playstable <- DT::datatable(names_first_to_capital(playlist[, plays_cols_to_show, drop = FALSE]), rownames = FALSE,
