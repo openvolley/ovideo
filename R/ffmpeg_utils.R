@@ -220,8 +220,10 @@ ov_images_to_video <- function(input_dir, image_file_mask = "image_%06d.jpg", im
     if (missing(outfile)) outfile <- tempfile(fileext = ".mp4")
     if (grepl("mp4$", outfile)) extra <- c(extra, "-pix_fmt", "yuv420p") ## https://trac.ffmpeg.org/wiki/Slideshow: "when outputting H.264, adding -vf format=yuv420p or -pix_fmt yuv420p will ensure compatibility"
     if (missing(input_dir)) {
-        ## ffmpeg needs forward slashes in the demux file?
+        ## ffmpeg needs forward slashes in the demux file
         image_files <- normalizePath(image_files, winslash = "/")
+        ## also on windows, a filename starting with a drive letter 'c:/xyz' needs to be 'file:c:/xyz' - see https://superuser.com/questions/718027/ffmpeg-concat-doesnt-work-with-absolute-path
+        if (get_os() == "windows") image_files <- paste0("'file:", image_files, "'")
         demux_file <- tempfile(fileext = ".txt")
         cat(paste0("file ", image_files, "\nduration ", 1/fps), sep = "\n", file = demux_file)
         cat("file ", tail(image_files, 1), "\n", sep = "", file = demux_file, append = TRUE)
