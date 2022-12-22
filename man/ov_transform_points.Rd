@@ -46,6 +46,9 @@ ix <- ov_transform_points(check, ref = crt, direction = "to_image")
 points(ix$x, ix$y, pch = 21, bg = 4)
 
 }
+\references{
+\url{https://en.wikipedia.org/wiki/Camera_matrix}. For general background see e.g. Ballard DH, Brown CM (1982) Computer Vision. Prentice-Hall, New Jersey
+}
 \seealso{
 \code{\link[=ov_get_court_ref]{ov_get_court_ref()}}, \code{\link[datavolley:dv_court]{datavolley::dv_court()}},  \code{\link[datavolley:ggcourt]{datavolley::ggcourt()}}
 }

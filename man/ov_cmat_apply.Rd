@@ -40,7 +40,7 @@ xX[, 1:2]
 
 }
 \references{
-\url{https://en.wikipedia.org/wiki/Camera_matrix}
+\url{https://en.wikipedia.org/wiki/Camera_matrix}. For general background see e.g. Ballard DH, Brown CM (1982) Computer Vision. Prentice-Hall, New Jersey
 }
 \seealso{
 \code{\link[=ov_cmat_estimate]{ov_cmat_estimate()}}

@@ -79,6 +79,8 @@ ov_get_court_ref <- function(image_file, video_file, t = 60, type = "corners") {
 #'
 #' @return A two-column data.frame with transformed values
 #'
+#' @references <https://en.wikipedia.org/wiki/Camera_matrix>. For general background see e.g. Ballard DH, Brown CM (1982) Computer Vision. Prentice-Hall, New Jersey
+#'
 #' @seealso [ov_get_court_ref()], [datavolley::dv_court()],  [datavolley::ggcourt()]
 #'
 #' @examples
@@ -143,7 +145,8 @@ ov_transform_points <- function(x, y, ref, direction = "to_court") {
 #'
 #' The camera matrix characterizes the mapping of a camera from 3D real-world coordinates to 2D coordinates in an image.
 #'
-#' @references <https://en.wikipedia.org/wiki/Camera_matrix>
+#' @references <https://en.wikipedia.org/wiki/Camera_matrix>. For general background see e.g. Ballard DH, Brown CM (1982) Computer Vision. Prentice-Hall, New Jersey
+#'
 #' @param X matrix or data.frame: Nx3 matrix of 3D real-world coordinates
 #' @param x matrix or data.frame: Nx2 matrix of image coordinates
 #'
@@ -199,7 +202,8 @@ ov_cmat_estimate <- function(X, x) {
 #'
 #' The camera matrix characterizes the mapping of a camera from 3D real-world coordinates to 2D coordinates in an image.
 #'
-#' @references <https://en.wikipedia.org/wiki/Camera_matrix>
+#' @references <https://en.wikipedia.org/wiki/Camera_matrix>. For general background see e.g. Ballard DH, Brown CM (1982) Computer Vision. Prentice-Hall, New Jersey
+#'
 #' @param C : camera matrix as returned by [ov_cmat_estimate()], or the coefficients from that object
 #' @param X matrix or data.frame: Nx3 matrix of 3D real-world coordinates
 #'
@@ -240,16 +244,16 @@ ov_cmat_apply <- function(C, X) {
 #'
 #' @param uv matrix or data.frame: u, v positions in 2D images, one row per image (u and v are the image x- and y-coordinates, normalized to the range 0-1)
 #' @param C list: a list of the same length as the number of rows in `uv`. The ith entry of `C` is the camera matrix (as returned by [ov_cmat_estimate()]) associated with the image coordinates in row i of `uv`. NOTE that the camera matrices in C must all return positions with the same orientation (i.e. all on the same court coordinates, oriented the same way)
+#' @param method string: either "dlt" (direct linear transform) or "nls" (nonlinear least-squares). The "nls" method finds the real-world x and y coordinates for each point in `uv`, assuming a certain value of z. It then chooses z to minimize the difference between those real-world x, y positions
+#' @param zinit numeric: initial estimate of height (only for `method = "nls"`)
 #'
-#' @return A named list with components `xyz` (the estimated 3D position) and `err` (the uncertainty in that position estimate - not yet populated)
+#' @return A named list with components `xyz` (the estimated 3D position) and `err` (a measure of uncertainty in that position estimate - currently only for method "nls")
 #'
-#' @seealso [ov_shiny_court_ref()] can also be used to generate camera matrices
+#' @references For general background see e.g. Ballard DH, Brown CM (1982) Computer Vision. Prentice-Hall, New Jersey
 #'
 #' @examples
-#' uv1 <- c(0.369, 0.775) ## object position in image 1
-#' uv2 <- c(0.732, 0.688) ## object position in image 2
 #'
-#' ## the camera matrices for the two images
+#'  ## two camera matrices
 #'  refpts1 <- dplyr::tribble(~image_x, ~image_y, ~court_x, ~court_y, ~z,
 #'                              0.0533,   0.0326,      3.5,      6.5,  0,
 #'                               0.974,   0.0572,      0.5,      6.5,  0,
@@ -275,18 +279,62 @@ ov_cmat_apply <- function(C, X) {
 #'  C2 <- ov_cmat_estimate(x = refpts2[, c("image_x", "image_y")],
 #'                         X = refpts2[, c("court_x", "court_y", "z")])
 #'
-#' ov_3dpos_multicamera(rbind(uv1, uv2), list(C1, C2))
+#'# uv1 <- ov_cmat_apply(C1, matrix(xyz, ncol = 3))c(0.369, 0.775) ## object position in image 1
+#'# uv2 <- c(0.732, 0.688) ## object position in image 2
+#'
+#' xyz <- matrix(c(3.4, 1.4, 2.90), ncol = 3)
+#' uv1 <- ov_cmat_apply(C1, xyz) ## object position in image 1
+#' uv2 <- ov_cmat_apply(C2, xyz) ## object position in image 2
+#'
+#' ## if our measurements are perfect (no noise), we can reconstruct xyz exactly:
+#' ov_3dpos_multicamera(rbind(uv1, uv2), list(C1, C2), method = "dlt")
+#' ov_3dpos_multicamera(rbind(uv1, uv2), list(C1, C2), method = "nls")
+#'
+#' ## with noise
+#' uv1 <- uv1 + rnorm(2, sd = 0.02)
+#' uv2 <- uv2 + rnorm(2, sd = 0.02)
+#' ov_3dpos_multicamera(rbind(uv1, uv2), list(C1, C2), method = "dlt")
+#' ov_3dpos_multicamera(rbind(uv1, uv2), list(C1, C2), method = "nls")
 #'
 #' @export
-ov_3dpos_multicamera <- function(uv, C) {
+ov_3dpos_multicamera <- function(uv, C, method = "dlt", zinit = 2) {
     if (!is.list(C) || nrow(uv) != length(C)) stop("number of rows of uv should match length of C")
-    A <- do.call(rbind, lapply(seq_len(nrow(uv)), function(i) {
-        Ca <- C[[i]]$coef[1:4]
-        Cb <- C[[i]]$coef[5:8]
-        Cc <- c(C[[i]]$coef[9:11], 1)
-        matrix(c(as.numeric(uv[i, 2]) * Cc - Cb, Ca - as.numeric(uv[i, 1]) * Cc), ncol = 4, byrow = TRUE)
-    }))
-    Asvd <- svd(A)
-    xyz <- Asvd$v[1:3, ncol(Asvd$v)] / Asvd$v[4, ncol(Asvd$v)] ## to homogeneous coords
-    list(xyz = xyz, err = NA_real_)
+    method <- match.arg(method, c("dlt", "nls"))
+    if (method == "dlt") {
+        A <- do.call(rbind, lapply(seq_len(nrow(uv)), function(i) {
+            Ca <- C[[i]]$coef[1:4]
+            Cb <- C[[i]]$coef[5:8]
+            Cc <- c(C[[i]]$coef[9:11], 1)
+            matrix(c(as.numeric(uv[i, 2]) * Cc - Cb, Ca - as.numeric(uv[i, 1]) * Cc), ncol = 4, byrow = TRUE)
+        }))
+        Asvd <- svd(A)
+        xyz <- Asvd$v[1:3, ncol(Asvd$v)] / Asvd$v[4, ncol(Asvd$v)] ## to homogeneous coords
+        list(xyz = xyz, err = NA_real_)
+    } else {
+        ## points in image space assuming zest
+        pest <- function(zest, uv, C) unname(do.call(rbind, lapply(seq_len(nrow(uv)), function(i) ov_cmat_pinv(C = C[[i]], u = uv[i, 1], v = uv[i, 2], z = zest))))
+        ## disagreement between all points assuming zest
+        erfun <- function(zest, uv, C) {
+            ps <- pest(zest, uv, C)
+            sum(sqrt((ps[-1, 1] - ps[1, 1])^2 + (ps[-1, 2] - ps[1, 2])^2))
+        }
+        zest <- stats::optim(zinit, erfun, uv = uv, C = C, lower = 0, upper = 20, method = "L-BFGS-B")
+        list(xyz = c(colMeans(pest(zest$par, uv, C)), zest$par), err = zest$value)
+    }
+}
+
+## given a camera matrix C, image coordinates u and v, and assumed real-world z, estimate real-world x and y
+## (the x, y intersection of the camera ray and the plane at z = z)
+## see e.g. https://homepages.inf.ed.ac.uk/rbf/BOOKS/BANDB/LIB/bandbA1_2.pdf around p484
+## Ballard DH, Brown CM (1982) Computer Vision. Prentice-Hall, New Jersey.
+ov_cmat_pinv <- function(C, u, v, z) {
+    if (is.list(C) && "coef" %in% names(C)) C <- C$coef
+    a1 <- C[1] - C[9]*u
+    a2 <- C[5] - C[9]*v
+    b1 <- C[2] - C[10]*u
+    c1 <- C[3] - C[11]*u
+    d1 <- C[4] - u
+    y <- ((C[7] - C[11]*v)*z + C[8] - v - a2/a1*(d1 + c1*z)) / (b1*a2/a1 - C[6] + C[10]*v)
+    x <- -(d1 + c1*z + b1*y) / a1
+    cbind(x = x, y = y)
 }

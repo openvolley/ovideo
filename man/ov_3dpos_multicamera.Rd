@@ -4,24 +4,26 @@
 \alias{ov_3dpos_multicamera}
 \title{3D position estimate from multiple 2D views}
 \usage{
-ov_3dpos_multicamera(uv, C)
+ov_3dpos_multicamera(uv, C, method = "dlt", zinit = 2)
 }
 \arguments{
 \item{uv}{matrix or data.frame: u, v positions in 2D images, one row per image (u and v are the image x- and y-coordinates, normalized to the range 0-1)}
 
 \item{C}{list: a list of the same length as the number of rows in \code{uv}. The ith entry of \code{C} is the camera matrix (as returned by \code{\link[=ov_cmat_estimate]{ov_cmat_estimate()}}) associated with the image coordinates in row i of \code{uv}. NOTE that the camera matrices in C must all return positions with the same orientation (i.e. all on the same court coordinates, oriented the same way)}
+
+\item{method}{string: either "dlt" (direct linear transform) or "nls" (nonlinear least-squares). The "nls" method finds the real-world x and y coordinates for each point in \code{uv}, assuming a certain value of z. It then chooses z to minimize the difference between those real-world x, y positions}
+
+\item{zinit}{numeric: initial estimate of height (only for \code{method = "nls"})}
 }
 \value{
-A named list with components \code{xyz} (the estimated 3D position) and \code{err} (the uncertainty in that position estimate - not yet populated)
+A named list with components \code{xyz} (the estimated 3D position) and \code{err} (a measure of uncertainty in that position estimate - currently only for method "nls")
 }
 \description{
 3D position estimate from multiple 2D views
 }
 \examples{
-uv1 <- c(0.369, 0.775) ## object position in image 1
-uv2 <- c(0.732, 0.688) ## object position in image 2
 
-## the camera matrices for the two images
+ ## two camera matrices
  refpts1 <- dplyr::tribble(~image_x, ~image_y, ~court_x, ~court_y, ~z,
                              0.0533,   0.0326,      3.5,      6.5,  0,
                               0.974,   0.0572,      0.5,      6.5,  0,
@@ -47,9 +49,24 @@ uv2 <- c(0.732, 0.688) ## object position in image 2
  C2 <- ov_cmat_estimate(x = refpts2[, c("image_x", "image_y")],
                         X = refpts2[, c("court_x", "court_y", "z")])
 
-ov_3dpos_multicamera(rbind(uv1, uv2), list(C1, C2))
+# uv1 <- ov_cmat_apply(C1, matrix(xyz, ncol = 3))c(0.369, 0.775) ## object position in image 1
+# uv2 <- c(0.732, 0.688) ## object position in image 2
+
+xyz <- matrix(c(3.4, 1.4, 2.90), ncol = 3)
+uv1 <- ov_cmat_apply(C1, xyz) ## object position in image 1
+uv2 <- ov_cmat_apply(C2, xyz) ## object position in image 2
+
+## if our measurements are perfect (no noise), we can reconstruct xyz exactly:
+ov_3dpos_multicamera(rbind(uv1, uv2), list(C1, C2), method = "dlt")
+ov_3dpos_multicamera(rbind(uv1, uv2), list(C1, C2), method = "nls")
+
+## with noise
+uv1 <- uv1 + rnorm(2, sd = 0.02)
+uv2 <- uv2 + rnorm(2, sd = 0.02)
+ov_3dpos_multicamera(rbind(uv1, uv2), list(C1, C2), method = "dlt")
+ov_3dpos_multicamera(rbind(uv1, uv2), list(C1, C2), method = "nls")
 
 }
-\seealso{
-\code{\link[=ov_shiny_court_ref]{ov_shiny_court_ref()}} can also be used to generate camera matrices
+\references{
+For general background see e.g. Ballard DH, Brown CM (1982) Computer Vision. Prentice-Hall, New Jersey
 }
