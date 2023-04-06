@@ -1,6 +1,6 @@
 #' Convert playlist to editry clips
 #'
-#' Note that in order to use `ov_editry_clips`, the `editry` package must be installed. Install it with: `remotes::install_github('scienceuntangled/editry')` or `install.packages('editry', repos = c('https://openvolley.r-universe.dev', 'https://cloud.r-project.org'))`. The `editry` package also requires `editly` (the underlying node JS package: see [editry::er_install_editly()]). [editry::er_install_editly()] will also attempt to install the system binaries for `node` and `ffmpeg` if needed.
+#' Note that in order to use `ov_editry_clips`, the `editry` package must be installed. Install it with: `remotes::install_github('scienceuntangled/editry')` or `install.packages('editry', repos = c('https://openvolley.r-universe.dev', 'https://cloud.r-project.org'))`. The `editry` package also requires `editly` (the underlying node JS package: see [editry::er_install_editly()]).
 #'
 #' @param playlist data.frame: a playlist as returned by `ov_video_playlist`. Note that only local video sources are supported
 #' @param title string: the title text (first slide). Use `NULL` to skip this slide
@@ -11,6 +11,7 @@
 #' @param title_args list: arguments to pass to [editry::er_clip_title_background()] when creating the title slide
 #' @param title2_args list: arguments to pass to [editry::er_clip_title2()] when creating the title2 slide
 #' @param pause_args list: arguments to pass to [editry::er_clip_pause()] when creating the final slide
+#' @param label_args list: arguments to pass to [editry::er_layer_news_title()], used if `label_col` is provided
 #'
 #' @return A list of [editry::er_clip()] objects, suitable to pass to [editry::er_spec()]
 #'
@@ -82,7 +83,7 @@
 #' }
 #'
 #' @export
-ov_editry_clips <- function(playlist, title = NULL, title2 = NULL, label_col, pause = TRUE, seamless = FALSE, title_args = list(), title2_args = list(), pause_args = list()) {
+ov_editry_clips <- function(playlist, title = NULL, title2 = NULL, label_col, pause = TRUE, seamless = FALSE, title_args = list(), title2_args = list(), pause_args = list(), label_args = list()) {
     if (!requireNamespace("editry", quietly = TRUE)) stop("the 'editry' package is required for this function. See `help('ov_editry_clips')` for details")
     if (missing(label_col) || !label_col %in% names(playlist)) label_col <- NULL
 
@@ -103,7 +104,9 @@ ov_editry_clips <- function(playlist, title = NULL, title2 = NULL, label_col, pa
 
     play_clips <- lapply(seq_len(nrow(playlist)), function(i) {
         lyrs <- list(editry::er_layer_video(path = playlist$video_src[i], cut_from = playlist$start_time[i], cut_to = playlist$start_time[i] + playlist$duration[i]))
-        if (!is.null(label_col)) lyrs <- c(lyrs, list(editry::er_layer_news_title(playlist[[label_col]][i])))
+        nt_args <- list(text = playlist[[label_col]][i])
+        for (nm in names(label_args)) nt_args[[nm]] <- label_args[[nm]]
+        if (!is.null(label_col)) lyrs <- c(lyrs, list(do.call(editry::er_layer_news_title, nt_args)))
         editry::er_clip(layers = lyrs)
     })
 

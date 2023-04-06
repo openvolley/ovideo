@@ -13,7 +13,8 @@ ov_editry_clips(
   seamless = FALSE,
   title_args = list(),
   title2_args = list(),
-  pause_args = list()
+  pause_args = list(),
+  label_args = list()
 )
 }
 \arguments{
@@ -34,12 +35,14 @@ ov_editry_clips(
 \item{title2_args}{list: arguments to pass to \code{\link[editry:er_clip_pause]{editry::er_clip_title2()}} when creating the title2 slide}
 
 \item{pause_args}{list: arguments to pass to \code{\link[editry:er_clip_pause]{editry::er_clip_pause()}} when creating the final slide}
+
+\item{label_args}{list: arguments to pass to \code{\link[editry:er_layer_pause]{editry::er_layer_news_title()}}, used if \code{label_col} is provided}
 }
 \value{
 A list of \code{\link[editry:er_layer]{editry::er_clip()}} objects, suitable to pass to \code{\link[editry:er_spec]{editry::er_spec()}}
 }
 \description{
-Note that in order to use \code{ov_editry_clips}, the \code{editry} package must be installed. Install it with: \code{remotes::install_github('scienceuntangled/editry')} or \code{install.packages('editry', repos = c('https://openvolley.r-universe.dev', 'https://cloud.r-project.org'))}. The \code{editry} package also requires \code{editly} (the underlying node JS package: see \code{\link[editry:er_install_editly]{editry::er_install_editly()}}). \code{\link[editry:er_install_editly]{editry::er_install_editly()}} will also attempt to install the system binaries for \code{node} and \code{ffmpeg} if needed.
+Note that in order to use \code{ov_editry_clips}, the \code{editry} package must be installed. Install it with: \code{remotes::install_github('scienceuntangled/editry')} or \code{install.packages('editry', repos = c('https://openvolley.r-universe.dev', 'https://cloud.r-project.org'))}. The \code{editry} package also requires \code{editly} (the underlying node JS package: see \code{\link[editry:er_install_editly]{editry::er_install_editly()}}).
 }
 \examples{
 \dontrun{
