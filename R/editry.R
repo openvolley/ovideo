@@ -85,7 +85,8 @@
 #' @export
 ov_editry_clips <- function(playlist, title = NULL, title2 = NULL, label_col, pause = TRUE, seamless = FALSE, title_args = list(), title2_args = list(), pause_args = list(), label_args = list()) {
     if (!requireNamespace("editry", quietly = TRUE)) stop("the 'editry' package is required for this function. See `help('ov_editry_clips')` for details")
-    if (missing(label_col) || !label_col %in% names(playlist)) label_col <- NULL
+    if (missing(label_col)) label_col <- NULL
+    if (!is.null(label_col) && !label_col %in% names(playlist)) label_col <- NULL
 
     if (isTRUE(seamless)) {
         ## combine adjacent/overlapping clips into one
@@ -104,9 +105,11 @@ ov_editry_clips <- function(playlist, title = NULL, title2 = NULL, label_col, pa
 
     play_clips <- lapply(seq_len(nrow(playlist)), function(i) {
         lyrs <- list(editry::er_layer_video(path = playlist$video_src[i], cut_from = playlist$start_time[i], cut_to = playlist$start_time[i] + playlist$duration[i]))
-        nt_args <- list(text = playlist[[label_col]][i])
-        for (nm in names(label_args)) nt_args[[nm]] <- label_args[[nm]]
-        if (!is.null(label_col)) lyrs <- c(lyrs, list(do.call(editry::er_layer_news_title, nt_args)))
+        if (!is.null(label_col)) {
+            nt_args <- list(text = playlist[[label_col]][i])
+            for (nm in names(label_args)) nt_args[[nm]] <- label_args[[nm]]
+            lyrs <- c(lyrs, list(do.call(editry::er_layer_news_title, nt_args)))
+        }
         editry::er_clip(layers = lyrs)
     })
 
