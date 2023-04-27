@@ -93,7 +93,7 @@ ov_editry_clips <- function(playlist, title = NULL, title2 = NULL, label_col, pa
         keep <- rep(FALSE, nrow(playlist)); keep[1] <- TRUE
         last <- 1L
         for (i in seq_len(nrow(playlist))[-1]) {
-            if (playlist$start_time[last] + playlist$duration[last] >= playlist$start_time[i]) {
+            if (isTRUE(playlist$video_src[last] == playlist$video_src[i]) && playlist$start_time[last] + playlist$duration[last] >= playlist$start_time[i]) {
                 playlist$duration[last] <- playlist$start_time[i] + playlist$duration[i] - playlist$start_time[last]
             } else {
                 keep[i] <- TRUE
