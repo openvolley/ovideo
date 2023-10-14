@@ -380,7 +380,7 @@ function dvjs_video_manage() {
 	    if (this_seamless && dvjs_video_controller.current >= 0 && dvjs_video_controller.current < (dvjs_video_controller.queue.length - 1)) {
 		var item = dvjs_video_controller.queue[dvjs_video_controller.current];
 		var next_item = dvjs_video_controller.queue[dvjs_video_controller.current+1];
-		this_seamless = item.video_src == next_item.video_src && next_item.start_time <= (item.start_time + item.duration)
+		this_seamless = item.video_src == next_item.video_src && next_item.start_time <= (item.start_time + item.duration) && next_item.start_time > item.start_time;
 	    }
 	    dvjs_video_next(this_seamless)
         } else {

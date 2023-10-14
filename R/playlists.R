@@ -212,7 +212,10 @@ match_id_from_meta <- function(z) {
 
 add_seamless_timings <- function(x) {
     x <- mutate(x, end_time = .data$start_time + .data$duration)
-    x <- mutate(group_by(x, .data$video_src), overlap = .data$start_time <= lag(.data$end_time),
+    x <- mutate(group_by(x, .data$video_src),
+                ## a clip overlaps with its preceding one if the start time of clip i sits within the time period of clip (i-1)
+                ## but if clip i starts *before* clip (i-1) then they do not overlap (cannot be played seamlessly) - maybe a randomly-ordered playlist
+                overlap = dplyr::n() > 1 & .data$start_time <= lag(.data$end_time) & .data$start_time > lag(.data$start_time),
                 overlap = case_when(is.na(.data$overlap) ~ FALSE, TRUE ~ .data$overlap), ## TRUE means that this event overlaps with previous
                 ## may be better to calculate overlap in terms of point_id and/or team_touch_id?
                 seamless_start_time = pmin(.data$video_time, case_when(is.na(lag(.data$end_time)) ~ .data$start_time, TRUE ~ (lag(.data$end_time) + .data$start_time)/2)),

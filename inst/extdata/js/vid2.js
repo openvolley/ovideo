@@ -531,7 +531,7 @@ function dvjs_controller(id, type, seamless = true) {
 		if (this_seamless && that.video_controller.current >= 0 && that.video_controller.current < (that.video_controller.queue.length - 1)) {
 		    var item = that.video_controller.queue[that.video_controller.current];
 		    var next_item = that.video_controller.queue[that.video_controller.current+1];
-		    this_seamless = item.video_src == next_item.video_src && next_item.start_time <= (item.start_time + item.duration);
+		    this_seamless = item.video_src == next_item.video_src && next_item.start_time <= (item.start_time + item.duration) && next_item.start_time > item.start_time;
 		}
 		that.video_next(this_seamless);
             } else {
