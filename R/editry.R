@@ -88,20 +88,7 @@ ov_editry_clips <- function(playlist, title = NULL, title2 = NULL, label_col, pa
     if (missing(label_col)) label_col <- NULL
     if (!is.null(label_col) && !label_col %in% names(playlist)) label_col <- NULL
 
-    if (isTRUE(seamless)) {
-        ## combine adjacent/overlapping clips into one
-        keep <- rep(FALSE, nrow(playlist)); keep[1] <- TRUE
-        last <- 1L
-        for (i in seq_len(nrow(playlist))[-1]) {
-            if (isTRUE(playlist$video_src[last] == playlist$video_src[i]) && playlist$start_time[last] + playlist$duration[last] >= playlist$start_time[i]) {
-                playlist$duration[last] <- playlist$start_time[i] + playlist$duration[i] - playlist$start_time[last]
-            } else {
-                keep[i] <- TRUE
-                last <- i
-            }
-        }
-        playlist <- playlist[keep, ]
-    }
+    if (isTRUE(seamless)) playlist <- merge_seamless(playlist)
 
     play_clips <- lapply(seq_len(nrow(playlist)), function(i) {
         lyrs <- list(editry::er_layer_video(path = playlist$video_src[i], cut_from = playlist$start_time[i], cut_to = playlist$start_time[i] + playlist$duration[i]))

@@ -554,26 +554,19 @@ render_pl <- function(pl, pl_name, bannerdir, outfile, table_cols, ...) {
 }
 
 merge_seamless <- function(playlist) {
-    ## merge seamless transitions into single entry
-    all_start <- playlist$start_time
-    all_duration <- playlist$duration
-    all_end <- all_start + all_duration
-    current <- 1
-    to_del <- rep(FALSE, nrow(playlist))
-    i <- 1
-    while (i < nrow(playlist)) {
-        if (all_end[current] >= all_start[i + 1]) {
-            all_end[current] <- all_end[i + 1]
-            to_del[i+1] <- TRUE
+    ## combine adjacent/overlapping clips into one
+    keep <- rep(FALSE, nrow(playlist)); keep[1] <- TRUE
+    last <- 1L
+    dur <- playlist$duration
+    for (i in seq_len(nrow(playlist))[-1]) {
+        if (isTRUE(playlist$video_src[last] == playlist$video_src[i]) && (playlist$start_time[last] + dur[last] >= playlist$start_time[i])) {
+            dur[last] <- playlist$start_time[i] + dur[i] - playlist$start_time[last]
         } else {
-            current <- i + 1
+            keep[i] <- TRUE
+            last <- i
         }
-        i <- i + 1
     }
-    all_duration <- all_end - all_start
-    playlist$start_time <- all_start
-    playlist$seamless_start_time <- all_start
-    playlist$duration <- all_duration
-    playlist$seamless_duration <- all_duration
-    playlist[!to_del, ]
+    playlist$seamless_duration <- playlist$duration <- dur
+    playlist$seamless_start_time <- playlist$start_time
+    playlist[keep, ]
 }

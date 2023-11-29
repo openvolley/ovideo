@@ -247,6 +247,7 @@ ov_images_to_video <- function(input_dir, image_file_mask = "image_%06d.jpg", im
 #' @param playlist data.frame: a playlist as returned by `ov_video_playlist`. Note that only local video sources are supported
 #' @param filename string: file to write to. If not specified (or `NULL`), a file in the temporary directory will be created. If `filename` exists, it will be overwritten. The extension of `filename` will determine the output format
 #' @param subtitle_column string: if not `NULL`, a subtitle file will be produced using the contents of this column (in the playlist) as the subtitle for each clip. The subtitle file will have the same name as `filename` but with extension ".srt"
+#' @param seamless logical: if `TRUE`, combine overlapping/adjacent clips. Note that if a `subtitle_col` has been specified, the subtitle from the first clip will be used for the whole of the combined clip (so it may no longer make sense, for example if the subtitle is the player name)
 #' @param debug logical: if `TRUE`, echo the ffmpeg output to the console
 #'
 #' @return A list with the filenames of the created video and subtitle files.
@@ -276,11 +277,12 @@ ov_images_to_video <- function(input_dir, image_file_mask = "image_%06d.jpg", im
 #' }
 #'
 #' @export
-ov_playlist_to_video <- function(playlist, filename, subtitle_column = NULL, debug = FALSE) {
+ov_playlist_to_video <- function(playlist, filename, subtitle_column = NULL, seamless = FALSE, debug = FALSE) {
     ov_ffmpeg_ok(do_error = TRUE)
     if (missing(filename) || is.null(filename)) filename <- tempfile(fileext = ".mp4")
     execfun <- if (isTRUE(debug)) sys::exec_wait else sys::exec_internal
     lapplyfun <- if (!requireNamespace("future.apply", quietly = TRUE) || inherits(future::plan(), "sequential")) lapply else future.apply::future_lapply
+    if (isTRUE(seamless)) playlist <- merge_seamless(playlist)
     tempfiles <- lapplyfun(seq_len(nrow(playlist)), function(ri) {
         outfile <- tempfile(fileext = paste0(".", fs::path_ext(playlist$video_src[ri])))
         if (file.exists(outfile)) unlink(outfile)
