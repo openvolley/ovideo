@@ -84,7 +84,7 @@ ov_install_ffmpeg <- function(force = FALSE, bits, check_hash = TRUE) {
         if (grepl("\\.zip$", zipname, ignore.case = TRUE)) {
             utils::unzip(zipname, exdir = path)
         } else {
-            archive::archive_extract(zipname, dir = path)
+            extract_txz(zipname, exdir = path)
         }
     }
     ## now we should see the executable

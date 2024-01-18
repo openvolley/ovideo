@@ -1,6 +1,6 @@
 Package: ovideo
 Title: Volleyball Video Utilities
-Version: 0.20.2
+Version: 0.21.0
 Authors@R: c(person(given = "Ben", family = "Raymond", role = c("aut", "cre"), email = "ben@untan.gl"),
              person(given = "Adrien", family = "Ickowicz", role = "aut"),
              person("openvolley.org", role = "org"))
@@ -13,7 +13,6 @@ LazyData: true
 Roxygen: list(markdown = TRUE)
 Depends: datavolley (> 0.12.999)
 Imports:
-    archive,
     assertthat,
     av,
     base64enc,

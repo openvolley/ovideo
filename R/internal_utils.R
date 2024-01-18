@@ -64,3 +64,12 @@ twitch_url_to_id <- function(z) {
 str_first_upper <- function(x) {
     paste0(toupper(substr(x, 1, 1)), tolower(substr(x, 2, nchar(x))))
 }
+
+## extract a .tar.xz file without using archive pkg
+extract_txz <- function(txzfile, exdir) {
+    if (!dir.exists(exdir)) stop("exdir must exist")
+    tf <- tempfile(fileext = ".tar")
+    on.exit(unlink(tf))
+    writeBin(memDecompress(readBin(txzfile, what = "raw", n = file.size(txzfile) * 1.2), type = "xz"), con = tf)
+    utils::untar(tf, exdir = fs::path_real(exdir))
+}
