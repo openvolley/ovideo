@@ -560,7 +560,10 @@ merge_seamless <- function(playlist) {
     last <- 1L
     dur <- playlist$duration
     for (i in seq_len(nrow(playlist))[-1]) {
-        if (isTRUE(playlist$video_src[last] == playlist$video_src[i]) && (playlist$start_time[last] + dur[last] >= playlist$start_time[i])) {
+        ## a clip overlaps with its preceding one if the start time of clip i sits within the time period of clip (i-1)
+        ## but if clip i starts *before* clip (i-1) then they do not overlap (cannot be played seamlessly) - maybe a randomly-ordered playlist
+        ## remember also that e.g. serve and reception will have the *same* start time. Also allow a bit of margin, so start_time >= (lag(start_time - 1))
+        if (isTRUE(playlist$video_src[last] == playlist$video_src[i]) && ((playlist$start_time[last] + dur[last]) >= playlist$start_time[i]) && (playlist$start_time[i] >= playlist$start_time[last] - 1)) {
             dur[last] <- playlist$start_time[i] + dur[i] - playlist$start_time[last]
         } else {
             keep[i] <- TRUE
