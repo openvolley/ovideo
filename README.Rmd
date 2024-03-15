@@ -8,7 +8,7 @@ output: github_document
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  fig.path = "man/figure/README-",
+  fig.path = "man/figures/README-",
   out.width = "100%"
 )
 ```
@@ -83,5 +83,5 @@ browseURL(f)
 ```
 And you should see something like:
 
-<img src="https://raw.githubusercontent.com/openvolley/ovideo/master/man/figure/ovideo_html_player.png" style="border:1px solid black;" />
+<img src="https://raw.githubusercontent.com/openvolley/ovideo/master/man/figures/ovideo_html_player.png" style="border:1px solid black;" />
 
