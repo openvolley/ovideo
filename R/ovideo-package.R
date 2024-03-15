@@ -15,4 +15,4 @@
 #' @importFrom shiny actionButton column fluidPage fluidRow hoverOpts icon invalidateLater isolate observe observeEvent plotOutput reactive reactiveVal reactiveValues reactiveValuesToList renderPlot renderUI selectInput textInput throttle uiOutput
 #' @importFrom stats na.omit quantile setNames
 #' @importFrom utils tail combn
-NULL
+"_PACKAGE"
