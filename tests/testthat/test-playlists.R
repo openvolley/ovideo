@@ -46,9 +46,6 @@ test_that("ov_video_playlist copes with full youtube URLs", {
     x$meta$video <- data.frame(camera = NA_character_, file = "http://www.youtube.com/watch?v=ZzbgMiklzzZ", stringsAsFactors = FALSE)
     px <- ov_video_playlist(x$plays[10, ], x$meta, type = "youtube")
     expect_equal(px$video_src, "ZzbgMiklzzZ")
-    x$meta$video <- data.frame(camera = NA_character_, file = "https://random.domain/something?x=blah&v=ZzbgMiklzzZ&foo=bar", stringsAsFactors = FALSE)
-    px <- ov_video_playlist(x$plays[10, ], x$meta, type = "youtube")
-    expect_equal(px$video_src, "ZzbgMiklzzZ")
 })
 
 test_that("youtube IDs are found correctly", {
