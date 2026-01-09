@@ -51,6 +51,13 @@ test_that("ov_video_playlist copes with full youtube URLs", {
     expect_equal(px$video_src, "ZzbgMiklzzZ")
 })
 
+test_that("youtube IDs are found correctly", {
+    expect_equal(ovideo:::youtube_url_to_id("https://youtu.be/ZzbgMiklzzZ"), "ZzbgMiklzzZ")
+    expect_equal(ovideo:::youtube_url_to_id("https://youtube.com/watch?v=ZzbgMiklzzZ"), "ZzbgMiklzzZ")
+    expect_warning(ovideo:::youtube_url_to_id("https://youtube.com/watch?v=ZzbgMiklzzZQ"))
+    expect_warning(ovideo:::youtube_url_to_id("https://youtu.be/ZzbgMiklzzZQ"))
+})
+
 test_that("playlist conversion to m3u works", {
     x <- datavolley::read_dv(datavolley::dv_example_file())
     x$meta$video <- data.frame(camera = NA_character_, file = "myvideo.mp4")

@@ -12,27 +12,25 @@ youtube_url_to_id <- function(z) {
     if (!is_youtube_id(z) && grepl("^https?://", z, ignore.case = TRUE)) {
         if (grepl("youtu\\.be", z, ignore.case = TRUE)) {
             ## assume https://youtu.be/xyz form
-            tryCatch({
+            try({
                 temp <- httr::parse_url(z)
-                if (!is.null(temp$path) && length(temp$path) == 1 && is_youtube_id(temp$path)) {
-                    temp$path
-                } else {
-                    z
+                if (!is.null(temp$path) && length(temp$path) == 1) {
+                    if (is_youtube_id(temp$path)) return(temp$path)
+                    warning("YouTube URL found but the video ID does not appear to be valid")
                 }
-            }, error = function(e) z)
-        } else {
-            tryCatch({
+            })
+        } else if (grepl("youtube", z, ignore.case = TRUE)) {
+            try({
                 temp <- httr::parse_url(z)
                 if (!is.null(temp$query$v) && length(temp$query$v) == 1) {
-                    temp$query$v
-                } else {
-                    z
+                    if (is_youtube_id(temp$query$v)) return(temp$query$v)
+                    warning("YouTube URL found but the video ID does not appear to be valid")
                 }
-            }, error = function(e) z)
+            })
         }
-    } else {
-        z
     }
+    ## if we got this far, return the input unchanged
+    z
 }
 
 is_twitch_video <- function(z) {
