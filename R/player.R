@@ -18,7 +18,7 @@ ov_video_js <- function(youtube = FALSE, twitch = FALSE, version = 1) {
     js <- paste(js, collapse = "\n")
     out <- list(tags$script(HTML(js)), if (youtube) tags$script(src = "https://www.youtube.com/iframe_api"),
                 if (twitch && version > 1) tags$script(src = "https://player.twitch.tv/js/embed/v1.js"),
-                tags$script("Shiny.addCustomMessageHandler('evaljs', function(jsexpr) { eval(jsexpr) });")) ## handler for running js code directly
+                tags$script("Shiny.initializedPromise.then(function() { Shiny.addCustomMessageHandler('evaljs', function(jsexpr) { eval(jsexpr) }); });")) ## handler for running js code directly
     tags$head(Filter(Negate(is.null), out))
 }
 
