@@ -1,6 +1,6 @@
 Package: ovideo
 Title: Volleyball Video Utilities
-Version: 1.0.0
+Version: 1.0.1
 Authors@R: c(person(given = "Ben", family = "Raymond", role = c("aut", "cre"), email = "ben@untan.gl"),
              person(given = "Adrien", family = "Ickowicz", role = "aut"),
              person("openvolley.org", role = "org"))
@@ -39,4 +39,4 @@ Suggests:
     remotes,
     testthat
 Remotes: openvolley/datavolley, openvolley/ovdata, scienceuntangled/editry
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2

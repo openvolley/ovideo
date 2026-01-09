@@ -99,7 +99,8 @@ function dvjs_controller(id, type, seamless = true) {
 			"controls": 0 //"rel": 0
 		    },
 		    events: {
-			"onStateChange": that.yt_player_state_change
+			"onStateChange": that.yt_player_state_change,
+			"onError": that.player_onerror
 		    }
 		});
 	    }
@@ -121,6 +122,12 @@ function dvjs_controller(id, type, seamless = true) {
 		that.yt_player.addEventListener(Twitch.Player.ENDED, that.stop_video_interval);
 		that.yt_player.addEventListener(Twitch.Player.PLAY, that.twitch_play_handler);
 		that.yt_player.addEventListener(Twitch.Player.PLAYING, that.twitch_playing_handler);
+	    }
+	} else {
+	    el = document.getElementById(that.video_controller.id);
+	    if (el) {
+		el.removeEventListener("error", that.player_onerror);
+		el.addEventListener("error", that.player_onerror);
 	    }
 	}
     }
@@ -161,7 +168,8 @@ function dvjs_controller(id, type, seamless = true) {
 		    },
 		    events: {
 			"onReady": that.video_play,
-			"onStateChange": that.yt_player_state_change
+			"onStateChange": that.yt_player_state_change,
+			"onError": that.player_onerror
 		    }
 		});
 	    } else {
@@ -197,6 +205,11 @@ function dvjs_controller(id, type, seamless = true) {
 	} else {
 	    // local media
 	    //console.log("set_playlist_and_play ... play");
+	    el = document.getElementById(that.video_controller.id);
+	    if (el) {
+		el.removeEventListener("error", that.player_onerror);
+		el.addEventListener("error", that.player_onerror);
+	    }
 	    that.video_play();
 	}
     }
@@ -224,6 +237,24 @@ function dvjs_controller(id, type, seamless = true) {
 	} else if (event.data == YT.PlayerState.PLAYING) {
 	    that.start_video_interval();
 	}
+    }
+
+    this.player_onerror = function(event) {
+        if (that.video_controller.type == "youtube") {
+            // event.data:
+            // 2 – The request contains an invalid parameter value. For example, this error occurs if you specify a video ID that does not have 11 characters, or if the video ID contains invalid characters, such as exclamation points or asterisks.
+            // 5 – The requested content cannot be played in an HTML5 player or another error related to the HTML5 player has occurred.
+            // 100 – The video requested was not found. This error occurs when a video has been removed (for any reason) or has been marked as private.
+            // 101 – The owner of the requested video does not allow it to be played in embedded players.
+            // 150 – This error is the same as 101. It's just a 101 error in disguise!
+            console.log("YT error:" + event.data);
+        } else {
+            console.log("Player error:");
+            el = document.getElementById(that.video_controller.id);
+            if (el) {
+                console.log("Video error " + el.error.message + " " + el.error.code);
+            }
+        }
     }
 
     this.video_play = function() {
