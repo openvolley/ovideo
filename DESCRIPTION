@@ -1,6 +1,6 @@
 Package: ovideo
 Title: Volleyball Video Utilities
-Version: 1.0.1
+Version: 1.0.1.9900
 Authors@R: c(person(given = "Ben", family = "Raymond", role = c("aut", "cre"), email = "ben@untan.gl"),
              person(given = "Adrien", family = "Ickowicz", role = "aut"),
              person("openvolley.org", role = "org"))
@@ -17,7 +17,7 @@ Imports:
     av,
     base64enc,
     digest,
-    dplyr,
+    dplyr (>= 1.0.0),
     DT,
     fs,
     ggplot2,
@@ -30,7 +30,8 @@ Imports:
     rappdirs,
     rmarkdown,
     shiny (>= 1.9.0),
-    sys
+    sys,
+    uuid
 Suggests:
     editry,
     future,
@@ -39,4 +40,4 @@ Suggests:
     remotes,
     testthat
 Remotes: openvolley/datavolley, openvolley/ovdata, scienceuntangled/editry
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3

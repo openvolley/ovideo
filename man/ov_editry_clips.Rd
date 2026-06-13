@@ -24,22 +24,22 @@ ov_editry_clips(
 
 \item{title2}{string: the second title text (on the second slide). Use \code{NULL} to skip this slide}
 
-\item{label_col}{string: the name of the column in \code{playlist} to use for a label on each clip (created with \code{\link[editry:er_layer_pause]{editry::er_layer_news_title()}}). Common label choices are player names, scores, or descriptions of the play being shown in the clip}
+\item{label_col}{string: the name of the column in \code{playlist} to use for a label on each clip (created with \code{\link[editry:er_layer_news_title]{editry::er_layer_news_title()}}). Common label choices are player names, scores, or descriptions of the play being shown in the clip}
 
 \item{pause}{logical: if \code{TRUE}, insert an \code{\link[editry:er_clip_pause]{editry::er_clip_pause()}} clip at the end of the sequence}
 
 \item{seamless}{logical: if \code{TRUE}, combine overlapping/adjacent clips. Note that if a \code{label_col} has been specified, the label from the first clip will be used for the whole of the combined clip (so it may no longer make sense, for example if the label is the player name)}
 
-\item{title_args}{list: arguments to pass to \code{\link[editry:er_clip_pause]{editry::er_clip_title_background()}} when creating the title slide}
+\item{title_args}{list: arguments to pass to \code{\link[editry:er_clip_title_background]{editry::er_clip_title_background()}} when creating the title slide}
 
-\item{title2_args}{list: arguments to pass to \code{\link[editry:er_clip_pause]{editry::er_clip_title2()}} when creating the title2 slide}
+\item{title2_args}{list: arguments to pass to \code{\link[editry:er_clip_title2]{editry::er_clip_title2()}} when creating the title2 slide}
 
 \item{pause_args}{list: arguments to pass to \code{\link[editry:er_clip_pause]{editry::er_clip_pause()}} when creating the final slide}
 
-\item{label_args}{list: arguments to pass to \code{\link[editry:er_layer_pause]{editry::er_layer_news_title()}}, used if \code{label_col} is provided}
+\item{label_args}{list: arguments to pass to \code{\link[editry:er_layer_news_title]{editry::er_layer_news_title()}}, used if \code{label_col} is provided}
 }
 \value{
-A list of \code{\link[editry:er_layer]{editry::er_clip()}} objects, suitable to pass to \code{\link[editry:er_spec]{editry::er_spec()}}
+A list of \code{\link[editry:er_clip]{editry::er_clip()}} objects, suitable to pass to \code{\link[editry:er_spec]{editry::er_spec()}}
 }
 \description{
 Note that in order to use \code{ov_editry_clips}, the \code{editry} package must be installed. Install it with: \code{remotes::install_github('scienceuntangled/editry')} or \code{install.packages('editry', repos = c('https://openvolley.r-universe.dev', 'https://cloud.r-project.org'))}. The \code{editry} package also requires \code{editly} (the underlying node JS package: see \code{\link[editry:er_install_editly]{editry::er_install_editly()}}).
@@ -111,5 +111,5 @@ Note that in order to use \code{ov_editry_clips}, the \code{editry} package must
 
 }
 \seealso{
-\code{\link[editry:er_layer_pause]{editry::er_layer_news_title()}}, \code{\link[editry:er_layer]{editry::er_layer()}}, \code{\link[editry:er_spec]{editry::er_spec()}}
+\code{\link[editry:er_layer_news_title]{editry::er_layer_news_title()}}, \code{\link[editry:er_layer]{editry::er_layer()}}, \code{\link[editry:er_spec]{editry::er_spec()}}
 }

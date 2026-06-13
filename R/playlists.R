@@ -7,7 +7,7 @@
 #' @param extra_cols character: names of additional columns from `x` to include in the returned data frame
 #' @param normalize_paths logical: if `TRUE`, apply `normalizePath` to local file paths. This will e.g. expand the tilde in paths like "~/path/to/video.mp4"
 #'
-#' @return A data.frame with columns `src`, `start_time`, `duration`, plus any extras specified in `extra_cols`
+#' @return A data.frame with at least the columns `video_src`, `clip_id`, `start_time`, `duration`, plus any extras specified in `extra_cols`
 #'
 #' @examples
 #' ## read data file
@@ -110,7 +110,7 @@ ov_video_playlist <- function(x, meta, type = NULL, timing = ov_video_timing(), 
     }
     ## add timings for seamless transitions
     x <- add_seamless_timings(x)
-    x[, c("video_src", "start_time", "duration", "type", "seamless_start_time", "seamless_duration", extra_cols)]
+    x[, intersect(c("video_src", "clip_id", "next_seamless_id", "start_time", "duration", "type", "seamless_start_time", "seamless_duration", extra_cols), names(x))]
 }
 
 #' Create video playlist per point_id
@@ -211,6 +211,80 @@ match_id_from_meta <- function(z) {
 }
 
 add_seamless_timings <- function(x) {
+    x0 <- x
+    tryCatch({
+        x <- x %>% mutate(end_time = .data$start_time + .data$duration) %>%
+            group_by(.data$video_src) %>%
+            mutate(
+                ## a clip overlaps with its preceding one if the start time of clip i sits within the time period of clip (i-1) OR if they were tagged with the same original video time (because e.g. serve-reception usually get this, and sometimes the reception-phase set too. But different starting offsets can be applied to serve/reception/set, which will cause problems in calculating overlap solely from clip timings without reference to the original video times. If an S-R-E sequence is kept intact we want it to play seamlessly)
+                ## note that we can also have randomly-ordered playlists and we don't want to play items in those in a seamless way
+                ## remember also that e.g. serve and reception will have the *same* start time. Also allow a bit of margin, so start_time >= (lag(start_time - 1))
+                overlaps_prev = dplyr::n() > 1 & ((.data$start_time <= lag(.data$end_time) & .data$start_time >= lag(.data$start_time - 1)) | abs(.data$video_time - lag(.data$video_time)) <= 1),
+                overlaps_prev = case_when(is.na(.data$overlaps_prev) ~ FALSE, TRUE ~ .data$overlaps_prev),
+                overlaps_next = lead(.data$overlaps_prev, default = FALSE),
+                clip_id = sub("-", "", substr(uuid::UUIDgenerate(n = dplyr::n()), 1, 13), fixed = TRUE),
+                next_seamless_id = case_when(.data$overlaps_next ~ lead(.data$clip_id), TRUE ~ ""), ## empty string not NA, so that it doesn't get dropped when we convert to json
+                ## calculate min/max extents of timing that we can use to construct seamless
+                seamless_start_min = if_else(.data$overlaps_prev, pmin(.data$start_time, lag(.data$start_time), na.rm = TRUE), .data$start_time),
+                seamless_end_max = pmin(.data$end_time, lead(.data$end_time), na.rm = TRUE))
+        ## adjust seamless timings so that start/end times are non-decreasing
+        for (i in rev(seq_len(nrow(x)))) {
+            if (isTRUE(x$overlaps_prev[i])) {
+                if ((x$seamless_start_min[i] > x$seamless_start_min[i-1]) && (x$seamless_end_max[i] < x$seamless_end_max[i-1])) {
+                    ## i is contained entirely within i-1
+                    x$seamless_start_min[i] <- x$seamless_start_min[i-1]
+                    x$seamless_end_max[i] <- x$seamless_end_max[i-1]
+                } else {
+                    if (x$seamless_start_min[i] < x$seamless_start_min[i-1]) {
+                        ## i starts before i-1, modify i-1
+                        x$seamless_start_min[i-1] <- x$seamless_start_min[i]
+                    }
+                    if (x$seamless_end_max[i] < x$seamless_end_max[i-1]) {
+                        ## i ends before i-1, extend it
+                        x$seamless_end_max[i] <- x$seamless_end_max[i-1]
+                    }
+                }
+            }
+        }
+        ## find distinct seamless timings
+        x <- x %>% group_by(.data$video_src, .data$seamless_start_min, .data$seamless_end_max, .data$overlaps_next) %>% mutate(.gid = cur_group_id()) %>% ungroup
+        ut <- x %>% distinct(.data$.gid, .data$video_src, .data$seamless_start_min, .data$seamless_end_max, .data$overlaps_next)
+        for (i in rev(seq_len(nrow(ut))[-1])) {
+            if (isTRUE(ut$overlaps_next[i-1])) ut$seamless_start_min[i] <- ut$seamless_end_max[i-1] <- (ut$seamless_start_min[i] + ut$seamless_end_max[i-1]) / 2
+        }
+        ## ut should be non-overlapping intervals, possibly of duration 0. Note that one row of ut can correspond to multiple clips in x
+        x <- x %>% dplyr::select(-"seamless_start_min", -"seamless_end_max") %>%
+            left_join(ut %>% dplyr::select(".gid", "seamless_start_min", "seamless_end_max"), by = ".gid") %>%
+            ## recalculate groups according to the new seamless timings
+            group_by(.data$video_src, .data$seamless_start_min, .data$seamless_end_max, .data$overlaps_next) %>%
+            ## separate out multiple clips with the same seamless_start_min, seamless_end_max values
+            mutate(seamless_start_time = spread_starts(.data$seamless_start_min, .data$seamless_end_max),
+                   seamless_duration = spread_ends(.data$seamless_start_min, .data$seamless_end_max) - .data$seamless_start_time) %>%
+            ungroup %>%
+            dplyr::select(-"overlaps_prev", -"overlaps_next", -".gid", -"seamless_start_min", -"seamless_end_max", -"end_time")
+        if (any(x$seamless_duration < 0, na.rm = TRUE)) {
+            warning("seamless durations < 0, needs checking")
+            x$seamless_duration[which(x$seamless_duration < 0)] <- 0
+        }
+        x
+    }, error = function(e) {
+        warning("add_seamless_timings failed with error message: ", conditionMessage(e), "\nfalling back to old method")
+        ## fall back to old code
+        add_seamless_timings0(x0)
+    })
+}
+
+spread_starts <- function(smin, emax) {
+    thisn <- length(smin) + 1
+    head(seq(min(smin), max(emax), length.out = thisn), -1)
+}
+spread_ends <- function(smin, emax) {
+    thisn <- length(smin) + 1
+    tail(seq(min(smin), max(emax), length.out = thisn), -1)
+}
+
+## old code
+add_seamless_timings0 <- function(x) {
     x <- mutate(x, end_time = .data$start_time + .data$duration)
     x <- mutate(group_by(x, .data$video_src),
                 ## a clip overlaps with its preceding one if the start time of clip i sits within the time period of clip (i-1)
@@ -558,16 +632,30 @@ merge_seamless <- function(playlist) {
     ## combine adjacent/overlapping clips into one
     keep <- rep(FALSE, nrow(playlist)); keep[1] <- TRUE
     last <- 1L
-    dur <- playlist$duration
-    for (i in seq_len(nrow(playlist))[-1]) {
-        ## a clip overlaps with its preceding one if the start time of clip i sits within the time period of clip (i-1)
-        ## but if clip i starts *before* clip (i-1) then they do not overlap (cannot be played seamlessly) - maybe a randomly-ordered playlist
-        ## remember also that e.g. serve and reception will have the *same* start time. Also allow a bit of margin, so start_time >= (lag(start_time - 1))
-        if (isTRUE(playlist$video_src[last] == playlist$video_src[i]) && ((playlist$start_time[last] + dur[last]) >= playlist$start_time[i]) && (playlist$start_time[i] >= playlist$start_time[last] - 1)) {
-            dur[last] <- playlist$start_time[i] + dur[i] - playlist$start_time[last]
-        } else {
-            keep[i] <- TRUE
-            last <- i
+    if (all(c("clip_id", "next_seamless_id") %in% names(playlist))) {
+        ## merge using the clip_id entries
+        dur <- playlist$seamless_duration
+        for (i in seq_len(nrow(playlist))[-1]) {
+            if (isTRUE(playlist$clip_id[i] == playlist$next_seamless_id[i-1])) {
+                dur[last] <- dur[last] + playlist$seamless_duration[i]
+            } else {
+                keep[i] <- TRUE
+                last <- i
+            }
+        }
+    } else {
+        ## old method
+        dur <- playlist$duration
+        for (i in seq_len(nrow(playlist))[-1]) {
+            ## a clip overlaps with its preceding one if the start time of clip i sits within the time period of clip (i-1)
+            ## but if clip i starts *before* clip (i-1) then they do not overlap (cannot be played seamlessly) - maybe a randomly-ordered playlist
+            ## remember also that e.g. serve and reception will have the *same* start time. Also allow a bit of margin, so start_time >= (lag(start_time - 1))
+            if (isTRUE(playlist$video_src[last] == playlist$video_src[i]) && ((playlist$start_time[last] + dur[last]) >= playlist$start_time[i]) && (playlist$start_time[i] >= playlist$start_time[last] - 1)) {
+                dur[last] <- playlist$start_time[i] + dur[i] - playlist$start_time[last] ## TODO max(dur[last], playlist$start_time[i] + dur[i] - playlist$start_time[last]) because clip[i] could finish before the current value of playlist$start_time[last] + dur[last]
+            } else {
+                keep[i] <- TRUE
+                last <- i
+            }
         }
     }
     playlist$seamless_duration <- playlist$duration <- dur

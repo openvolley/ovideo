@@ -27,7 +27,7 @@ ov_video_playlist(
 \item{normalize_paths}{logical: if \code{TRUE}, apply \code{normalizePath} to local file paths. This will e.g. expand the tilde in paths like "~/path/to/video.mp4"}
 }
 \value{
-A data.frame with columns \code{src}, \code{start_time}, \code{duration}, plus any extras specified in \code{extra_cols}
+A data.frame with at least the columns \code{video_src}, \code{clip_id}, \code{start_time}, \code{duration}, plus any extras specified in \code{extra_cols}
 }
 \description{
 Create video playlist
