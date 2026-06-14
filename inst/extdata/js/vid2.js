@@ -564,10 +564,9 @@ function dvjs_controller(id, type, seamless = true) {
                     var next_item = that.video_controller.queue[that.video_controller.current+1];
                     if (typeof item.next_seamless_id !== "undefined") {
                         this_seamless = next_item.clip_id === item.next_seamless_id;
-                    } else {
-                        // old method
-                        this_seamless = item.video_src == next_item.video_src && next_item.start_time <= (item.start_time + item.duration) && next_item.start_time >= (item.start_time - 1);
                     }
+                    // also check against direct method
+                    this_seamless = this_seamless || (item.video_src == next_item.video_src && next_item.start_time <= (item.start_time + item.duration) && next_item.start_time >= (item.start_time - 1));
                 }
                 that.video_next(this_seamless);
             } else {
