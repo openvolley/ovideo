@@ -258,8 +258,8 @@ add_seamless_timings <- function(x) {
             ## recalculate groups according to the new seamless timings
             group_by(.data$video_src, .data$seamless_start_min, .data$seamless_end_max, .data$overlaps_next) %>%
             ## separate out multiple clips with the same seamless_start_min, seamless_end_max values
-            mutate(seamless_start_time = spread_starts(.data$seamless_start_min, .data$seamless_end_max),
-                   seamless_duration = spread_ends(.data$seamless_start_min, .data$seamless_end_max) - .data$seamless_start_time) %>%
+            mutate(seamless_start_time = spread_starts(.data$seamless_start_min, emax = .data$seamless_end_max, skill = .data$skill),
+                   seamless_duration = spread_ends(.data$seamless_start_min, emax = .data$seamless_end_max, skill = .data$skill) - .data$seamless_start_time) %>%
             ungroup %>%
             dplyr::select(-"overlaps_prev", -"overlaps_next", -".gid", -"seamless_start_min", -"seamless_end_max", -"end_time")
         if (any(x$seamless_duration < 0, na.rm = TRUE)) {
@@ -274,13 +274,26 @@ add_seamless_timings <- function(x) {
     })
 }
 
-spread_starts <- function(smin, emax) {
-    thisn <- length(smin) + 1
-    head(seq(min(smin), max(emax), length.out = thisn), -1)
+spread_starts <- function(smin, emax, skill) {
+    thisn <- length(smin)
+    smin <- min(smin, na.rm = TRUE)
+    emax <- max(emax, na.rm = TRUE)
+    if (!missing(skill) && isTRUE(skill[1] == "Serve") && thisn > 1) {
+        ## if the first skill is a serve, allow that to absorb most of the interval, because it's probably starting from the ball toss
+        head(c(0, 9 + seq(thisn)) / (9 + thisn) * (emax - smin) + smin, -1)
+    } else {
+        head(seq(smin, emax, length.out = thisn + 1), -1)
+    }
 }
-spread_ends <- function(smin, emax) {
-    thisn <- length(smin) + 1
-    tail(seq(min(smin), max(emax), length.out = thisn), -1)
+spread_ends <- function(smin, emax, skill) {
+    thisn <- length(smin)
+    smin <- min(smin, na.rm = TRUE)
+    emax <- max(emax, na.rm = TRUE)
+    if (!missing(skill) && isTRUE(skill[1] == "Serve") && thisn > 1) {
+        tail(c(0, 9 + seq(thisn)) / (9 + thisn) * (emax - smin) + smin, -1)
+    } else {
+        tail(seq(smin, emax, length.out = thisn + 1), -1)
+    }
 }
 
 ## old code
