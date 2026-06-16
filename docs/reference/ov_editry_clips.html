@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">ovideo</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,7 +32,7 @@
     </div>
 
     <div class="ref-description section level2">
-    <p>Note that in order to use <code>ov_editry_clips</code>, the <code>editry</code> package must be installed. Install it with: <code>remotes::install_github('scienceuntangled/editry')</code> or <code>install.packages('editry', repos = c('https://openvolley.r-universe.dev', 'https://cloud.r-project.org'))</code>. The <code>editry</code> package also requires <code>editly</code> (the underlying node JS package: see <code><a href="https://rdrr.io/pkg/editry/man/er_install_editly.html" class="external-link">editry::er_install_editly()</a></code>).</p>
+    <p>Note that in order to use <code>ov_editry_clips</code>, the <code>editry</code> package must be installed. Install it with: <code>remotes::install_github('scienceuntangled/editry')</code> or <code>install.packages('editry', repos = c('https://openvolley.r-universe.dev', 'https://cloud.r-project.org'))</code>. The <code>editry</code> package also requires <code>editly</code> (the underlying node JS package: see <code>editry::er_install_editly()</code>).</p>
     </div>
 
     <div class="section level2">
@@ -68,11 +68,11 @@
 
 
 <dt id="arg-label-col">label_col<a class="anchor" aria-label="anchor" href="#arg-label-col"></a></dt>
-<dd><p>string: the name of the column in <code>playlist</code> to use for a label on each clip (created with <code><a href="https://rdrr.io/pkg/editry/man/er_layer_pause.html" class="external-link">editry::er_layer_news_title()</a></code>). Common label choices are player names, scores, or descriptions of the play being shown in the clip</p></dd>
+<dd><p>string: the name of the column in <code>playlist</code> to use for a label on each clip (created with <code>editry::er_layer_news_title()</code>). Common label choices are player names, scores, or descriptions of the play being shown in the clip</p></dd>
 
 
 <dt id="arg-pause">pause<a class="anchor" aria-label="anchor" href="#arg-pause"></a></dt>
-<dd><p>logical: if <code>TRUE</code>, insert an <code><a href="https://rdrr.io/pkg/editry/man/er_clip_pause.html" class="external-link">editry::er_clip_pause()</a></code> clip at the end of the sequence</p></dd>
+<dd><p>logical: if <code>TRUE</code>, insert an <code>editry::er_clip_pause()</code> clip at the end of the sequence</p></dd>
 
 
 <dt id="arg-seamless">seamless<a class="anchor" aria-label="anchor" href="#arg-seamless"></a></dt>
@@ -80,28 +80,28 @@
 
 
 <dt id="arg-title-args">title_args<a class="anchor" aria-label="anchor" href="#arg-title-args"></a></dt>
-<dd><p>list: arguments to pass to <code><a href="https://rdrr.io/pkg/editry/man/er_clip_pause.html" class="external-link">editry::er_clip_title_background()</a></code> when creating the title slide</p></dd>
+<dd><p>list: arguments to pass to <code>editry::er_clip_title_background()</code> when creating the title slide</p></dd>
 
 
 <dt id="arg-title-args">title2_args<a class="anchor" aria-label="anchor" href="#arg-title-args"></a></dt>
-<dd><p>list: arguments to pass to <code><a href="https://rdrr.io/pkg/editry/man/er_clip_pause.html" class="external-link">editry::er_clip_title2()</a></code> when creating the title2 slide</p></dd>
+<dd><p>list: arguments to pass to <code>editry::er_clip_title2()</code> when creating the title2 slide</p></dd>
 
 
 <dt id="arg-pause-args">pause_args<a class="anchor" aria-label="anchor" href="#arg-pause-args"></a></dt>
-<dd><p>list: arguments to pass to <code><a href="https://rdrr.io/pkg/editry/man/er_clip_pause.html" class="external-link">editry::er_clip_pause()</a></code> when creating the final slide</p></dd>
+<dd><p>list: arguments to pass to <code>editry::er_clip_pause()</code> when creating the final slide</p></dd>
 
 
 <dt id="arg-label-args">label_args<a class="anchor" aria-label="anchor" href="#arg-label-args"></a></dt>
-<dd><p>list: arguments to pass to <code><a href="https://rdrr.io/pkg/editry/man/er_layer_pause.html" class="external-link">editry::er_layer_news_title()</a></code>, used if <code>label_col</code> is provided</p></dd>
+<dd><p>list: arguments to pass to <code>editry::er_layer_news_title()</code>, used if <code>label_col</code> is provided</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list of <code><a href="https://rdrr.io/pkg/editry/man/er_layer.html" class="external-link">editry::er_clip()</a></code> objects, suitable to pass to <code><a href="https://rdrr.io/pkg/editry/man/er_spec.html" class="external-link">editry::er_spec()</a></code></p>
+    <p>A list of <code>editry::er_clip()</code> objects, suitable to pass to <code>editry::er_spec()</code></p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="https://rdrr.io/pkg/editry/man/er_layer_pause.html" class="external-link">editry::er_layer_news_title()</a></code>, <code><a href="https://rdrr.io/pkg/editry/man/er_layer.html" class="external-link">editry::er_layer()</a></code>, <code><a href="https://rdrr.io/pkg/editry/man/er_spec.html" class="external-link">editry::er_spec()</a></code></p></div>
+    <div class="dont-index"><p><code>editry::er_layer_news_title()</code>, <code>editry::er_layer()</code>, <code>editry::er_spec()</code></p></div>
     </div>
 
     <div class="section level2">
@@ -132,7 +132,7 @@
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co">## Step 2: convert to editly clip objects and compile to mp4</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/scienceuntangled/editry" class="external-link">editry</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">editry</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="co">## create the clips, one for each row of the playlist</span></span></span>
 <span class="r-in"><span>  <span class="va">clips</span> <span class="op">&lt;-</span> <span class="fu">ov_editry_clips</span><span class="op">(</span><span class="va">ply</span>, title <span class="op">=</span> <span class="st">"GKS Katowice\nvs\nMKS Bedzin"</span>,</span></span>
 <span class="r-in"><span>                                title2 <span class="op">=</span> <span class="st">"Attacks"</span>, label_col <span class="op">=</span> <span class="st">"label"</span><span class="op">)</span></span></span>
@@ -140,8 +140,8 @@
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co">## compile to video</span></span></span>
 <span class="r-in"><span>  <span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".mp4"</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="va">my_spec</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/editry/man/er_spec.html" class="external-link">er_spec</a></span><span class="op">(</span>out_path <span class="op">=</span> <span class="va">outfile</span>, clips <span class="op">=</span> <span class="va">clips</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/pkg/editry/man/er_exec_wait.html" class="external-link">er_exec_wait</a></span><span class="op">(</span>spec <span class="op">=</span> <span class="va">my_spec</span>, fast <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">my_spec</span> <span class="op">&lt;-</span> <span class="fu">er_spec</span><span class="op">(</span>out_path <span class="op">=</span> <span class="va">outfile</span>, clips <span class="op">=</span> <span class="va">clips</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu">er_exec_wait</span><span class="op">(</span>spec <span class="op">=</span> <span class="va">my_spec</span>, fast <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co">## and view the output</span></span></span>
 <span class="r-in"><span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/browseURL.html" class="external-link">browseURL</a></span><span class="op">(</span><span class="va">outfile</span><span class="op">)</span></span></span>
@@ -151,22 +151,22 @@
 <span class="r-in"><span>  <span class="co">## Example 2</span></span></span>
 <span class="r-in"><span>  <span class="co">## without a playlist, make a simple clip from a known segment of video</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/scienceuntangled/editry" class="external-link">editry</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">editry</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ovdata.openvolley.org" class="external-link">ovdata</a></span><span class="op">)</span> <span class="co">## install via remotes::install_github("openvolley/ovdata") if needed</span></span></span>
 <span class="r-in"><span>  <span class="va">my_video</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ovdata.openvolley.org/reference/ovdata_example_video.html" class="external-link">ovdata_example_video</a></span><span class="op">(</span><span class="st">"190301_kats_beds"</span><span class="op">)</span> <span class="co">## path to your video file</span></span></span>
 <span class="r-in"><span>  <span class="va">my_logo</span> <span class="op">&lt;-</span> <span class="st">"https://github.com/openvolley/community/raw/master/docs/talks/common/ovlogo-blur.png"</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="va">clips</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/editry/man/er_clip_pause.html" class="external-link">er_clip_video</a></span><span class="op">(</span>path <span class="op">=</span> <span class="va">my_video</span>, cut_from <span class="op">=</span> <span class="fl">1</span>, cut_to <span class="op">=</span> <span class="fl">8</span><span class="op">)</span>, <span class="co">## video segment</span></span></span>
+<span class="r-in"><span>  <span class="va">clips</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu">er_clip_video</span><span class="op">(</span>path <span class="op">=</span> <span class="va">my_video</span>, cut_from <span class="op">=</span> <span class="fl">1</span>, cut_to <span class="op">=</span> <span class="fl">8</span><span class="op">)</span>, <span class="co">## video segment</span></span></span>
 <span class="r-in"><span>                <span class="co">## add an outro banner with logo</span></span></span>
-<span class="r-in"><span>                <span class="fu"><a href="https://rdrr.io/pkg/editry/man/er_layer.html" class="external-link">er_clip</a></span><span class="op">(</span>duration <span class="op">=</span> <span class="fl">1.5</span>, layers <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/editry/man/er_layer_pause.html" class="external-link">er_layer_fill_color</a></span><span class="op">(</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                                                      <span class="fu"><a href="https://rdrr.io/pkg/editry/man/er_layer_pause.html" class="external-link">er_layer_image</a></span><span class="op">(</span>path <span class="op">=</span> <span class="va">my_logo</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                <span class="fu">er_clip</span><span class="op">(</span>duration <span class="op">=</span> <span class="fl">1.5</span>, layers <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu">er_layer_fill_color</span><span class="op">(</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                                                      <span class="fu">er_layer_image</span><span class="op">(</span>path <span class="op">=</span> <span class="va">my_logo</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                <span class="co">##  and blank finishing screen</span></span></span>
-<span class="r-in"><span>                <span class="fu"><a href="https://rdrr.io/pkg/editry/man/er_clip_pause.html" class="external-link">er_clip_pause</a></span><span class="op">(</span>duration <span class="op">=</span> <span class="fl">0.25</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                <span class="fu">er_clip_pause</span><span class="op">(</span>duration <span class="op">=</span> <span class="fl">0.25</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".mp4"</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="va">my_spec</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/editry/man/er_spec.html" class="external-link">er_spec</a></span><span class="op">(</span>clips <span class="op">=</span> <span class="va">clips</span>, out_path <span class="op">=</span> <span class="va">outfile</span>, allow_remote_requests <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">my_spec</span> <span class="op">&lt;-</span> <span class="fu">er_spec</span><span class="op">(</span>clips <span class="op">=</span> <span class="va">clips</span>, out_path <span class="op">=</span> <span class="va">outfile</span>, allow_remote_requests <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/pkg/editry/man/er_exec_wait.html" class="external-link">er_exec_wait</a></span><span class="op">(</span>spec <span class="op">=</span> <span class="va">my_spec</span>, fast <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu">er_exec_wait</span><span class="op">(</span>spec <span class="op">=</span> <span class="va">my_spec</span>, fast <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/browseURL.html" class="external-link">browseURL</a></span><span class="op">(</span><span class="va">outfile</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
@@ -181,7 +181,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>
